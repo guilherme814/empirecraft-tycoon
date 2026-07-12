@@ -1,22 +1,36 @@
 name: Build EmpireCraft Tycoon
 
-on: [push]
+on:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download Godot
+
+      - name: Download Godot Editor
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip
           unzip -q Godot_v4.2.1-stable_linux.x86_64.zip
           chmod +x Godot_v4.2.1-stable_linux.x86_64
+
+      - name: Download Godot Export Templates
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/
+          unzip -q Godot_v4.2.1-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/
+          mv ~/.local/share/godot/export_templates/templates/* ~/.local/share/godot/export_templates/4.2.1.stable/
+          ls ~/.local/share/godot/export_templates/4.2.1.stable/
+
       - name: Export APK
         run: |
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" game.apk 2>&1 || true
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" game.apk 2>&1 | tee export.log
           ls -la *.apk || echo "APK não gerado"
+
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: empirecraft-tycoon

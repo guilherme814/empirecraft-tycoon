@@ -1,18 +1,18 @@
 extends Node
 
-enum Theme { LIGHT, DARK }
-var current_theme = Theme.DARK
+enum NebulaTheme { LIGHT, DARK }
+var current_theme = NebulaTheme.DARK
 
 var colors = {
-    Theme.LIGHT: {
+    NebulaTheme.LIGHT: {
         "background": Color.WHITE,
         "panel": Color(0.95, 0.95, 0.95),
         "text": Color.BLACK,
         "accent": Color.DODGER_BLUE
     },
-    Theme.DARK: {
-        "background": Color(0.1, 0.1, 0.12),
-        "panel": Color(0.18, 0.18, 0.2),
+    NebulaTheme.DARK: {
+        "background": Color(0.08, 0.08, 0.1),
+        "panel": Color(0.15, 0.15, 0.18),
         "text": Color.WHITE,
         "accent": Color.ORANGE
     }
@@ -21,7 +21,6 @@ var colors = {
 func get_color(key: String) -> Color:
     return colors[current_theme][key]
 
-func set_theme(theme: int):
-    current_theme = theme
-    # Emite sinal para atualizar toda a UI
+func toggle_theme():
+    current_theme = NebulaTheme.LIGHT if current_theme == NebulaTheme.DARK else NebulaTheme.DARK
     get_tree().call_group("theme_sensitive", "update_theme")
