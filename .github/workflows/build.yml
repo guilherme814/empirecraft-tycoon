@@ -10,6 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0 platform-tools'
+
       - name: Download Godot Editor
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip
@@ -22,10 +27,10 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
           unzip -q Godot_v4.2.1-stable_export_templates.tpz -d /tmp/godot_templates
           mv /tmp/godot_templates/templates/* ~/.local/share/godot/export_templates/4.2.1.stable/
-          ls -la ~/.local/share/godot/export_templates/4.2.1.stable/
 
       - name: Export APK
         run: |
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
           ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" game.apk 2>&1 | tee export.log
           ls -la *.apk || echo "APK não gerado"
 
