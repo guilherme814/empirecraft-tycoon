@@ -1,0 +1,18 @@
+config_version=5
+
+[application]
+config/name="EmpireCraft Tycoon"
+config/description="Tycoon de Empreendedorismo e Tecnologia"
+config/version="0.1.0"
+run/main_scene="res://src/scenes/menu/MainMenu.tscn"
+
+[rendering]
+renderer/rendering_method="mobile"
+
+[input_devices]
+pointing/emulate_touch_from_mouse=true
+
+[display]
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
