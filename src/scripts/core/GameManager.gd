@@ -1,25 +1,30 @@
 extends Node
 
-signal game_started
-signal game_paused
-signal day_passed(day: int)
 signal money_changed(amount: float)
+signal day_passed(day: int)
 
-var company_name: String = "Sua Empresa"
 var money: float = 50000.0
 var reputation: float = 50.0
 var current_day: int = 1
-var research_points: float = 0.0
-var employees: Array = []
-var products: Array = []
-var active_events: Array = []
+var player_os: OperatingSystem = null
 
 func _ready():
-    print("EmpireCraft Tycoon iniciado!")
-    load_initial_data()
-
-func load_initial_data():
-    pass
+    # Inicializar tema
+    var theme_manager = load("res://src/scripts/ui/theme/ThemeManager.gd").new()
+    theme_manager.name = "ThemeManager"
+    add_child(theme_manager)
+    
+    # Cria o SO inicial do jogador
+    player_os = OperatingSystem.new()
+    player_os.os_name = "NebulaOS"
+    player_os.version = "0.1 Alpha"
+    print("Sistema operacional inicializado: ", player_os.os_name)
+    
+    # Conectar ao sistema de diagnóstico (se existir)
+    var diag = get_node_or_null("/root/DiagnosticAI")
+    if diag:
+        # Captura erros não tratados (apenas exemplo)
+        pass
 
 func add_money(amount: float):
     money += amount
@@ -34,27 +39,4 @@ func spend_money(amount: float) -> bool:
 
 func next_day():
     current_day += 1
-    calculate_daily_income()
-    process_events()
     emit_signal("day_passed", current_day)
-
-func calculate_daily_income():
-    var income: float = 0.0
-    for product in products:
-        income += product.sales * product.price
-    add_money(income)
-
-func process_events():
-    pass
-
-func _ready():
-    # Código existente...
-    # Conectar ao sistema de diagnóstico
-    var diag = get_node_or_null("/root/DiagnosticAI")
-    if diag:
-        # Captura erros não tratados
-        JavaScriptBridge.eval("""
-            window.onerror = function(msg, url, line) {
-                console.error('Erro capturado: ' + msg);
-            };
-        """)

@@ -7,14 +7,17 @@ extends Control
 func _ready():
     add_to_group("theme_sensitive")
     update_theme()
-    GameManager.money_changed.connect(_on_money_changed)
-    GameManager.day_passed.connect(_on_day_passed)
+    if GameManager:
+        GameManager.money_changed.connect(_on_money_changed)
+        GameManager.day_passed.connect(_on_day_passed)
 
 func update_theme():
     var tm = get_node("/root/ThemeManager")
-    $TopBar.color = tm.get_color("panel")
-    money_label.add_theme_color_override("font_color", tm.get_color("text"))
-    # ... outros labels
+    if tm:
+        $TopBar.color = tm.get_color("panel")
+        money_label.add_theme_color_override("font_color", tm.get_color("text"))
+        day_label.add_theme_color_override("font_color", tm.get_color("text"))
+        rep_label.add_theme_color_override("font_color", tm.get_color("text"))
 
 func _on_money_changed(amount):
     money_label.text = "$ " + str(amount)

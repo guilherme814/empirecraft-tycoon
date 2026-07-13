@@ -1,7 +1,5 @@
 extends Node
 
-class_name DiagnosticAI
-
 var api_manager: APIManager = null
 var error_log: Array = []
 
@@ -12,7 +10,7 @@ func _ready():
 
 func add_error(error_message: String):
     error_log.append({"time": Time.get_datetime_string_from_system(), "error": error_message})
-    if error_log.size() > 50:  # mantém apenas os últimos 50 erros
+    if error_log.size() > 50:
         error_log.pop_front()
 
 func get_diagnostic() -> String:
@@ -32,7 +30,6 @@ func ask_ai_for_fix(error_message: String) -> String:
     if api_key == "":
         return "Chave da API OpenAI não configurada. Adicione em api_config.json."
     
-    # Monta a requisição (usando HTTPRequest do Godot)
     var http = HTTPRequest.new()
     add_child(http)
     http.request_completed.connect(_on_ai_response)
@@ -55,14 +52,16 @@ func ask_ai_for_fix(error_message: String) -> String:
     if err != OK:
         return "Falha na comunicação com a API de IA."
     
-    # A resposta será processada em _on_ai_response
     return "Consultando IA..."
 
 func _on_ai_response(result, response_code, headers, body):
     var json = JSON.parse_string(body.get_string_from_utf8())
     if json and json.has("choices"):
         var reply = json.choices[0].message.content
-        # Emite sinal ou armazena a resposta (para ser exibida na UI)
-        get_node("/root/SupportScreen").show_ai_reply(reply)
+        var support_screen = get_node_or_null("/root/SupportScreen")
+        if support_screen:
+            support_screen.show_ai_reply(reply)
     else:
-        get_node("/root/SupportScreen").show_ai_reply("A IA não conseguiu analisar o erro.")
+        var support_screen = get_node_or_null("/root/SupportScreen")
+        if support_screen:
+            support_screen.show_ai_reply("A IA não conseguiu analisar o erro.")
