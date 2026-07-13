@@ -19,3 +19,5 @@ window/stretch/mode="canvas_items"
 
 [autoload]
 GameManager="*res://src/scripts/core/GameManager.gd"
+APIManager="*res://src/scripts/core/APIManager.gd"
+DiagnosticAI="*res://src/scripts/core/diagnostics/DiagnosticAI.gd"

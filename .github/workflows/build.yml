@@ -1,11 +1,11 @@
-name: Build EmpireCraft Tycoon
+name: Build and Publish APK
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,13 +15,13 @@ jobs:
         with:
           packages: 'platforms;android-34 build-tools;34.0.0 platform-tools'
 
-      - name: Download Godot Editor
+      - name: Download Godot
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip
           unzip -q Godot_v4.2.1-stable_linux.x86_64.zip
           chmod +x Godot_v4.2.1-stable_linux.x86_64
 
-      - name: Download Godot Export Templates
+      - name: Download Export Templates
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
@@ -32,11 +32,13 @@ jobs:
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" game.apk 2>&1 | tee export.log
-          ls -la *.apk || echo "APK não gerado"
+          ls -la game.apk
 
-      - name: Upload APK
-        if: success()
-        uses: actions/upload-artifact@v4
+      - name: Publish APK to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: empirecraft-tycoon
-          path: game.apk
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          publish_branch: gh-pages
+          keep_files: true
+          force_orphan: true

@@ -46,3 +46,15 @@ func calculate_daily_income():
 
 func process_events():
     pass
+
+func _ready():
+    # Código existente...
+    # Conectar ao sistema de diagnóstico
+    var diag = get_node_or_null("/root/DiagnosticAI")
+    if diag:
+        # Captura erros não tratados
+        JavaScriptBridge.eval("""
+            window.onerror = function(msg, url, line) {
+                console.error('Erro capturado: ' + msg);
+            };
+        """)
