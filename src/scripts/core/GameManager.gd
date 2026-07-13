@@ -23,7 +23,6 @@ func _ready():
     # Conectar ao sistema de diagnóstico (se existir)
     var diag = get_node_or_null("/root/DiagnosticAI")
     if diag:
-        # Captura erros não tratados (apenas exemplo)
         pass
 
 func add_money(amount: float):
