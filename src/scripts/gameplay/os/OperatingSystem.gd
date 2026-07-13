@@ -13,6 +13,12 @@ class_name OperatingSystem
 @export var compatible_apps: Array = []
 @export var installed_base: int = 0
 
+func _init():
+    # Validações básicas (testes automáticos)
+    assert(stability >= 0 and stability <= 100, "Stability out of range")
+    assert(security >= 0 and security <= 100, "Security out of range")
+    assert(performance >= 0 and performance <= 100, "Performance out of range")
+
 func update_market_share(total_users: int):
     if total_users > 0:
         market_share = float(installed_base) / float(total_users) * 100.0
