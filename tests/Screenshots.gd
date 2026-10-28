@@ -46,6 +46,43 @@ func _ready() -> void:
 	screen._show_page("market")
 	Game.changed.emit()
 	await _shot("market")
+	# v0.3: estúdio e novas páginas
+	for id in ["res_tech", "res_tech", "res_tech", "res_design", "res_shapes", "res_finish", "res_features", "res_os", "res_cost", "res_cost", "res_factory", "res_hype", "res_hype", "res_capital"]:
+		c.research_points += 400.0
+		c.money += 60000.0
+		c.do_research(id)
+	c.money = 1500000.0
+	screen._show_page("products")
+	var pp: Control = screen._pages["products"]
+	pp._design["shape"] = "slim"
+	pp._design["finish"] = "titanium"
+	pp._design["color"] = "blue"
+	pp._toggle_feature("nfc")
+	Game.changed.emit()
+	await _shot("studio_design")
+	pp._go(1)
+	await _shot("studio_hardware")
+	pp._go(2)
+	await _shot("studio_system")
+	pp._go(3)
+	await _shot("studio_production")
+	c.start_os_dev("Aurora OS")
+	for i in 60:
+		Game.advance_day()
+	screen._show_page("ops")
+	Game.changed.emit()
+	await _shot("ops")
+	c.reputation = 50.0
+	c.sign_deal("retail")
+	for i in 70:
+		Game.advance_day()
+	screen._show_page("finance")
+	Game.changed.emit()
+	await _shot("finance")
+	screen._show_page("stocks")
+	c.stocks.buy(c, "Nova Corp", 500)
+	Game.changed.emit()
+	await _shot("stocks")
 	# vitrine: cada categoria em dois níveis de especificação/acabamento
 	screen.queue_free()
 	var show := Control.new()

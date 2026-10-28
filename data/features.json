@@ -1,0 +1,170 @@
+{
+ "phone": [
+  {
+   "id": "nfc",
+   "name": "NFC",
+   "q": 0.015,
+   "cost": 1.03,
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "aod",
+   "name": "Tela sempre ativa",
+   "q": 0.015,
+   "cost": 1.03,
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "wireless",
+   "name": "Carregamento sem fio",
+   "q": 0.02,
+   "cost": 1.05,
+   "req": "res_features",
+   "lvl": 1
+  },
+  {
+   "id": "face",
+   "name": "Biometria facial",
+   "q": 0.025,
+   "cost": 1.05,
+   "req": "res_features",
+   "lvl": 2
+  },
+  {
+   "id": "5g",
+   "name": "Rede 5G",
+   "q": 0.04,
+   "cost": 1.1,
+   "req": "res_features",
+   "lvl": 3
+  }
+ ],
+ "watch": [
+  {
+   "id": "nfc",
+   "name": "NFC (pagamentos)",
+   "q": 0.015,
+   "cost": 1.03,
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "gps",
+   "name": "GPS",
+   "q": 0.02,
+   "cost": 1.04,
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "aod",
+   "name": "Tela sempre ativa",
+   "q": 0.015,
+   "cost": 1.03,
+   "req": "res_features",
+   "lvl": 1
+  },
+  {
+   "id": "ecg",
+   "name": "ECG",
+   "q": 0.03,
+   "cost": 1.06,
+   "req": "res_features",
+   "lvl": 2
+  },
+  {
+   "id": "lte",
+   "name": "eSIM LTE",
+   "q": 0.03,
+   "cost": 1.08,
+   "req": "res_features",
+   "lvl": 3
+  }
+ ],
+ "laptop": [
+  {
+   "id": "backlit",
+   "name": "Teclado iluminado",
+   "q": 0.01,
+   "cost": 1.02,
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "fprint",
+   "name": "Leitor biométrico",
+   "q": 0.015,
+   "cost": 1.03,
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "touch",
+   "name": "Tela touch",
+   "q": 0.02,
+   "cost": 1.06,
+   "req": "res_features",
+   "lvl": 1
+  },
+  {
+   "id": "fastio",
+   "name": "Portas de alta velocidade",
+   "q": 0.025,
+   "cost": 1.05,
+   "req": "res_features",
+   "lvl": 2
+  },
+  {
+   "id": "gpu",
+   "name": "GPU dedicada",
+   "q": 0.05,
+   "cost": 1.15,
+   "req": "res_features",
+   "lvl": 3
+  }
+ ],
+ "console": [
+  {
+   "id": "haptic",
+   "name": "Controle háptico",
+   "q": 0.02,
+   "cost": 1.04,
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "4k",
+   "name": "Saída 4K",
+   "q": 0.03,
+   "cost": 1.06,
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "ssd",
+   "name": "SSD ultrarrápido",
+   "q": 0.03,
+   "cost": 1.06,
+   "req": "res_features",
+   "lvl": 1
+  },
+  {
+   "id": "vr",
+   "name": "Suporte a VR",
+   "q": 0.04,
+   "cost": 1.1,
+   "req": "res_features",
+   "lvl": 2
+  },
+  {
+   "id": "stream",
+   "name": "Streaming em nuvem",
+   "q": 0.03,
+   "cost": 1.05,
+   "req": "res_features",
+   "lvl": 3
+  }
+ ]
+}

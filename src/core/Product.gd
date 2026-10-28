@@ -23,6 +23,9 @@ var cost_total: float = 0.0     # custo de produção acumulado
 var dev_cost: float = 0.0
 var units_carry: float = 0.0
 var ema_units: float = 0.0      # média móvel de unidades por dia
+var design: Dictionary = {}     # {shape, finish, color}
+var os_id: String = "droidix"   # sistema operacional ("own" = sistema próprio)
+var mfr: String = "fabrix"      # fabricante ("own" = fábrica própria)
 
 func progress() -> float:
 	return clampf(work_done / maxf(work_required, 1.0), 0.0, 1.0)
@@ -34,7 +37,8 @@ func to_dict() -> Dictionary:
 	return {"id": id, "name": pname, "cat": category, "specs": specs, "price": price, "unit_cost": unit_cost,
 		"work_req": work_required, "work_done": work_done, "state": state, "quality": quality,
 		"release": release_day, "units": units_total, "revenue": revenue_total, "cost": cost_total,
-		"dev_cost": dev_cost, "carry": units_carry, "ema": ema_units}
+		"dev_cost": dev_cost, "carry": units_carry, "ema": ema_units,
+		"design": design, "os": os_id, "mfr": mfr}
 
 static func from_dict(d: Dictionary) -> Product:
 	var p := Product.new()
@@ -57,4 +61,7 @@ static func from_dict(d: Dictionary) -> Product:
 	p.dev_cost = float(d.get("dev_cost", 0.0))
 	p.units_carry = float(d.get("carry", 0.0))
 	p.ema_units = float(d.get("ema", 0.0))
+	p.design = d.get("design", {}).duplicate()
+	p.os_id = str(d.get("os", "droidix"))
+	p.mfr = str(d.get("mfr", "fabrix"))
 	return p

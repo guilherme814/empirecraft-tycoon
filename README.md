@@ -40,3 +40,13 @@ tests/           testes da simulação, bot de balanceamento, teste de UI, gerad
 
 ## Instalação
 Veja [docs/INSTALL.md](docs/INSTALL.md). APK: Releases → "Build mais recente".
+
+## Novidades da v0.3
+- **Estúdio de design** em 4 etapas (formato, acabamento, cor, medidas, hardware, recursos extras, sistema, fabricante) com 3D ao vivo.
+- **Pesquisas de design**: Novos Formatos, Materiais Premium, Recursos Avançados.
+- **Sistema operacional próprio** (nome, versões, foco, cor) ou licenciado (OpenX, Droidix, Lumen).
+- **Terceirização**: Fabrix, Meridian, Titan Foundry ou fábrica própria (níveis 1-3); defeitos e recalls.
+- **Acordos comerciais** (varejo, operadora, games, componentes, influenciadores).
+- **Finanças**: demonstrativo por categoria, impostos, empréstimos, patrimônio.
+- **Bolsa**: 5 concorrentes com valor de mercado, ações negociáveis e abertura de capital (IPO).
+- Correção: a rolagem não volta mais ao topo quando a página atualiza.

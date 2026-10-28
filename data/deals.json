@@ -1,0 +1,73 @@
+[
+ {
+  "id": "retail",
+  "name": "Rede Varejo Sul",
+  "desc": "Prateleira em lojas de todo o país.",
+  "cats": [],
+  "sales": 0.15,
+  "commission": 0.08,
+  "cost": 0.0,
+  "commit": 0,
+  "days": 180,
+  "rep": 15,
+  "fee": 8000
+ },
+ {
+  "id": "telecom",
+  "name": "Operadora TeleBrasil",
+  "desc": "Venda casada com planos: celulares e relógios.",
+  "cats": [
+   "phone",
+   "watch"
+  ],
+  "sales": 0.3,
+  "commission": 0.12,
+  "cost": 0.0,
+  "commit": 0,
+  "days": 240,
+  "rep": 30,
+  "fee": 20000
+ },
+ {
+  "id": "gamestore",
+  "name": "GameStore Global",
+  "desc": "Exclusividade em lojas de games e informática.",
+  "cats": [
+   "console",
+   "laptop"
+  ],
+  "sales": 0.35,
+  "commission": 0.15,
+  "cost": 0.0,
+  "commit": 0,
+  "days": 240,
+  "rep": 35,
+  "fee": 25000
+ },
+ {
+  "id": "silicio",
+  "name": "Contrato Silício S.A.",
+  "desc": "Chips em volume: -6% no custo de produção, mínimo mensal de compra.",
+  "cats": [],
+  "sales": 0.0,
+  "commission": 0.0,
+  "cost": 0.06,
+  "commit": 6000,
+  "days": 360,
+  "rep": 25,
+  "fee": 30000
+ },
+ {
+  "id": "influencers",
+  "name": "Campanha com influenciadores",
+  "desc": "Aumenta a procura por 60 dias.",
+  "cats": [],
+  "sales": 0.1,
+  "commission": 0.0,
+  "cost": 0.0,
+  "commit": 0,
+  "days": 60,
+  "rep": 0,
+  "fee": 15000
+ }
+]

@@ -59,13 +59,13 @@ func _place_camera(cat: String) -> void:
 	_cam.look_at(Vector3(0, 0, 0), Vector3.UP)
 
 ## quality_ratio = qualidade / expectativa do mercado (define o acabamento).
-func set_device(cat: String, specs: Dictionary, quality_ratio: float) -> void:
+func set_device(cat: String, specs: Dictionary, quality_ratio: float, design: Dictionary = {}) -> void:
 	var tier := DeviceModel.tier_for(quality_ratio)
-	var k := "%s|%s|%d" % [cat, str(specs), tier]
+	var k := "%s|%s|%d|%s" % [cat, str(specs), tier, str(design)]
 	if k == _key:
 		return
 	_key = k
-	_model.build(cat, specs, quality_ratio)
+	_model.build(cat, specs, quality_ratio, design)
 	_place_camera(cat)
 
 func _process(delta: float) -> void:

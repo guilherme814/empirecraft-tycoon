@@ -1,0 +1,49 @@
+{
+ "licensed": [
+  {
+   "id": "openx",
+   "name": "OpenX (livre)",
+   "q": 0.92,
+   "royalty": 0.0,
+   "desc": "Gratuito, qualidade e ecossistema modestos."
+  },
+  {
+   "id": "droidix",
+   "name": "Droidix",
+   "q": 0.97,
+   "royalty": 0.06,
+   "desc": "Popular e barato: 6% do custo base por unidade."
+  },
+  {
+   "id": "lumen",
+   "name": "Lumen OS",
+   "q": 1.05,
+   "royalty": 0.14,
+   "desc": "Premium e polido: 14% do custo base por unidade."
+  }
+ ],
+ "own": {
+  "name": "Sistema próprio",
+  "req": "res_os",
+  "base_q": 0.9,
+  "q_per_version": 0.05,
+  "max_version": 6,
+  "dev_money": [
+   60000,
+   90000,
+   140000,
+   200000,
+   300000,
+   450000
+  ],
+  "dev_work": [
+   500,
+   450,
+   600,
+   750,
+   900,
+   1100
+  ],
+  "eco_base": 4000
+ }
+}

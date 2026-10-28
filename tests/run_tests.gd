@@ -19,6 +19,7 @@ func _initialize() -> void:
 	test_save_roundtrip()
 	test_determinism()
 	test_bankruptcy()
+	test_v3_systems()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -179,3 +180,68 @@ func test_bankruptcy() -> void:
 	var day := c.day
 	c.advance_day()
 	check(c.day == day, "jogo encerrado não avança")
+
+func test_v3_systems() -> void:
+	var c := staffed(11)
+	c.money = 3000000.0
+	c.research_points = 5000.0
+	# design bloqueado até pesquisar
+	var d := c.default_design("phone")
+	d.shape = "fold"
+	check(not c.design_valid("phone", d), "formato dobrável bloqueado")
+	for id in ["res_tech", "res_tech", "res_design", "res_shapes", "res_shapes", "res_shapes", "res_features"]:
+		c.do_research(id)
+	check(c.design_valid("phone", d), "dobrável liberado após pesquisa")
+	var base_q := c.estimate_quality("phone", c.default_specs("phone"), c.default_design("phone"))
+	d.features = ["nfc"]
+	check(c.estimate_quality("phone", c.default_specs("phone"), d) > base_q, "design/recursos elevam a qualidade")
+	check(c.estimate_unit_cost("phone", c.default_specs("phone"), d) > c.estimate_unit_cost("phone", c.default_specs("phone")), "design custa mais")
+	# produto com SO e fabricante
+	var r := c.create_product("T1", "phone", c.default_specs("phone"), 0.0, d, "lumen", "meridian")
+	check(r.ok, "cria produto com design/SO/fabricante: " + str(r.get("msg", "")))
+	var p: Product = r.product
+	check(p.os_id == "lumen" and p.mfr == "meridian", "produto guarda SO e fabricante")
+	check(not c.create_product("X", "phone", c.default_specs("phone"), 0.0, {}, "own", "").ok, "SO próprio indisponível no início")
+	check(not c.create_product("X", "phone", c.default_specs("phone"), 0.0, {}, "", "titan").ok, "Titan exige reputação")
+	# SO próprio
+	for id in ["res_tech", "res_tech", "res_os"]:
+		c.do_research(id)
+	check(c.start_os_dev("Aurora OS").ok, "inicia SO próprio")
+	for i in 1500:
+		c.advance_day()
+		if int(c.own_os.get("version", 0)) >= 1:
+			break
+	check(int(c.own_os.get("version", 0)) >= 1 and c.os_available("own"), "SO próprio concluído")
+	# fábrica
+	c.do_research("res_cost")
+	c.do_research("res_cost")
+	c.do_research("res_factory")
+	check(c.build_factory().ok and c.factory_level == 1, "constrói fábrica")
+	check(c.mfr_available("own"), "fábrica própria disponível")
+	# bolsa e rivais
+	for i in 200:
+		c.advance_day()
+	check(c.market.rivals.size() == 5, "5 rivais")
+	for rv in c.market.rivals:
+		check(float(rv.price) > 0.0 and float(rv.value) > 0.0, "rival com preço/valor positivos")
+	check(c.stocks.value > 0.0, "valor da empresa calculado")
+	var m0 := c.money
+	check(c.stocks.buy(c, "Nova Corp", 100).ok and c.stocks.holding("Nova Corp") == 100, "compra ações")
+	check(c.money < m0, "compra custa dinheiro")
+	check(c.stocks.sell(c, "Nova Corp", 100).ok and c.stocks.holding("Nova Corp") == 0, "vende ações")
+	check(c.money < m0 + 1.0, "ida e volta nas ações perde taxas")
+	# acordos e empréstimo
+	c.reputation = 60.0
+	check(c.sign_deal("retail").ok and c.deal_sales_bonus("phone") > 0.0, "acordo comercial ativo")
+	check(not c.sign_deal("retail").ok, "acordo duplicado recusado")
+	var debt0 := c.loan
+	check(c.take_loan(10000.0).ok and c.loan == debt0 + 10000.0, "empréstimo")
+	check(c.repay_loan(10000.0).ok and c.loan == debt0, "quita empréstimo")
+	# save/load completo
+	var c2 := Company.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	check(c2 != null and c2.factory_level == 1 and int(c2.own_os.get("version", 0)) >= 1, "save mantém fábrica e SO")
+	check(c2.market.rivals.size() == 5 and c2.deal_active("retail"), "save mantém rivais e acordos")
+	check(c2.products[0].os_id == "lumen" and c2.products[0].design.get("shape", "") == "fold", "save mantém design do produto")
+	for i in 60:
+		c2.advance_day()
+	check(not c2.game_over, "jogo carregado segue funcionando")

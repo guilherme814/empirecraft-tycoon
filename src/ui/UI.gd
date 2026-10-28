@@ -129,3 +129,34 @@ static func kind_color(kind: String) -> Color:
 		"good": return Palette.GOOD
 		"bad": return Palette.BAD
 		_: return Palette.TEXT
+
+## Linha de ajuste "nome  [−]  valor  [+]" (estilo do estúdio de design).
+static func stepper(name: String, value_text: String, on_minus: Callable, on_plus: Callable,
+		can_minus: bool = true, can_plus: bool = true, name_w: int = 250) -> HBoxContainer:
+	var row := hbox(8)
+	var l := label(name, 26)
+	l.custom_minimum_size = Vector2(name_w, 0)
+	row.add_child(l)
+	var m := button("−", on_minus, "normal", 66, 76)
+	m.disabled = not can_minus
+	row.add_child(m)
+	var v := label(value_text, 28, Palette.ACCENT)
+	v.custom_minimum_size = Vector2(150, 0)
+	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	row.add_child(v)
+	var pl := button("+", on_plus, "normal", 66, 76)
+	pl.disabled = not can_plus
+	row.add_child(pl)
+	return row
+
+## Painel azul de planta técnica (referência visual do estúdio).
+static func blueprint(pad: int = 18) -> PanelContainer:
+	var p := PanelContainer.new()
+	var sb := Palette.box(Color("17315c"), 20, pad)
+	sb.border_color = Color("3b6fc4")
+	sb.set_border_width_all(2)
+	p.add_theme_stylebox_override("panel", sb)
+	return p
+
+static func hex(c: Color) -> String:
+	return c.to_html(false)

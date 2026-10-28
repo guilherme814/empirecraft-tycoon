@@ -6,6 +6,9 @@ const PAGE_DEFS := [
 	{"id": "team", "title": "Equipe", "icon": "nav_team", "script": "res://src/ui/pages/TeamPage.gd"},
 	{"id": "products", "title": "Produtos", "icon": "nav_products", "script": "res://src/ui/pages/ProductsPage.gd"},
 	{"id": "research", "title": "Pesquisa", "icon": "nav_research", "script": "res://src/ui/pages/ResearchPage.gd"},
+	{"id": "ops", "title": "Operações", "icon": "nav_ops", "script": "res://src/ui/pages/OperationsPage.gd"},
+	{"id": "finance", "title": "Finanças", "icon": "nav_finance", "script": "res://src/ui/pages/FinancePage.gd"},
+	{"id": "stocks", "title": "Bolsa", "icon": "nav_stocks", "script": "res://src/ui/pages/StocksPage.gd"},
 	{"id": "market", "title": "Mercado", "icon": "nav_market", "script": "res://src/ui/pages/MarketPage.gd"},
 ]
 const SPEED_ICONS := ["pause", "speed1", "speed2", "speed3", "speed4"]
@@ -106,10 +109,10 @@ func _build_nav() -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(260, 0)
 	panel.add_theme_stylebox_override("panel", Palette.box(Palette.PANEL_DEEP, 0, 14))
-	var v := UI.vbox(12)
+	var v := UI.vbox(8)
 	panel.add_child(v)
 	for d in PAGE_DEFS:
-		var b := UI.button(str(d.title), func(): _show_page(d.id), "normal", 96, 0, str(d.icon), "nav")
+		var b := UI.button(str(d.title), func(): _show_page(d.id), "normal", 84, 0, str(d.icon), "nav")
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_nav[d.id] = b
 		v.add_child(b)

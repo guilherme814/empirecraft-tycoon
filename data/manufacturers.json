@@ -1,0 +1,62 @@
+{
+ "own_factory": {
+  "cost": [
+   1.0,
+   0.88,
+   0.78
+  ],
+  "q": [
+   1.0,
+   1.0,
+   1.02
+  ],
+  "risk": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "build": [
+   60000,
+   200000,
+   600000
+  ],
+  "upkeep": [
+   4000,
+   12000,
+   30000
+  ],
+  "req": "res_factory"
+ },
+ "contractors": [
+  {
+   "id": "fabrix",
+   "name": "Fabrix Montadora",
+   "cost": 1.1,
+   "q": 0.95,
+   "risk": 0.04,
+   "fee": 0,
+   "rep": 0,
+   "desc": "Barata de começar, qualidade irregular."
+  },
+  {
+   "id": "meridian",
+   "name": "Meridian Industrial",
+   "cost": 1.03,
+   "q": 1.0,
+   "risk": 0.015,
+   "fee": 5000,
+   "rep": 20,
+   "desc": "Equilibrada e confiável."
+  },
+  {
+   "id": "titan",
+   "name": "Titan Foundry",
+   "cost": 0.93,
+   "q": 1.03,
+   "risk": 0.01,
+   "fee": 15000,
+   "rep": 45,
+   "desc": "Escala enorme e custo baixo; exige reputação."
+  }
+ ]
+}

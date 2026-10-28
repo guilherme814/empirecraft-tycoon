@@ -62,6 +62,11 @@ svg("nav_products", '<path d="M32 6l24 12v28L32 58 8 46V18z"/><path d="M8 18l24 
 svg("nav_research", '<path d="M25 6h14"/><path d="M28 6v18L11 52q-3 7 4 7h34q7 0 4-7L36 24V6"/><path d="M19 42h26"/>')
 svg("nav_market", '<path d="M8 8v48h48"/><rect x="16" y="32" width="8" height="18" rx="2"/><rect x="30" y="22" width="8" height="28" rx="2"/><rect x="44" y="12" width="8" height="38" rx="2"/>')
 
+# ── v0.3: operações, finanças, bolsa ──
+svg("nav_ops", '<path d="M6 54V28l14 8V28l14 8V20h8V8h10v46z"/><path d="M6 54h52"/><path d="M42 36v8M50 36v8"/>')
+svg("nav_finance", '<rect x="10" y="8" width="44" height="48" rx="6"/><path d="M20 22h24M20 32h24M20 42h14"/>')
+svg("nav_stocks", '<path d="M8 8v48h48"/><path d="M16 20v22M32 12v26M48 24v22"/><rect x="12" y="26" width="8" height="10" rx="1"/><rect x="28" y="18" width="8" height="14" rx="1"/><rect x="44" y="30" width="8" height="10" rx="1"/>')
+
 # ── velocidade ──
 solid("pause", '<rect x="16" y="12" width="12" height="40" rx="3"/><rect x="36" y="12" width="12" height="40" rx="3"/>')
 def chevrons(n):

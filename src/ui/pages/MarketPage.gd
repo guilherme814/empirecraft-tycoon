@@ -11,7 +11,7 @@ func build() -> void:
 	sc.add_child(_body)
 
 func signature() -> String:
-	return str(company.day)
+	return str(company.day / 7)
 
 func rebuild() -> void:
 	UI.clear(_body)

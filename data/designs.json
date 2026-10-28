@@ -1,0 +1,210 @@
+{
+ "finishes": [
+  {
+   "id": "plastic",
+   "name": "Plástico",
+   "q": -0.03,
+   "cost": 0.93,
+   "req": "",
+   "lvl": 0,
+   "metal": 0.05,
+   "rough": 0.7
+  },
+  {
+   "id": "alu",
+   "name": "Alumínio",
+   "q": 0.0,
+   "cost": 1.0,
+   "req": "",
+   "lvl": 0,
+   "metal": 0.85,
+   "rough": 0.35
+  },
+  {
+   "id": "glass",
+   "name": "Vidro",
+   "q": 0.04,
+   "cost": 1.08,
+   "req": "res_finish",
+   "lvl": 1,
+   "metal": 0.2,
+   "rough": 0.08
+  },
+  {
+   "id": "titanium",
+   "name": "Titânio",
+   "q": 0.07,
+   "cost": 1.18,
+   "req": "res_finish",
+   "lvl": 2,
+   "metal": 1.0,
+   "rough": 0.28
+  },
+  {
+   "id": "ceramic",
+   "name": "Cerâmica",
+   "q": 0.1,
+   "cost": 1.3,
+   "req": "res_finish",
+   "lvl": 3,
+   "metal": 0.1,
+   "rough": 0.15
+  }
+ ],
+ "shapes": {
+  "phone": [
+   {
+    "id": "classic",
+    "name": "Clássico",
+    "q": 0.0,
+    "cost": 1.0,
+    "req": "",
+    "lvl": 0
+   },
+   {
+    "id": "slim",
+    "name": "Ultrafino",
+    "q": 0.03,
+    "cost": 1.05,
+    "req": "res_shapes",
+    "lvl": 1
+   },
+   {
+    "id": "edge",
+    "name": "Tela infinita",
+    "q": 0.05,
+    "cost": 1.1,
+    "req": "res_shapes",
+    "lvl": 2
+   },
+   {
+    "id": "fold",
+    "name": "Dobrável",
+    "q": 0.1,
+    "cost": 1.35,
+    "req": "res_shapes",
+    "lvl": 3
+   }
+  ],
+  "watch": [
+   {
+    "id": "square",
+    "name": "Quadrado",
+    "q": 0.0,
+    "cost": 1.0,
+    "req": "",
+    "lvl": 0
+   },
+   {
+    "id": "round",
+    "name": "Redondo",
+    "q": 0.03,
+    "cost": 1.05,
+    "req": "res_shapes",
+    "lvl": 1
+   },
+   {
+    "id": "sport",
+    "name": "Esportivo",
+    "q": 0.05,
+    "cost": 1.1,
+    "req": "res_shapes",
+    "lvl": 2
+   }
+  ],
+  "laptop": [
+   {
+    "id": "classic",
+    "name": "Clássico",
+    "q": 0.0,
+    "cost": 1.0,
+    "req": "",
+    "lvl": 0
+   },
+   {
+    "id": "thin",
+    "name": "Ultrafino",
+    "q": 0.04,
+    "cost": 1.08,
+    "req": "res_shapes",
+    "lvl": 1
+   },
+   {
+    "id": "convert",
+    "name": "Conversível",
+    "q": 0.07,
+    "cost": 1.18,
+    "req": "res_shapes",
+    "lvl": 2
+   }
+  ],
+  "console": [
+   {
+    "id": "classic",
+    "name": "Clássico",
+    "q": 0.0,
+    "cost": 1.0,
+    "req": "",
+    "lvl": 0
+   },
+   {
+    "id": "compact",
+    "name": "Compacto",
+    "q": 0.03,
+    "cost": 1.05,
+    "req": "res_shapes",
+    "lvl": 1
+   },
+   {
+    "id": "tower",
+    "name": "Torre",
+    "q": 0.06,
+    "cost": 1.15,
+    "req": "res_shapes",
+    "lvl": 2
+   }
+  ]
+ },
+ "colors": [
+  {
+   "id": "graphite",
+   "name": "Grafite",
+   "hex": "3a3f4b"
+  },
+  {
+   "id": "silver",
+   "name": "Prata",
+   "hex": "cfd4de"
+  },
+  {
+   "id": "gold",
+   "name": "Dourado",
+   "hex": "d9b25a"
+  },
+  {
+   "id": "blue",
+   "name": "Azul",
+   "hex": "3f6fc4"
+  },
+  {
+   "id": "red",
+   "name": "Vermelho",
+   "hex": "c8404a"
+  },
+  {
+   "id": "green",
+   "name": "Verde",
+   "hex": "3f9b73"
+  },
+  {
+   "id": "white",
+   "name": "Branco",
+   "hex": "eef0f4"
+  },
+  {
+   "id": "purple",
+   "name": "Roxo",
+   "hex": "7b5cc4"
+  }
+ ]
+}

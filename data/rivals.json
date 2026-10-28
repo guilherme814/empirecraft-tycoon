@@ -1,0 +1,29 @@
+{
+ "list": [
+  {
+   "name": "Nova Corp",
+   "aggr": 1.0,
+   "focus": "phone"
+  },
+  {
+   "name": "Helix Labs",
+   "aggr": 0.8,
+   "focus": "laptop"
+  },
+  {
+   "name": "Orbital",
+   "aggr": 1.2,
+   "focus": "console"
+  },
+  {
+   "name": "Kairo Systems",
+   "aggr": 0.9,
+   "focus": "watch"
+  },
+  {
+   "name": "Zenite",
+   "aggr": 1.1,
+   "focus": "phone"
+  }
+ ]
+}

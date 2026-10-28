@@ -12,6 +12,8 @@ const ACCENT := Color("ff9a2e")
 const APP_COLORS := [Color("ff9a2e"), Color("4cd18a"), Color("5aa9ff"), Color("ff5d6c"), Color("c792ea")]
 
 var _tier: int = 1
+var _design: Dictionary = {}
+var _cat: String = "phone"
 
 ## Distância de câmera sugerida para enquadrar cada categoria.
 static func camera_distance(cat: String) -> float:
@@ -28,7 +30,11 @@ static func tier_for(ratio: float) -> int:
 	if ratio < 2.0: return 3
 	return 4
 
-func build(cat: String, specs: Dictionary, quality_ratio: float) -> void:
+func build(cat: String, specs: Dictionary, quality_ratio: float, design: Dictionary = {}) -> void:
+	_design = design
+	_cat = cat
+	scale = Vector3.ONE
+	rotation_degrees = Vector3.ZERO
 	for ch in get_children():
 		remove_child(ch)
 		ch.queue_free()
@@ -44,12 +50,45 @@ func build(cat: String, specs: Dictionary, quality_ratio: float) -> void:
 func _f(s: Dictionary, axis: String) -> float:
 	return clampf(float(s.get(axis, 40)) / 100.0, 0.0, 1.0)
 
+## Fator de medida (1-9 -> 0.80-1.20).
+func _dm(key: String) -> float:
+	return 0.8 + 0.05 * (float(_design.get(key, 5)) - 1.0)
+
+func _shape() -> String:
+	return str(_design.get("shape", "classic"))
+
+func _color_of(id: String, fallback: Color) -> Color:
+	for c in GameData.designs().colors:
+		if c.id == id:
+			return Color(str(c.hex))
+	return fallback
+
 func _body_mat() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
-	m.albedo_color = TIER_COLORS[_tier]
-	m.metallic = TIER_METAL[_tier]
-	m.roughness = TIER_ROUGH[_tier]
+	if _design.is_empty():
+		m.albedo_color = TIER_COLORS[_tier]
+		m.metallic = TIER_METAL[_tier]
+		m.roughness = TIER_ROUGH[_tier]
+		return m
+	var metal := 0.5
+	var rough := 0.4
+	for f in GameData.designs().finishes:
+		if f.id == str(_design.get("finish", "alu")):
+			metal = float(f.metal)
+			rough = float(f.rough)
+	m.albedo_color = _color_of(str(_design.get("color", "graphite")), TIER_COLORS[_tier])
+	m.metallic = metal
+	m.roughness = rough
 	return m
+
+func _corner(base: float) -> float:
+	return base * (0.45 + 0.11 * float(_design.get("corner", 5)))
+
+## Pontinhos verdes no verso: um por recurso extra escolhido.
+func _feature_dots(parent: Node3D, pos: Vector3, rot: Vector3 = Vector3.ZERO) -> void:
+	var feats: Array = _design.get("features", [])
+	for i in feats.size():
+		_add(parent, _cyl(0.022, 0.01, 10), _glow_mat(Color("4cd18a"), 1.4), pos + Vector3(float(i) * 0.06, 0, 0), rot)
 
 func _dark_mat(rough: float = 0.35) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -67,7 +106,10 @@ func _glow_mat(color: Color, energy: float) -> StandardMaterial3D:
 	return m
 
 func _screen_mat(display: float) -> StandardMaterial3D:
-	return _glow_mat(Color(0.12, 0.30, 0.62).lerp(Color(0.25, 0.55, 1.0), display), 0.55 + 0.5 * display)
+	var base := Color(0.12, 0.30, 0.62).lerp(Color(0.25, 0.55, 1.0), display)
+	if _design.has("accent"):
+		base = Color(str(_design.accent)).darkened(0.25).lerp(Color(str(_design.accent)), display)
+	return _glow_mat(base, 0.55 + 0.5 * display)
 
 func _add(parent: Node3D, mesh: Mesh, mat: Material, pos: Vector3 = Vector3.ZERO,
 		rot_deg: Vector3 = Vector3.ZERO) -> MeshInstance3D:
@@ -96,14 +138,21 @@ func _cyl(radius: float, height: float, segs: int = 20) -> CylinderMesh:
 # ───────── smartphone ─────────
 
 func _phone(s: Dictionary) -> void:
-	var w := 0.74
-	var h := 1.5
-	var t: float = lerpf(0.07, 0.13, _f(s, "battery"))
-	_add(self, RoundedSlab.build(w, h, t, 0.11, 0.014), _body_mat())
-	var bezel: float = lerpf(0.07, 0.022, _f(s, "display"))
+	var w := 0.74 * _dm("w")
+	var h := 1.5 * _dm("h")
+	var t: float = lerpf(0.07, 0.13, _f(s, "battery")) * _dm("d")
+	var shape := _shape()
+	if shape == "slim":
+		t *= 0.7
+	var rad := _corner(0.11) + (0.03 if shape == "edge" else 0.0)
+	var phone_body := _add(self, RoundedSlab.build(w, h, t, rad, 0.014), _body_mat())
+	var bezel: float = lerpf(0.07, 0.022, _f(s, "display")) * (0.45 if shape == "edge" else 1.0)
 	var sw := w - bezel * 2.0
 	var sh := h - bezel * 2.4
 	var z := t * 0.5 + 0.003
+	if shape == "fold":
+		_add(self, _box(Vector3(w * 0.98, 0.012, t + 0.02)), _dark_mat(0.5), Vector3(0, 0, 0))
+		_add(self, _box(Vector3(sw, 0.01, 0.01)), _dark_mat(0.8), Vector3(0, 0, z + 0.008))
 	_add(self, RoundedSlab.build(sw, sh, 0.006, maxf(0.025, 0.095 - bezel * 0.6), 0.002), _screen_mat(_f(s, "display")), Vector3(0, 0, z))
 	# "aplicativos" na tela
 	var icon_size := sw * 0.17
@@ -134,23 +183,33 @@ func _phone(s: Dictionary) -> void:
 	# faixa de desempenho (brilho)
 	_add(self, RoundedSlab.build(0.34, 0.03, 0.004, 0.012, 0.001, 3), _glow_mat(ACCENT, 0.4 + 2.2 * _f(s, "performance")),
 		Vector3(0, -0.35, -t * 0.5 - 0.003))
+	_feature_dots(self, Vector3(-0.15, -0.55, -t * 0.5 - 0.006), Vector3(90, 0, 0))
 
 # ───────── smartwatch ─────────
 
 func _watch(s: Dictionary) -> void:
-	var t: float = lerpf(0.20, 0.32, _f(s, "battery"))
+	var shape := _shape()
+	var t: float = lerpf(0.20, 0.32, _f(s, "battery")) * _dm("d") * (1.3 if shape == "sport" else 1.0)
 	var design := _f(s, "design")
+	var cw := 0.82 * _dm("w")
+	var ch := 0.98 * _dm("h")
+	var srad := 0.49 * minf(cw, ch) if shape == "round" else _corner(0.27)
+	var strap_w := 0.58 * (0.7 + 0.06 * float(_design.get("strap", 5)))
 	var strap_col := Color("2a2f3d").lerp(ACCENT, design)
+	if not _design.is_empty():
+		strap_col = _color_of(str(_design.get("color", "graphite")), strap_col).darkened(0.25)
+	if shape == "sport":
+		strap_col = ACCENT
 	var strap := _glow_mat(strap_col, 0.0)
 	strap.emission_enabled = false
 	strap.albedo_color = strap_col
 	strap.roughness = 0.7
 	for sgn in [1.0, -1.0]:
-		var piece := _add(self, RoundedSlab.build(0.58, 0.85, 0.05, 0.05, 0.008), strap, Vector3(0, sgn * 0.78, -0.02))
+		var piece := _add(self, RoundedSlab.build(strap_w, 0.85, 0.05, 0.05, 0.008), strap, Vector3(0, sgn * 0.78, -0.02))
 		piece.rotation_degrees = Vector3(-sgn * 12.0, 0, 0)
-	_add(self, RoundedSlab.build(0.82, 0.98, t, 0.27, 0.02, 7), _body_mat())
+	_add(self, RoundedSlab.build(cw, ch, t, srad, 0.02, 7), _body_mat())
 	var bezel: float = lerpf(0.09, 0.03, _f(s, "display"))
-	_add(self, RoundedSlab.build(0.82 - bezel * 2.0, 0.98 - bezel * 2.0, 0.006, 0.22, 0.002, 6), _screen_mat(_f(s, "display")),
+	_add(self, RoundedSlab.build(cw - bezel * 2.0, ch - bezel * 2.0, 0.006, maxf(0.05, srad - bezel * 0.8), 0.002, 6), _screen_mat(_f(s, "display")),
 		Vector3(0, 0, t * 0.5 + 0.003))
 	# mostrador: anel de atividade
 	var ring := TorusMesh.new()
@@ -167,18 +226,20 @@ func _watch(s: Dictionary) -> void:
 		var ang := TAU * float(i) / float(maxi(sensors, 2)) + 0.4
 		_add(self, _cyl(0.06, 0.02), _glow_mat(Color("4cd18a"), 1.3),
 			Vector3(cos(ang) * 0.18, sin(ang) * 0.18, -t * 0.5 - 0.012), Vector3(90, 0, 0))
+	_feature_dots(self, Vector3(-0.2, -0.36, -t * 0.5 - 0.02), Vector3(90, 0, 0))
 
 # ───────── notebook ─────────
 
 func _laptop(s: Dictionary) -> void:
-	var w := 1.7
-	var d := 1.15
-	var t: float = lerpf(0.06, 0.12, _f(s, "battery"))
+	var w := 1.7 * _dm("w")
+	var d := 1.15 * _dm("h")
+	var shape := _shape()
+	var t: float = lerpf(0.06, 0.12, _f(s, "battery")) * _dm("d") * (0.6 if shape == "thin" else 1.0)
 	var flat := Node3D.new()
 	flat.rotation_degrees = Vector3(-90, 0, 0)
 	flat.position = Vector3(0, -0.45, 0)
 	add_child(flat)
-	_add(flat, RoundedSlab.build(w, d, t, 0.07, 0.01), _body_mat())
+	_add(flat, RoundedSlab.build(w, d, t, _corner(0.07), 0.01), _body_mat())
 	var top := -0.45 + t * 0.5
 	# teclado
 	var keys := MultiMesh.new()
@@ -207,7 +268,7 @@ func _laptop(s: Dictionary) -> void:
 	# tampa
 	var hinge := Node3D.new()
 	hinge.position = Vector3(0, top, -d * 0.5 + 0.02)
-	hinge.rotation_degrees = Vector3(-14, 0, 0)
+	hinge.rotation_degrees = Vector3(-62 if shape == "convert" else -14, 0, 0)
 	add_child(hinge)
 	var lid_h := 1.1
 	_add(hinge, RoundedSlab.build(w, lid_h, 0.05, 0.07, 0.008), _body_mat(), Vector3(0, lid_h * 0.5, 0))
@@ -219,17 +280,24 @@ func _laptop(s: Dictionary) -> void:
 			Vector3(-0.35 + float(i) * 0.35, lid_h * 0.5 + 0.1, 0.034))
 	# logo (Desempenho)
 	_add(hinge, _cyl(0.11, 0.008, 24), _glow_mat(ACCENT, 0.4 + 2.2 * _f(s, "performance")), Vector3(0, lid_h * 0.5, -0.03), Vector3(90, 0, 0))
+	_feature_dots(hinge, Vector3(-0.3, lid_h * 0.5 - 0.25, -0.034), Vector3(90, 0, 0))
 
 # ───────── console ─────────
 
 func _console(s: Dictionary) -> void:
-	var w := 1.7
-	var d := 1.05
-	var ht: float = lerpf(0.22, 0.40, _f(s, "thermal"))
+	var w := 1.7 * _dm("w")
+	var d := 1.05 * _dm("h")
+	var shape := _shape()
+	var ht: float = lerpf(0.22, 0.40, _f(s, "thermal")) * _dm("d")
+	if shape == "compact":
+		scale = Vector3.ONE * 0.8
+	elif shape == "tower":
+		rotation_degrees = Vector3(0, 0, 90)
+		scale = Vector3.ONE * 0.9
 	var flat := Node3D.new()
 	flat.rotation_degrees = Vector3(-90, 0, 0)
 	add_child(flat)
-	_add(flat, RoundedSlab.build(w, d, ht, 0.14, 0.02, 8), _body_mat())
+	_add(flat, RoundedSlab.build(w, d, ht, _corner(0.14), 0.02, 8), _body_mat())
 	var top := ht * 0.5
 	# aberturas de ventilação
 	var slits: int = 4 + int(_f(s, "thermal") * 7.0)
@@ -254,3 +322,4 @@ func _console(s: Dictionary) -> void:
 	var bays: int = 1 + int(_f(s, "storage") * 2.99)
 	for i in bays:
 		_add(self, _box(Vector3(0.1, 0.03, 0.012)), _glow_mat(Color("4cd18a"), 0.9), Vector3(-0.72 + float(i) * 0.14, -ht * 0.12, d * 0.5 + 0.002))
+	_feature_dots(self, Vector3(-0.6, top + 0.01, 0.35))

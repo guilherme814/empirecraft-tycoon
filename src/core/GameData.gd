@@ -61,3 +61,21 @@ static func research_item(id: String) -> Dictionary:
 		if r.id == id:
 			return r
 	return {}
+
+static func rivals() -> Array:
+	return _load("rivals").list
+
+static func designs() -> Dictionary:
+	return _load("designs")
+
+static func os_data() -> Dictionary:
+	return _load("os")
+
+static func manufacturers() -> Dictionary:
+	return _load("manufacturers")
+
+static func features(cat_id: String) -> Array:
+	return _load("features").get(cat_id, [])
+
+static func deals() -> Array:
+	return _load("deals")

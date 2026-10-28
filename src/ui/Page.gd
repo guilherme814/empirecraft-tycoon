@@ -37,7 +37,12 @@ func refresh() -> void:
 	var s := signature()
 	if s != _last_sig:
 		_last_sig = s
+		# reconstruir esvazia o conteúdo e jogaria a rolagem para o topo: guarda e devolve a posição
+		var saved := {}
+		for sc in _scrolls(self):
+			saved[sc] = sc.scroll_vertical
 		rebuild()
+		_restore_scrolls(saved)
 	live()
 
 ## Resultado de uma ação do jogador: avisa erros e atualiza a tela.
@@ -49,3 +54,21 @@ func act(res: Dictionary) -> void:
 		Game.notice.emit(str(res.msg), "good")
 	_last_sig = "\u0001"
 	Game.changed.emit()
+
+func _scrolls(n: Node) -> Array:
+	var out: Array = []
+	for ch in n.get_children():
+		if ch is ScrollContainer:
+			out.append(ch)
+		out.append_array(_scrolls(ch))
+	return out
+
+func _restore_scrolls(saved: Dictionary) -> void:
+	for sc in saved:
+		(sc as ScrollContainer).scroll_vertical = int(saved[sc])
+	# o novo conteúdo só ganha tamanho depois do layout: repete por dois quadros
+	for i in 2:
+		get_tree().process_frame.connect(func():
+			for sc in saved:
+				if is_instance_valid(sc):
+					(sc as ScrollContainer).scroll_vertical = int(saved[sc]), CONNECT_ONE_SHOT)

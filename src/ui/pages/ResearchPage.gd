@@ -2,6 +2,7 @@ extends Page
 ## Pesquisa: melhorias permanentes e desbloqueio de categorias.
 
 var _body: VBoxContainer
+var _rp_label: Label
 
 func build() -> void:
 	var sc := UI.scroll()
@@ -17,7 +18,6 @@ func signature() -> String:
 		var cost := c.research_cost(r)
 		parts.append("%s:%d:%d" % [r.id, c.research_level(r.id),
 			1 if (c.research_blocker(r) == "" and c.research_points >= float(cost.rp) and c.money >= float(cost.money)) else 0])
-	parts.append(int(c.research_points / 25.0))   # atualiza o saldo de vez em quando
 	return str(parts)
 
 func rebuild() -> void:
@@ -28,7 +28,8 @@ func rebuild() -> void:
 	var th := UI.hbox(14)
 	top.add_child(th)
 	th.add_child(UI.icon("flask", 40, Palette.ACCENT))
-	th.add_child(UI.label("Pontos de pesquisa: %d" % int(c.research_points), 32, Palette.ACCENT))
+	_rp_label = UI.label("Pontos de pesquisa: %d" % int(c.research_points), 32, Palette.ACCENT)
+	th.add_child(_rp_label)
 	th.add_child(UI.label("+%.1f/dia" % c.research_per_day(), 26, Palette.MUTED))
 	th.add_child(UI.spacer())
 	th.add_child(UI.button("Pesquisar tudo (auto)", func(): act(c.research_all()), "primary", 76))
@@ -63,3 +64,7 @@ func rebuild() -> void:
 				func(): act(c.do_research(r.id)), "primary", 72)
 			b.disabled = c.research_points < float(cost.rp) or c.money < float(cost.money)
 			v.add_child(b)
+
+func live() -> void:
+	if _rp_label != null:
+		_rp_label.text = "Pontos de pesquisa: %d" % int(company.research_points)
