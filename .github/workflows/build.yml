@@ -1,3 +1,4 @@
+
 name: Build Android APK
 
 on:
@@ -29,20 +30,23 @@ jobs:
         with:
           packages: 'platforms;android-34 build-tools;34.0.0 platform-tools'
 
-      - name: Accept Android SDK licenses and ensure required packages
+      - name: Install Android SDK packages
         shell: bash
         run: |
           set -euo pipefail
           yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-34" "build-tools;34.0.0" "platform-tools" >/dev/null
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --install \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "platform-tools" >/dev/null
 
       - name: Verify Android tools
         shell: bash
         run: |
           set -euo pipefail
           java -version
-          test -x "$ANDROID_SDK_ROOT/platform-tools/adb" || { echo "::error::adb não encontrado"; exit 1; }
-          test -x "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" || { echo "::error::apksigner não encontrado"; exit 1; }
+          test -x "$ANDROID_SDK_ROOT/platform-tools/adb"
+          test -x "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner"
           "$ANDROID_SDK_ROOT/platform-tools/adb" version
           "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" version
 
@@ -51,16 +55,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$HOME/.android"
-          keytool -genkeypair -noprompt -keyalg RSA -keysize 2048 -validity 10000 \
+
+          keytool -genkeypair -noprompt \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
             -alias androiddebugkey \
             -keystore "$HOME/.android/debug.keystore" \
-            -storepass android -keypass android \
+            -storepass android \
+            -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" \
             -deststoretype PKCS12
+
           echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$HOME/.android/debug.keystore" >> "$GITHUB_ENV"
           echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey" >> "$GITHUB_ENV"
           echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android" >> "$GITHUB_ENV"
-          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PRIVATE_KEY_PASSWORD=android" >> "$GITHUB_ENV"
 
       - name: Download Godot 4.2.1
         shell: bash
@@ -78,13 +87,15 @@ jobs:
           mkdir -p "$HOME/.local/share/godot/export_templates/4.2.1.stable"
           mkdir -p /tmp/godot_templates
           unzip -q Godot_v4.2.1-stable_export_templates.tpz -d /tmp/godot_templates
-          cp -a /tmp/godot_templates/templates/. "$HOME/.local/share/godot/export_templates/4.2.1.stable/"
+          cp -a /tmp/godot_templates/templates/. \
+            "$HOME/.local/share/godot/export_templates/4.2.1.stable/"
 
       - name: Configure Godot editor settings
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$HOME/.config/godot"
+
           cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF_SETTINGS
           [gd_resource type="EditorSettings" format=3]
 
@@ -94,35 +105,124 @@ jobs:
           &"export/android/java_sdk_path": "$JAVA_HOME"
           }
           EOF_SETTINGS
-          echo "Godot Android SDK: $ANDROID_SDK_ROOT"
-          echo "Godot Java SDK: $JAVA_HOME"
 
-      - name: Validate Godot project and Android preset
+      - name: Configure Android signing in export preset
         shell: bash
         run: |
           set -euo pipefail
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --verbose --path . --editor --quit 2>&1 | tee editor-check.log
-          test -f "$HOME/.android/debug.keystore" || { echo "::error::debug keystore not created"; exit 1; }
+
+          test -f "$GODOT_ANDROID_KEYSTORE_DEBUG_PATH" || {
+            echo "::error::Certificado de depuração não encontrado"
+            exit 1
+          }
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          path = Path("export_presets.cfg")
+          if not path.is_file():
+              raise SystemExit("::error::export_presets.cfg não encontrado")
+
+          content = path.read_text(encoding="utf-8")
+          replacements = {
+              "keystore/debug=":
+                  'keystore/debug="' +
+                  os.environ["GODOT_ANDROID_KEYSTORE_DEBUG_PATH"] + '"',
+              "keystore/debug_user=":
+                  'keystore/debug_user="' +
+                  os.environ["GODOT_ANDROID_KEYSTORE_DEBUG_USER"] + '"',
+              "keystore/debug_password=":
+                  'keystore/debug_password="' +
+                  os.environ["GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD"] + '"',
+          }
+
+          lines = content.splitlines()
+
+          for key, value in replacements.items():
+              matches = [
+                  i for i, line in enumerate(lines)
+                  if line.startswith(key)
+              ]
+              if len(matches) != 1:
+                  raise SystemExit(
+                      f"::error::Opção {key} ausente ou duplicada no preset"
+                  )
+              lines[matches[0]] = value
+
+          path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          print("Configuração de assinatura aplicada ao preset Android.")
+          PY
+
+          grep -E '^keystore/debug(_user|_password)?=' export_presets.cfg \
+            | sed -E 's/(debug_password=).*/\1[oculto]/'
+
+      - name: Validate Godot project
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./Godot_v4.2.1-stable_linux.x86_64 \
+            --headless --verbose --path . --editor --quit \
+            2>&1 | tee editor-check.log
 
       - name: Run project tests
         shell: bash
         run: |
-          set -o pipefail
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --path . --script tests/test_operating_system.gd 2>&1 | tee test.log
+          set -euo pipefail
+          ./Godot_v4.2.1-stable_linux.x86_64 \
+            --headless --path . \
+            --script tests/test_operating_system.gd \
+            2>&1 | tee test.log
 
       - name: Export APK
         shell: bash
-        
         run: |
           set -euo pipefail
-          mkdir -p build
+
+          test -n "${ANDROID_SDK_ROOT:-}" || {
+            echo "::error::ANDROID_SDK_ROOT não definido"
+            exit 1
+          }
+
+          test -n "${JAVA_HOME:-}" || {
+            echo "::error::JAVA_HOME não definido"
+            exit 1
+          }
+
+          test -f "$GODOT_ANDROID_KEYSTORE_DEBUG_PATH" || {
+            echo "::error::Certificado não encontrado"
+            exit 1
+          }
+
+          test -x "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" || {
+            echo "::error::apksigner não encontrado"
+            exit 1
+          }
+
           export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          mkdir -p build
+
+          set +e
           ./Godot_v4.2.1-stable_linux.x86_64 \
             --headless --verbose --path . \
             --export-debug "Android" build/EmpireCraftTycoon.apk \
             2>&1 | tee export.log
-          test -s build/EmpireCraftTycoon.apk || { echo "::error::APK não foi criado"; exit 1; }
-          "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" verify --verbose build/EmpireCraftTycoon.apk
+          export_status=${PIPESTATUS[0]}
+          set -e
+
+          if [ "$export_status" -ne 0 ]; then
+            echo "::error::Falha na exportação. Consulte export.log."
+            exit "$export_status"
+          fi
+
+          test -s build/EmpireCraftTycoon.apk || {
+            echo "::error::O APK não foi criado"
+            exit 1
+          }
+
+          "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" \
+            verify --verbose build/EmpireCraftTycoon.apk
+
           ls -lh build/EmpireCraftTycoon.apk
           sha256sum build/EmpireCraftTycoon.apk
 
