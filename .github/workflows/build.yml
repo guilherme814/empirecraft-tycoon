@@ -1,61 +1,78 @@
-name: Build and Publish APK
+
+name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-publish:
+  build-apk:
+    name: Export and upload Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           packages: 'platforms;android-34 build-tools;34.0.0 platform-tools'
 
-      - name: Download Godot
+      - name: Download Godot 4.2.1
+        shell: bash
         run: |
+          set -euo pipefail
           wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip
           unzip -q Godot_v4.2.1-stable_linux.x86_64.zip
           chmod +x Godot_v4.2.1-stable_linux.x86_64
 
-      - name: Download Export Templates
+      - name: Install Godot export templates
+        shell: bash
         run: |
+          set -euo pipefail
           wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
-          mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.2.1.stable"
+          mkdir -p /tmp/godot_templates
           unzip -q Godot_v4.2.1-stable_export_templates.tpz -d /tmp/godot_templates
-          mv /tmp/godot_templates/templates/* ~/.local/share/godot/export_templates/4.2.1.stable/
+          cp -a /tmp/godot_templates/templates/. "$HOME/.local/share/godot/export_templates/4.2.1.stable/"
 
-      - name: Validate Project
+      - name: Validate project
+        shell: bash
         run: |
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --check-only 2>&1 | tee validation.log
-          if grep -q "ERROR" validation.log; then
-            echo "Validação falhou! Corrija os erros antes de exportar."
-            cat validation.log
-            exit 1
-          fi
+          set -o pipefail
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless --path . --editor --quit 2>&1 | tee validation.log
 
-      - name: Run Tests
+      - name: Run project tests
+        shell: bash
         run: |
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --script tests/test_operating_system.gd 2>&1 | tee test.log
-          if grep -q "FAILED" test.log; then
-            echo "Testes falharam!"
-            exit 1
-          fi
+          set -o pipefail
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless --path . --script tests/test_operating_system.gd 2>&1 | tee test.log
 
       - name: Export APK
+        shell: bash
         run: |
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" game.apk 2>&1 | tee export.log
-          ls -la game.apk
+          set -euo pipefail
+          mkdir -p build
+          export ANDROID_HOME="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless --path . --export-release "Android" build/EmpireCraftTycoon.apk 2>&1 | tee export.log
+          if [[ ! -s build/EmpireCraftTycoon.apk ]]; then
+            echo "::error::APK was not created"
+            find . -maxdepth 4 -type f -iname '*.apk' -print
+            exit 1
+          fi
+          ls -lh build/EmpireCraftTycoon.apk
+          sha256sum build/EmpireCraftTycoon.apk
 
-      - name: Publish APK to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          publish_branch: gh-pages
-          keep_files: true
-          force_orphan: true
+          name: EmpireCraftTycoon-Android-APK
+          path: build/EmpireCraftTycoon.apk
+          if-no-files-found: error
+          retention-days: 30
