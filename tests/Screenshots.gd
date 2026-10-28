@@ -61,10 +61,12 @@ func _ready() -> void:
 	Game.changed.emit()
 	await _shot("studio_design")
 	pp._go(1)
-	await _shot("studio_hardware")
+	await _shot("studio_style")
 	pp._go(2)
-	await _shot("studio_system")
+	await _shot("studio_hardware")
 	pp._go(3)
+	await _shot("studio_system")
+	pp._go(4)
 	await _shot("studio_production")
 	c.start_os_dev("Aurora OS")
 	for i in 60:
@@ -104,7 +106,18 @@ func _ready() -> void:
 			var specs := {}
 			for a in cat.axes:
 				specs[a] = combo[0]
-			v.set_device(cat.id, specs, combo[1])
+			var des: Dictionary = {}
+			if combo[0] > 50:
+				des = c.default_design(cat.id)
+				des["color"] = ["blue", "gold", "red", "green"][GameData.categories().find(cat) % 4]
+				des["finish"] = "alu"
+				des["wall"] = ["sunset", "aurora", "neon", "ocean"][GameData.categories().find(cat) % 4]
+				des["cam"] = ["circle", "plate", "bar", "grid"][GameData.categories().find(cat) % 4]
+				des["brand_name"] = "Aurora"
+				des["features"] = [GameData.features(cat.id)[0].id, GameData.features(cat.id)[1].id]
+				des["band"] = "leather"
+				des["led"] = "purple"
+			v.set_device(cat.id, specs, combo[1], des)
 			v._yaw = 0.7
 	await _shot("3d_showcase")
 	get_tree().quit()

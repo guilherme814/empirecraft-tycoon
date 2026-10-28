@@ -79,3 +79,6 @@ static func features(cat_id: String) -> Array:
 
 static func deals() -> Array:
 	return _load("deals")
+
+static func reviews() -> Dictionary:
+	return _load("reviews")

@@ -1,0 +1,179 @@
+{
+ "outlets": [
+  "TechPulse",
+  "Gadget Hoje",
+  "Byte & Cia",
+  "Review do Zé",
+  "Canal Hardware"
+ ],
+ "axis_pos": {
+  "performance": [
+   "Roda tudo sem engasgar.",
+   "Desempenho de sobra, abre apps num piscar de olhos.",
+   "Muito rápido, nem esquenta."
+  ],
+  "battery": [
+   "A bateria dura o dia inteiro.",
+   "Autonomia excelente, carrego de dois em dois dias.",
+   "Bateria é o ponto forte."
+  ],
+  "display": [
+   "A tela é linda, cores vivas.",
+   "Tela nítida e muito brilhante.",
+   "Display impecável, ótimo para vídeos."
+  ],
+  "camera": [
+   "As fotos ficaram incríveis.",
+   "Câmera surpreende, até no escuro.",
+   "Ótimas fotos e vídeos estáveis."
+  ],
+  "thermal": [
+   "Mantém-se frio mesmo sob carga.",
+   "Refrigeração silenciosa e eficiente."
+  ],
+  "storage": [
+   "Muito espaço, não preciso apagar nada.",
+   "Armazenamento rápido e generoso."
+  ],
+  "sensors": [
+   "Sensores precisos, o monitoramento é confiável.",
+   "Rastreia atividades com muita precisão."
+  ],
+  "design": [
+   "O design chama atenção por onde passo.",
+   "Acabamento caprichado e elegante."
+  ],
+  "graphics": [
+   "Gráficos de cair o queixo.",
+   "Jogos rodam lindos e fluidos."
+  ],
+  "audio": [
+   "O som é cheio e limpo.",
+   "Áudio surpreendente para o tamanho."
+  ]
+ },
+ "axis_neg": {
+  "performance": [
+   "Trava em tarefas pesadas.",
+   "Desempenho fraco, demora para abrir apps."
+  ],
+  "battery": [
+   "A bateria não chega ao fim do dia.",
+   "Autonomia decepcionante."
+  ],
+  "display": [
+   "A tela é apagada e com muita moldura.",
+   "Display fraco sob o sol."
+  ],
+  "camera": [
+   "A câmera deixa a desejar, fotos borradas.",
+   "Fotos com ruído em qualquer luz."
+  ],
+  "thermal": [
+   "Esquenta demais depois de alguns minutos.",
+   "Ventoinha barulhenta e calor excessivo."
+  ],
+  "storage": [
+   "Armazenamento acaba rápido.",
+   "Pouco espaço, vivo apagando coisas."
+  ],
+  "sensors": [
+   "Os sensores erram bastante.",
+   "Monitoramento impreciso."
+  ],
+  "design": [
+   "O visual é sem graça.",
+   "Parece um produto genérico."
+  ],
+  "graphics": [
+   "Gráficos abaixo do esperado.",
+   "Jogos com quedas de quadros."
+  ],
+  "audio": [
+   "O som é abafado.",
+   "Áudio fraco, sem graves."
+  ]
+ },
+ "price_pos": [
+  "Preço justo pelo que entrega.",
+  "Ótimo custo-benefício.",
+  "Barato para essa qualidade."
+ ],
+ "price_neg": [
+  "Caro demais para o que oferece.",
+  "Não vale esse preço.",
+  "Por esse valor, esperava mais."
+ ],
+ "os_pos": [
+  "O sistema é fluido e bem pensado.",
+  "Sistema leve, com atualizações em dia."
+ ],
+ "os_neg": [
+  "O sistema é limitado e faltam apps.",
+  "Sistema pesado e cheio de bugs."
+ ],
+ "design_pos": [
+  "Adorei o acabamento premium.",
+  "A cor e o formato ficaram lindos."
+ ],
+ "fashion": [
+  "A cor da vez, todo mundo elogia!",
+  "Cor linda, bem na moda."
+ ],
+ "outdated": [
+  "Já está defasado perto dos concorrentes.",
+  "Falta evolução frente ao mercado."
+ ],
+ "defect": [
+  "Veio com defeito de fábrica.",
+  "Problemas de montagem, tive que trocar."
+ ],
+ "closers": {
+  "5": [
+   "Recomendo de olhos fechados!",
+   "Melhor compra do ano.",
+   "Nota 10."
+  ],
+  "4": [
+   "Muito bom, recomendo.",
+   "Vale a pena.",
+   "Quase perfeito."
+  ],
+  "3": [
+   "Cumpre o que promete, sem brilho.",
+   "Mediano, dá para o gasto."
+  ],
+  "2": [
+   "Não recomendo.",
+   "Esperava bem mais.",
+   "Decepção."
+  ],
+  "1": [
+   "Péssima experiência.",
+   "Quero meu dinheiro de volta.",
+   "Não comprem."
+  ]
+ },
+ "critic_heads": {
+  "90": [
+   "Um novo padrão para a categoria",
+   "Obra-prima de engenharia"
+  ],
+  "75": [
+   "Excelente, com poucas ressalvas",
+   "Concorrente forte ao topo"
+  ],
+  "60": [
+   "Bom, mas não revoluciona",
+   "Sólido, porém previsível"
+  ],
+  "40": [
+   "Fica atrás da concorrência",
+   "Promessas que não se cumprem"
+  ],
+  "0": [
+   "Evite",
+   "Um passo atrás"
+  ]
+ }
+}

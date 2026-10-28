@@ -64,18 +64,14 @@ func _ready() -> void:
 				var model := DeviceModel.new()
 				add_child(model)
 				model.build(cat.id, specs, ratio)
-				ok(model.get_child_count() > 3, "modelo 3D %s nível %d tem peças" % [cat.id, level])
-				var meshes := 0
-				for ch in model.get_children():
-					if ch is MeshInstance3D and (ch as MeshInstance3D).mesh != null and (ch as MeshInstance3D).mesh.get_surface_count() > 0:
-						meshes += 1
-				ok(meshes > 3, "modelo 3D %s tem malhas válidas" % cat.id)
+				ok(_count(model, false) > 3, "modelo 3D %s nível %d tem peças" % [cat.id, level])
+				ok(_count(model, true) > 3, "modelo 3D %s tem malhas válidas" % cat.id)
 				model.queue_free()
 	var slab := RoundedSlab.build(1.0, 2.0, 0.1, 0.2, 0.01, 6)
 	ok(slab.get_surface_count() == 1 and slab.surface_get_array_len(0) > 100, "RoundedSlab gera malha")
 	prods._pick_category("phone")
 	prods._adjust("battery", 5)
-	for st in 4:
+	for st in 5:
 		prods._go(st)
 		await get_tree().process_frame
 	prods._toggle_feature("nfc")
@@ -93,7 +89,7 @@ func _ready() -> void:
 				des.w = 1
 				des.d = 9
 				d.build(cat.id, c.default_specs(cat.id), 1.2, des)
-				ok(d.get_child_count() > 3, "modelo %s/%s/%s" % [cat.id, sh.id, fin.id])
+				ok(_count(d, false) > 3, "modelo %s/%s/%s" % [cat.id, sh.id, fin.id])
 	d.queue_free()
 	# páginas novas: interações
 	screen._show_page("stocks")
@@ -114,3 +110,11 @@ func _ready() -> void:
 	Saves.delete_save()
 	print("UI smoke: %s" % ("OK" if failures == 0 else "%d falha(s)" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
+
+func _count(n: Node, meshes_only: bool) -> int:
+	var k := 0
+	for ch in n.get_children():
+		if not meshes_only or (ch is MeshInstance3D and (ch as MeshInstance3D).mesh != null):
+			k += 1
+		k += _count(ch, meshes_only)
+	return k

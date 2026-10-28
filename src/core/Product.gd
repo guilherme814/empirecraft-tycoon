@@ -26,6 +26,12 @@ var ema_units: float = 0.0      # média móvel de unidades por dia
 var design: Dictionary = {}     # {shape, finish, color}
 var os_id: String = "droidix"   # sistema operacional ("own" = sistema próprio)
 var mfr: String = "fabrix"      # fabricante ("own" = fábrica própria)
+var rating: float = 0.0         # nota média dos clientes (1-5)
+var rating_n: int = 0
+var critic: float = 0.0         # média da crítica (0-100)
+var reviews: Array = []         # últimas avaliações
+var promise: float = 0.0        # vantagem prometida no lançamento (0, .10, .25, .40)
+var promise_gap: float = 0.0    # quanto da promessa não foi cumprida
 
 func progress() -> float:
 	return clampf(work_done / maxf(work_required, 1.0), 0.0, 1.0)
@@ -38,7 +44,8 @@ func to_dict() -> Dictionary:
 		"work_req": work_required, "work_done": work_done, "state": state, "quality": quality,
 		"release": release_day, "units": units_total, "revenue": revenue_total, "cost": cost_total,
 		"dev_cost": dev_cost, "carry": units_carry, "ema": ema_units,
-		"design": design, "os": os_id, "mfr": mfr}
+		"design": design, "os": os_id, "mfr": mfr,
+		"rating": rating, "rating_n": rating_n, "critic": critic, "reviews": reviews, "promise": promise, "gap": promise_gap}
 
 static func from_dict(d: Dictionary) -> Product:
 	var p := Product.new()
@@ -64,4 +71,10 @@ static func from_dict(d: Dictionary) -> Product:
 	p.design = d.get("design", {}).duplicate()
 	p.os_id = str(d.get("os", "droidix"))
 	p.mfr = str(d.get("mfr", "fabrix"))
+	p.rating = float(d.get("rating", 0.0))
+	p.rating_n = int(d.get("rating_n", 0))
+	p.critic = float(d.get("critic", 0.0))
+	p.reviews = d.get("reviews", []).duplicate(true)
+	p.promise = float(d.get("promise", 0.0))
+	p.promise_gap = float(d.get("gap", 0.0))
 	return p

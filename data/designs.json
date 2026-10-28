@@ -206,5 +206,97 @@
    "name": "Roxo",
    "hex": "7b5cc4"
   }
+ ],
+ "wallpapers": [
+  {
+   "id": "aurora",
+   "name": "Aurora",
+   "c1": "1b2a6b",
+   "c2": "2fd1b4"
+  },
+  {
+   "id": "sunset",
+   "name": "Pôr do sol",
+   "c1": "ff7a3d",
+   "c2": "7a2f8f"
+  },
+  {
+   "id": "mono",
+   "name": "Mono",
+   "c1": "1a1c22",
+   "c2": "5b6072"
+  },
+  {
+   "id": "neon",
+   "name": "Neon",
+   "c1": "ff2fa0",
+   "c2": "2f5bff"
+  },
+  {
+   "id": "forest",
+   "name": "Floresta",
+   "c1": "0f3d2a",
+   "c2": "7bd17a"
+  },
+  {
+   "id": "ocean",
+   "name": "Oceano",
+   "c1": "063a6b",
+   "c2": "5ec8ff"
+  }
+ ],
+ "camera_layouts": [
+  {
+   "id": "plate",
+   "name": "Placa"
+  },
+  {
+   "id": "circle",
+   "name": "Círculo"
+  },
+  {
+   "id": "bar",
+   "name": "Barra"
+  },
+  {
+   "id": "island",
+   "name": "Ilha"
+  },
+  {
+   "id": "grid",
+   "name": "Grade"
+  }
+ ],
+ "notches": [
+  {
+   "id": "punch",
+   "name": "Furo"
+  },
+  {
+   "id": "notch",
+   "name": "Entalhe"
+  },
+  {
+   "id": "island",
+   "name": "Ilha"
+  },
+  {
+   "id": "none",
+   "name": "Sem recorte"
+  }
+ ],
+ "bands": [
+  {
+   "id": "silicone",
+   "name": "Silicone"
+  },
+  {
+   "id": "leather",
+   "name": "Couro"
+  },
+  {
+   "id": "mesh",
+   "name": "Malha metálica"
+  }
  ]
 }

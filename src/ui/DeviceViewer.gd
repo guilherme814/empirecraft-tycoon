@@ -8,6 +8,7 @@ var _vp: SubViewport
 var _cam: Camera3D
 var _pivot: Node3D
 var _model: DeviceModel
+var _shadow: MeshInstance3D
 var _key: String = ""
 var _yaw: float = 0.55
 var _pitch: float = 0.16
@@ -27,9 +28,18 @@ func _ready() -> void:
 
 	var env := Environment.new()
 	env.background_mode = Environment.BG_CLEAR_COLOR
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.55, 0.6, 0.72)
-	env.ambient_light_energy = 0.8
+	var sky_mat := ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.32, 0.42, 0.68)
+	sky_mat.sky_horizon_color = Color(0.85, 0.88, 0.95)
+	sky_mat.ground_horizon_color = Color(0.5, 0.52, 0.6)
+	sky_mat.ground_bottom_color = Color(0.1, 0.1, 0.14)
+	sky_mat.sun_angle_max = 18.0
+	var sky := Sky.new()
+	sky.sky_material = sky_mat
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 0.9
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	_cam = Camera3D.new()
 	_cam.environment = env
 	_cam.fov = 32.0
@@ -46,6 +56,28 @@ func _ready() -> void:
 	rim.omni_range = 9.0
 	_vp.add_child(rim)
 
+	# sombra de contato (fixa; não gira com o aparelho)
+	_shadow = MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(2.6, 2.6)
+	_shadow.mesh = q
+	var sm := StandardMaterial3D.new()
+	sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.5, 0.85])
+	grad.colors = PackedColorArray([Color(0, 0, 0, 0.5), Color(0, 0, 0, 0.12), Color(0, 0, 0, 0.0)])
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.fill = GradientTexture2D.FILL_RADIAL
+	gt.fill_from = Vector2(0.5, 0.5)
+	gt.fill_to = Vector2(1.0, 0.5)
+	gt.width = 128
+	gt.height = 128
+	sm.albedo_texture = gt
+	_shadow.material_override = sm
+	_shadow.rotation_degrees = Vector3(-90, 0, 0)
+	_vp.add_child(_shadow)
 	_pivot = Node3D.new()
 	_vp.add_child(_pivot)
 	_model = DeviceModel.new()
@@ -66,6 +98,7 @@ func set_device(cat: String, specs: Dictionary, quality_ratio: float, design: Di
 		return
 	_key = k
 	_model.build(cat, specs, quality_ratio, design)
+	_shadow.position = Vector3(0, _model.floor_y - 0.05, 0)
 	_place_camera(cat)
 
 func _process(delta: float) -> void:

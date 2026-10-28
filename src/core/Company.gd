@@ -7,6 +7,7 @@ extends RefCounted
 
 signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
+signal review_ready(prod_id: int)
 
 const SAVE_VERSION := 2
 const TAX_RATE := 0.15
@@ -413,6 +414,13 @@ func estimate_quality(cat_id: String, specs: Dictionary, design: Dictionary = {}
 func estimate_final_quality(cat_id: String, specs: Dictionary, design: Dictionary, os_id: String, mfr_id: String) -> float:
 	return estimate_quality(cat_id, specs, design) * os_mult(os_id, cat_id) * float(mfr_stats(mfr_id).q)
 
+## Estatísticas ao vivo do editor (qualidade, custo, preço justo, margem, prazo).
+func device_stats(cat_id: String, specs: Dictionary, design: Dictionary, os_id: String, mfr_id: String) -> Dictionary:
+	var q := estimate_final_quality(cat_id, specs, design, os_id, mfr_id)
+	var uc := estimate_final_cost(cat_id, specs, design, os_id, mfr_id)
+	var fp := fair_price(cat_id, q)
+	return {"quality": q, "unit_cost": uc, "fair_price": fp, "margin": (fp - uc) / maxf(fp, 1.0)}
+
 func estimate_final_cost(cat_id: String, specs: Dictionary, design: Dictionary, os_id: String, mfr_id: String) -> float:
 	var cat: Dictionary = GameData.category(cat_id)
 	return estimate_unit_cost(cat_id, specs, design) * float(mfr_stats(mfr_id).cost) * (1.0 - deal_cost_discount()) \
@@ -543,7 +551,9 @@ func _finish_dev(p: Product) -> void:
 		p.price = roundf(fair_price(p.category, effective_quality(p)))
 	add_log("%s está pronto para lançamento (qualidade %d)" % [p.pname, int(round(p.quality))], "good", "ready")
 
-func release(prod_id: int, price: float = -1.0) -> Dictionary:
+const PROMISE_COSTS := {0.0: 0.0, 0.1: 8000.0, 0.25: 25000.0, 0.4: 70000.0}
+
+func release(prod_id: int, price: float = -1.0, promise: float = 0.0) -> Dictionary:
 	var p: Variant = _find_in(products, prod_id)
 	if p == null:
 		return _fail("Produto não encontrado")
@@ -551,9 +561,21 @@ func release(prod_id: int, price: float = -1.0) -> Dictionary:
 		return _fail("Produto não está pronto")
 	if price > 0.0:
 		p.price = price
+	var fee: float = float(PROMISE_COSTS.get(promise, -1.0))
+	if fee < 0.0:
+		return _fail("Promessa inválida")
+	if money < fee:
+		return _fail("Campanha custa %s" % Fmt.money(fee))
+	if fee > 0.0:
+		_expense(fee, "fees")
+	p.promise = promise
 	p.state = Product.STATE_RELEASED
 	p.release_day = day
+	var best := market.best_quality(p.category)
+	var adv: float = effective_quality(p) / maxf(best, 1.0) - 1.0
+	p.promise_gap = maxf(0.0, promise - adv) if promise > 0.0 else 0.0
 	add_log("%s foi lançado por %s!" % [p.pname, Fmt.money(p.price)], "good", "release")
+	Reviews.launch(self, p)
 	return _ok()
 
 func set_price(prod_id: int, price: float) -> Dictionary:
@@ -584,9 +606,18 @@ func attractiveness(p: Product) -> float:
 	var price_factor := clampf(pow(fair / maxf(p.price, 1.0), 2.2), 0.0, 4.0)
 	var age := day - p.release_day
 	var dec := Market.decay(age, float(cat.lifetime))
-	var hype := 1.0 + 0.6 * maxf(0.0, 1.0 - float(age) / 30.0) * (1.0 + effect("hype"))
+	var hype := 1.0 + 0.6 * maxf(0.0, 1.0 - float(age) / 30.0) * (1.0 + effect("hype") + 1.5 * p.promise)
 	var rep_factor := 0.5 + reputation / 100.0
-	return q_factor * price_factor * dec * hype * rep_factor
+	return q_factor * price_factor * dec * hype * rep_factor * rating_factor(p) * (1.04 if is_fashion_color(str(p.design.get("color", ""))) else 1.0)
+
+## Nota dos clientes realimenta as vendas: 1★ = 0.75, 3★ = 1.0, 5★ = 1.25.
+func rating_factor(p: Product) -> float:
+	if p.rating_n < 3:
+		return 1.0
+	return lerpf(0.75, 1.25, clampf((p.rating - 1.0) / 4.0, 0.0, 1.0))
+
+func is_fashion_color(color_id: String) -> bool:
+	return color_id != "" and color_id == str(market.fashion.get("color", ""))
 
 func _sell() -> void:
 	var exp_q := market.expectation(day)
@@ -673,6 +704,7 @@ func _month_end() -> void:
 	income_month = 0.0
 	expense_month = 0.0
 	_recalls()
+	Reviews.monthly(self)
 	stocks.month_end(self)
 	history.append({"day": day, "money": money, "value": stocks.value})
 	if history.size() > 120:
@@ -826,7 +858,8 @@ func net_worth() -> float:
 func default_design(cat_id: String) -> Dictionary:
 	var shapes: Array = GameData.designs().shapes.get(cat_id, [])
 	return {"shape": str(shapes[0].id) if not shapes.is_empty() else "classic", "finish": "alu", "color": "graphite",
-		"w": 5, "h": 5, "d": 5, "corner": 5, "strap": 5, "features": []}
+		"w": 5, "h": 5, "d": 5, "corner": 5, "strap": 5, "features": [],
+		"trim": "silver", "wall": "aurora", "cam": "plate", "notch": "punch", "band": "silicone", "led": "blue", "brand": true}
 
 func design_item_unlocked(item: Dictionary) -> bool:
 	return str(item.req) == "" or research_level(str(item.req)) >= int(item.lvl)
@@ -1104,6 +1137,9 @@ func _recalls() -> void:
 			var loss: float = maxf(2000.0, p.ema_units * 30.0 * current_unit_cost(p) * 0.4)
 			_expense(loss, "recall")
 			reputation = maxf(0.0, reputation - 2.0)
+			for i in 3:
+				p.reviews.append(Reviews.customer(self, p, true))
+				p.rating = lerpf(p.rating, 1.5, 0.15)
 			add_log("Defeito de fábrica em %s (recall: %s)" % [p.pname, Fmt.money(loss)], "bad", "event_bad")
 
 func company_value() -> float:

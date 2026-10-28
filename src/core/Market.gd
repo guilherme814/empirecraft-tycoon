@@ -8,6 +8,7 @@ var comp_products: Array = []   # {id, company, cat, quality, born}
 var trends: Array = []          # {cat, mult, until}
 var rivals: Array = []          # empresas concorrentes (ver seed_rivals)
 var macro: float = 1.0          # humor geral da bolsa (1.0 = neutro)
+var fashion: Dictionary = {}    # cor da moda: {color, until}
 var _next_id: int = 1
 
 func _init(p_rng: RandomNumberGenerator) -> void:
@@ -54,6 +55,13 @@ func competitor_attractiveness(cat_id: String, day: int) -> float:
 		var qf := pow(clampf(float(c.quality) / exp_q, 0.0, 3.0), 3.0)
 		total += qf * decay(day - int(c.born), float(cat.lifetime))
 	return total
+
+func best_quality(cat_id: String) -> float:
+	var best := 0.0
+	for c in comp_products:
+		if c.cat == cat_id:
+			best = maxf(best, float(c.quality))
+	return best
 
 func competitor_count(cat_id: String) -> int:
 	var n := 0
@@ -149,6 +157,9 @@ func price_tick() -> void:
 
 func tick(day: int) -> void:
 	price_tick()
+	if fashion.is_empty() or day >= int(fashion.until):
+		var cols: Array = GameData.designs().colors
+		fashion = {"color": str(cols[rng.randi() % cols.size()].id), "until": day + 120}
 	if day % Rules.DAYS_IN_MONTH == 0:
 		month_end()
 	for t in trends.duplicate():
@@ -163,13 +174,14 @@ func tick(day: int) -> void:
 			comp_products.erase(c)
 
 func to_dict() -> Dictionary:
-	return {"comp": comp_products, "trends": trends, "next": _next_id, "rivals": rivals, "macro": macro}
+	return {"comp": comp_products, "trends": trends, "next": _next_id, "rivals": rivals, "macro": macro, "fashion": fashion}
 
 func load_dict(d: Dictionary) -> void:
 	comp_products = d.get("comp", []).duplicate(true)
 	trends = d.get("trends", []).duplicate(true)
 	_next_id = int(d.get("next", 1))
 	macro = float(d.get("macro", 1.0))
+	fashion = d.get("fashion", {}).duplicate()
 	rivals = d.get("rivals", []).duplicate(true)
 	if rivals.is_empty():
 		seed_rivals()
