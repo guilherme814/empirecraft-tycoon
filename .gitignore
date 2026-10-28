@@ -1,1 +1,12 @@
+# Godot
+.godot/
+*.translation
+export_credentials.cfg
+# Build
+build/
+*.apk
+*.aab
+*.keystore
+# Segredos (nunca no repositório)
 api_config.json
+.env

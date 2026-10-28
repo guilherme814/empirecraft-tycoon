@@ -1,0 +1,5 @@
+[
+  {"id": "local",    "name": "Agência Local",     "price": 6000,  "skill_min": 15, "skill_max": 45, "min_found": 2, "max_found": 3},
+  {"id": "regional", "name": "Agência Regional",  "price": 18000, "skill_min": 40, "skill_max": 70, "min_found": 2, "max_found": 3},
+  {"id": "elite",    "name": "Caçadores Elite",   "price": 50000, "skill_min": 65, "skill_max": 92, "min_found": 1, "max_found": 2}
+]

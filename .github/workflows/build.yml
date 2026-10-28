@@ -1,61 +1,122 @@
-name: Build and Publish APK
+name: Testes e APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: 4.2.1
+  GODOT_BIN: ${{ github.workspace }}/godot/Godot_v4.2.1-stable_linux.x86_64
 
 jobs:
-  build-and-publish:
+  test:
+    name: Testes (sem UI e com UI)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'platforms;android-34 build-tools;34.0.0 platform-tools'
-
-      - name: Download Godot
+      - name: Baixar Godot
         run: |
-          wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip
-          unzip -q Godot_v4.2.1-stable_linux.x86_64.zip
-          chmod +x Godot_v4.2.1-stable_linux.x86_64
+          mkdir -p godot && cd godot
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q Godot_v*.zip
+          chmod +x Godot_v*
 
-      - name: Download Export Templates
+      - name: Importar projeto (gera o cache de classes)
         run: |
-          wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
-          mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
-          unzip -q Godot_v4.2.1-stable_export_templates.tpz -d /tmp/godot_templates
-          mv /tmp/godot_templates/templates/* ~/.local/share/godot/export_templates/4.2.1.stable/
-
-      - name: Validate Project
-        run: |
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --check-only 2>&1 | tee validation.log
-          if grep -q "ERROR" validation.log; then
-            echo "Validação falhou! Corrija os erros antes de exportar."
-            cat validation.log
+          # 1ª passada: o cache de class_name ainda não existe, então os autoloads reclamam. É esperado.
+          "$GODOT_BIN" --headless --editor --quit || true
+          # 2ª passada: precisa ser limpa. Qualquer erro de script quebra o build.
+          "$GODOT_BIN" --headless --editor --quit 2>&1 | tee import.log
+          if grep -E "SCRIPT ERROR|Parse Error" import.log; then
+            echo "::error::Erros de script encontrados"
             exit 1
           fi
 
-      - name: Run Tests
+      - name: Testes da simulação
         run: |
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --script tests/test_operating_system.gd 2>&1 | tee test.log
-          if grep -q "FAILED" test.log; then
-            echo "Testes falharam!"
-            exit 1
-          fi
+          "$GODOT_BIN" --headless --script res://tests/run_tests.gd 2>&1 | tee test.log
+          grep -q "ALL TESTS PASSED" test.log
 
-      - name: Export APK
+      - name: Teste de fumaça da interface
         run: |
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" game.apk 2>&1 | tee export.log
-          ls -la game.apk
+          "$GODOT_BIN" --headless res://tests/UISmoke.tscn 2>&1 | tee ui.log
+          grep -q "UI smoke: OK" ui.log
 
-      - name: Publish APK to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+  android:
+    name: APK Android
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          publish_branch: gh-pages
-          keep_files: true
-          force_orphan: true
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools build-tools;34.0.0 platforms;android-34"
+
+      - name: Baixar Godot e templates de exportação
+        run: |
+          mkdir -p godot && cd godot
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q Godot_v*.zip
+          chmod +x Godot_v*
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          unzip -q Godot_v*_export_templates.tpz -d /tmp/templates
+          mv /tmp/templates/templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+
+      - name: Configurar Godot para Android
+        run: |
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.tres <<SETTINGS
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "${ANDROID_HOME}"
+          export/android/java_sdk_path = "${JAVA_HOME}"
+          SETTINGS
+          # Keystore de debug gerada na hora (APK instalável; para a Play Store use uma keystore sua em Secrets).
+          keytool -genkey -v -keystore "$HOME/debug.keystore" -storepass android -alias androiddebugkey \
+            -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          {
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$HOME/debug.keystore"
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey"
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android"
+          } >> "$GITHUB_ENV"
+
+      - name: Importar projeto
+        run: |
+          "$GODOT_BIN" --headless --editor --quit || true
+          "$GODOT_BIN" --headless --editor --quit
+
+      - name: Exportar APK
+        run: |
+          mkdir -p build
+          "$GODOT_BIN" --headless --export-debug "Android" build/EmpireCraft.apk 2>&1 | tee export.log
+          test -s build/EmpireCraft.apk || { echo "::error::APK não foi gerado"; exit 1; }
+          ls -la build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EmpireCraft-apk
+          path: build/EmpireCraft.apk
+
+      - name: Publicar na página de Releases (baixe pelo celular)
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete latest-build --cleanup-tag -y || true
+          gh release create latest-build build/EmpireCraft.apk \
+            --prerelease --title "Build mais recente" \
+            --notes "APK de debug gerado automaticamente a partir do commit ${GITHUB_SHA::7}."

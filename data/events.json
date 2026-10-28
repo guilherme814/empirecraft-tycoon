@@ -1,0 +1,18 @@
+[
+  {"name": "Tendência de Mercado",  "text": "Uma categoria está em alta! Demanda +40% por 60 dias.", "kind": "good", "weight": 3,
+   "effect": {"trend": {"cat": "random", "mult": 1.4, "days": 60}, "reputation": 2}},
+  {"name": "Crise Econômica",       "text": "Recessão: a demanda geral cai 25% por 90 dias.", "kind": "bad", "weight": 1,
+   "effect": {"trend": {"cat": "all", "mult": 0.75, "days": 90}}},
+  {"name": "Feira de Tecnologia",   "text": "Sua empresa brilhou na feira: reputação e pesquisa em alta.", "kind": "good", "weight": 2,
+   "effect": {"reputation": 4, "research_points": 40}},
+  {"name": "Vazamento de Dados",    "text": "Informações vazaram. Reputação e caixa sofrem.", "kind": "bad", "weight": 1,
+   "effect": {"reputation": -5, "money": -8000}},
+  {"name": "Prêmio de Inovação",    "text": "Sua empresa ganhou um prêmio de inovação!", "kind": "good", "weight": 1,
+   "effect": {"reputation": 6}},
+  {"name": "Investidor-anjo",       "text": "Um investidor-anjo aportou capital na empresa.", "kind": "good", "weight": 1,
+   "effect": {"money": 25000}},
+  {"name": "Licenciamento",         "text": "Uma oferta de licenciamento de patentes rendeu um bônus.", "kind": "good", "weight": 2,
+   "effect": {"money": 12000}},
+  {"name": "Rival lança novidade",  "text": "Um concorrente lançou um produto forte.", "kind": "bad", "weight": 2,
+   "effect": {"comp_launch": true}}
+]

@@ -1,0 +1,14 @@
+[
+  {"id": "phone",   "name": "Smartphone", "unlock": "",             "needs": ["engineer", "programmer"],
+   "work": 250, "dev_cost": 15000,  "unit_cost": 90,  "fair_price": 320, "base_demand": 22, "lifetime": 260,
+   "axes": {"performance": 0.30, "battery": 0.25, "display": 0.25, "camera": 0.20}},
+  {"id": "laptop",  "name": "Notebook",   "unlock": "res_laptop",   "needs": ["engineer", "programmer"],
+   "work": 400, "dev_cost": 40000,  "unit_cost": 280, "fair_price": 900, "base_demand": 9, "lifetime": 380,
+   "axes": {"performance": 0.30, "battery": 0.20, "display": 0.20, "thermal": 0.15, "storage": 0.15}},
+  {"id": "watch",   "name": "Smartwatch", "unlock": "res_wearable", "needs": ["engineer", "programmer"],
+   "work": 225, "dev_cost": 25000,  "unit_cost": 70,  "fair_price": 220, "base_demand": 14, "lifetime": 300,
+   "axes": {"battery": 0.30, "display": 0.25, "sensors": 0.25, "design": 0.20}},
+  {"id": "console", "name": "Console",    "unlock": "res_console",  "needs": ["engineer", "programmer", "designer"],
+   "work": 700, "dev_cost": 120000, "unit_cost": 260, "fair_price": 550, "base_demand": 12, "lifetime": 600,
+   "axes": {"performance": 0.30, "graphics": 0.30, "thermal": 0.15, "storage": 0.10, "audio": 0.15}}
+]

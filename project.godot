@@ -1,24 +1,38 @@
+; Engine configuration file.
 config_version=5
 
 [application]
+
 config/name="EmpireCraft Tycoon"
+config/version="0.2.0"
 config/description="Tycoon de Empreendedorismo e Tecnologia"
-config/version="0.1.0"
-run/main_scene="res://src/scenes/menu/MainMenu.tscn"
+run/main_scene="res://src/scenes/MainMenu.tscn"
+config/icon="res://icon.svg"
+config/quit_on_go_back=false
+config/features=PackedStringArray("4.2", "GL Compatibility")
+boot_splash/bg_color=Color(0.07, 0.08, 0.1, 1)
 
-[rendering]
-renderer/rendering_method="mobile"
+[autoload]
 
-[input_devices]
-pointing/emulate_touch_from_mouse=true
+Game="*res://src/autoload/Game.gd"
+Clock="*res://src/autoload/Clock.gd"
+Saves="*res://src/autoload/Saves.gd"
+Sfx="*res://src/autoload/Sfx.gd"
 
 [display]
+
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
 
-[autoload]
-GameManager="*res://src/scripts/core/GameManager.gd"
-APIManager="*res://src/scripts/core/APIManager.gd"
-DiagnosticAI="*res://src/scripts/core/diagnostics/DiagnosticAI.gd"
-ScriptRegistry="*res://src/scripts/core/ScriptRegistry.gd"
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

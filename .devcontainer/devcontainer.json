@@ -1,0 +1,6 @@
+{
+  "name": "EmpireCraft Tycoon",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "postCreateCommand": "bash scripts/setup-dev.sh",
+  "customizations": { "vscode": { "extensions": ["geequlim.godot-tools"] } }
+}

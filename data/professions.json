@@ -1,0 +1,6 @@
+[
+  {"id": "engineer",   "name": "Engenheiros",    "singular": "Engenheiro",    "primary": "craft",   "works": true},
+  {"id": "programmer", "name": "Programadores",  "singular": "Programador",   "primary": "pace",    "works": true},
+  {"id": "designer",   "name": "Designers",      "singular": "Designer",      "primary": "insight", "works": true},
+  {"id": "researcher", "name": "Pesquisadores",  "singular": "Pesquisador",   "primary": "insight", "works": false}
+]
