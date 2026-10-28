@@ -1,11 +1,21 @@
-extends Node
 
-func _ready():
+extends SceneTree
+
+func _initialize() -> void:
     print("Executando testes do OperatingSystem...")
-    var os = OperatingSystem.new()
-    assert(os != null, "OperatingSystem não foi criado")
-    assert(os.performance >= 0, "Performance fora do intervalo")
-    assert(os.security >= 0, "Security fora do intervalo")
-    assert(os.stability >= 0, "Stability fora do intervalo")
+
+    var os_script = preload("res://src/scripts/gameplay/os/OperatingSystem.gd")
+    var os = os_script.new()
+
+    if os == null:
+        push_error("OperatingSystem não foi criado")
+        quit(1)
+        return
+
+    if os.performance < 0.0 or os.security < 0.0 or os.stability < 0.0:
+        push_error("Uma ou mais métricas estão abaixo de zero")
+        quit(1)
+        return
+
     print("Todos os testes passaram!")
-    get_tree().quit(0)
+    quit(0)
