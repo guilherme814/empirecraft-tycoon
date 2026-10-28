@@ -97,11 +97,12 @@ jobs:
           echo "Godot Android SDK: $ANDROID_SDK_ROOT"
           echo "Godot Java SDK: $JAVA_HOME"
 
-      - name: Validate project
+      - name: Validate Godot project and Android preset
         shell: bash
         run: |
-          set -o pipefail
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --path . --editor --quit 2>&1 | tee validation.log
+          set -euo pipefail
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless --verbose --path . --editor --quit 2>&1 | tee editor-check.log
+          test -f "$HOME/.android/debug.keystore" || { echo "::error::debug keystore not created"; exit 1; }
 
       - name: Run project tests
         shell: bash
@@ -111,11 +112,19 @@ jobs:
 
       - name: Export APK
         shell: bash
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ env.GODOT_ANDROID_KEYSTORE_DEBUG_PATH }}
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: ${{ env.GODOT_ANDROID_KEYSTORE_DEBUG_USER }}
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: ${{ env.GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD }}
+          GODOT_ANDROID_KEYSTORE_DEBUG_PRIVATE_KEY_PASSWORD: ${{ env.GODOT_ANDROID_KEYSTORE_DEBUG_PRIVATE_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           mkdir -p build
           export ANDROID_HOME="$ANDROID_SDK_ROOT"
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --verbose --path . --export-debug "Android" build/EmpireCraftTycoon.apk 2>&1 | tee export.log
+          ./Godot_v4.2.1-stable_linux.x86_64 \
+            --headless --verbose --path . \
+            --export-debug "Android" build/EmpireCraftTycoon.apk \
+            2>&1 | tee export.log
           test -s build/EmpireCraftTycoon.apk || { echo "::error::APK não foi criado"; exit 1; }
           "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" verify --verbose build/EmpireCraftTycoon.apk
           ls -lh build/EmpireCraftTycoon.apk
@@ -135,7 +144,7 @@ jobs:
         with:
           name: build-logs
           path: |
-            validation.log
+            editor-check.log
             test.log
             export.log
           if-no-files-found: warn
