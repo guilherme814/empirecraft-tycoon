@@ -2,12 +2,14 @@ class_name Market
 extends RefCounted
 ## Mercado: expectativa de qualidade crescente, tamanho por categoria, tendências e concorrentes.
 
-
 var rng: RandomNumberGenerator
 var comp_products: Array = []   # {id, company, cat, quality, born}
 var trends: Array = []          # {cat, mult, until}
 var rivals: Array = []          # empresas concorrentes (ver seed_rivals)
-var macro: float = 1.0          # humor geral da bolsa (1.0 = neutro)
+var macro: float = 1.0          # humor geral da economia (1.0 = neutro)
+var sentiment: float = 1.0      # confiança do consumidor
+var inflation: float = 0.025    # inflação esperada
+var supply_chain: float = 1.0   # nível da cadeia de suprimentos
 var _next_id: int = 1
 
 func _init(p_rng: RandomNumberGenerator) -> void:
@@ -19,7 +21,7 @@ func seed_competitors(day: int) -> void:
 	for cat in GameData.categories():
 		for i in 2:
 			var c := launch_competitor(cat.id, day)
-			c.quality = expectation(day) * rng.randf_range(0.9, 1.2)
+			c.quality = maxf(15.0, expectation(day) * rng.randf_range(0.8, 1.15) * (0.8 + 0.7 * float(i + 1)))
 
 ## Qualidade que o mercado considera "normal" neste dia: sobe com o tempo.
 func expectation(day: int) -> float:
@@ -38,8 +40,13 @@ func market_size(cat_id: String, day: int) -> float:
 		return 0.0
 	var growth := 1.0 + Rules.MARKET_GROWTH_PER_DAY * float(day)
 	var month := floori(float(day % Rules.DAYS_IN_YEAR) / float(Rules.DAYS_IN_MONTH))
-	var season := 1.35 if month == 10 else 1.0    # "Black Friday"
-	return float(cat.base_demand) * growth * season * trend_mult(cat_id, day)
+	var season := 1.28 if month == 10 else 1.0    # "Black Friday"
+	var sentiment_factor := clampf(0.8 + sentiment * 0.6, 0.55, 1.8)
+	var macro_factor := clampf(0.75 + (macro - 1.0) * 0.8, 0.60, 1.55)
+	var supply_factor := clampf(1.0 / maxf(0.75, supply_chain), 0.7, 1.35)
+	var competition_pressure := 1.0 / maxf(1.0, 1.0 + float(competitor_count(cat_id)) * 0.06)
+	var base_demand := float(cat.base_demand) * growth * season * trend_mult(cat_id, day)
+	return maxf(500.0, base_demand * sentiment_factor * macro_factor * supply_factor * competition_pressure)
 
 static func decay(age: int, lifetime: float) -> float:
 	return maxf(0.08, exp(-float(age) / lifetime))
@@ -64,6 +71,12 @@ func competitor_count(cat_id: String) -> int:
 
 func add_trend(cat_id: String, mult: float, days: int, day: int) -> void:
 	trends.append({"cat": cat_id, "mult": mult, "until": day + days})
+
+func apply_macro_shift(delta_macro: float, delta_sentiment: float = 0.0, delta_supply: float = 0.0) -> void:
+	macro = clampf(macro + delta_macro, 0.55, 1.6)
+	sentiment = clampf(sentiment + delta_sentiment, 0.6, 1.5)
+	supply_chain = clampf(supply_chain + delta_supply, 0.65, 1.5)
+	inflation = clampf(inflation + maxf(0.0, delta_macro) * 0.04, 0.01, 0.15)
 
 func launch_competitor(cat_id: String, day: int) -> Dictionary:
 	var ri := _pick_rival(cat_id)
@@ -121,7 +134,10 @@ func add_rival_revenue(ri: int, rev: float) -> void:
 
 ## Fim de mês: lucro, caixa, tecnologia e valor de cada rival.
 func month_end() -> void:
-	macro = clampf(macro + (1.0 - macro) * 0.15 + rng.randf_range(-0.07, 0.07), 0.6, 1.4)
+	macro = clampf(macro + (1.0 - macro) * 0.10 + rng.randf_range(-0.12, 0.12), 0.65, 1.45)
+	sentiment = clampf(sentiment + (1.0 - sentiment) * 0.08 + rng.randf_range(-0.09, 0.10), 0.70, 1.40)
+	inflation = clampf(inflation + (macro - 1.0) * 0.04 + rng.randf_range(-0.006, 0.015), 0.01, 0.12)
+	supply_chain = clampf(supply_chain + rng.randf_range(-0.12, 0.12) + (1.0 - macro) * 0.08, 0.70, 1.35)
 	for r in rivals:
 		var rev := float(r.rev_month)
 		r.rev_year = lerpf(float(r.rev_year), rev * 12.0, 0.25)
@@ -148,6 +164,9 @@ func price_tick() -> void:
 			h.pop_front()
 
 func tick(day: int) -> void:
+	if day % 7 == 0:
+		macro = clampf(macro + rng.randf_range(-0.04, 0.04), 0.65, 1.45)
+		sentiment = clampf(sentiment + rng.randf_range(-0.06, 0.06), 0.7, 1.4)
 	price_tick()
 	if day % Rules.DAYS_IN_MONTH == 0:
 		month_end()
@@ -163,13 +182,17 @@ func tick(day: int) -> void:
 			comp_products.erase(c)
 
 func to_dict() -> Dictionary:
-	return {"comp": comp_products, "trends": trends, "next": _next_id, "rivals": rivals, "macro": macro}
+	return {"comp": comp_products, "trends": trends, "next": _next_id, "rivals": rivals, "macro": macro,
+		"sentiment": sentiment, "inflation": inflation, "supply_chain": supply_chain}
 
 func load_dict(d: Dictionary) -> void:
 	comp_products = d.get("comp", []).duplicate(true)
 	trends = d.get("trends", []).duplicate(true)
 	_next_id = int(d.get("next", 1))
 	macro = float(d.get("macro", 1.0))
+	sentiment = float(d.get("sentiment", 1.0))
+	inflation = float(d.get("inflation", 0.025))
+	supply_chain = float(d.get("supply_chain", 1.0))
 	rivals = d.get("rivals", []).duplicate(true)
 	if rivals.is_empty():
 		seed_rivals()
