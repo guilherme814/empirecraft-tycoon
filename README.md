@@ -17,7 +17,7 @@ Veja [docs/DESIGN.md](docs/DESIGN.md) para as regras, a arquitetura e o roteiro.
 
 ## Rodando
 ```bash
-godot --headless --editor --quit        # 1ª vez: gera o cache de classes (erros de autoload são esperados)
+godot --headless --editor --quit-after 300   # 1ª vez: gera o cache de classes (erros de autoload são esperados)
 godot --headless --editor --quit        # 2ª passada deve sair limpa
 godot --path .                          # abre o jogo (precisa de display)
 

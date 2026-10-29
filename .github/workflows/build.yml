@@ -30,7 +30,7 @@ jobs:
       - name: Importar projeto (gera o cache de classes)
         run: |
           # 1ª passada: o cache de class_name ainda não existe, então os autoloads reclamam. É esperado.
-          "$GODOT_BIN" --headless --editor --quit || true
+          "$GODOT_BIN" --headless --editor --quit-after 300 || true
           # 2ª passada: precisa ser limpa. Qualquer erro de script quebra o build.
           "$GODOT_BIN" --headless --editor --quit 2>&1 | tee import.log
           if grep -E "SCRIPT ERROR|Parse Error" import.log; then
@@ -101,7 +101,7 @@ jobs:
 
       - name: Importar projeto
         run: |
-          "$GODOT_BIN" --headless --editor --quit || true
+          "$GODOT_BIN" --headless --editor --quit-after 300 || true
           "$GODOT_BIN" --headless --editor --quit
 
       - name: Exportar APK
