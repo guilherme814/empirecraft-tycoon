@@ -7,7 +7,10 @@ var rng: RandomNumberGenerator
 var comp_products: Array = []   # {id, company, cat, quality, born}
 var trends: Array = []          # {cat, mult, until}
 var rivals: Array = []          # empresas concorrentes (ver seed_rivals)
-var macro: float = 1.0          # humor geral da bolsa (1.0 = neutro)
+var macro: float = 1.0          # humor geral da economia (1.0 = neutro)
+var sentiment: float = 1.0      # confiança do consumidor
+var inflation: float = 0.025    # inflação anual esperada
+var supply_chain: float = 1.0   # saúde da cadeia de suprimentos (menor = escassez)
 var fashion: Dictionary = {}    # cor da moda: {color, until}
 var _next_id: int = 1
 
@@ -26,6 +29,22 @@ func seed_competitors(day: int) -> void:
 func expectation(day: int) -> float:
 	return minf(Rules.EXPECTATION_MAX, Rules.EXPECTATION_START + Rules.EXPECTATION_PER_DAY * float(day))
 
+## Efeito da economia na demanda: confiança do consumidor e ciclo macro (neutro = 1.0).
+func economy_factor() -> float:
+	var s := clampf(1.0 + (sentiment - 1.0) * 0.6, 0.7, 1.3)
+	var m := clampf(1.0 + (macro - 1.0) * 0.8, 0.7, 1.3)
+	return s * m
+
+## Pressão de custos: escassez de componentes encarece a produção (1.0 = neutro).
+func cost_pressure() -> float:
+	return clampf(1.0 + (1.0 - supply_chain) * 0.5, 0.9, 1.3)
+
+func apply_macro_shift(delta_macro: float, delta_sentiment: float = 0.0, delta_supply: float = 0.0, delta_inflation: float = 0.0) -> void:
+	macro = clampf(macro + delta_macro, 0.55, 1.6)
+	sentiment = clampf(sentiment + delta_sentiment, 0.6, 1.5)
+	supply_chain = clampf(supply_chain + delta_supply, 0.65, 1.5)
+	inflation = clampf(inflation + delta_inflation + maxf(0.0, delta_macro) * 0.04, 0.01, 0.15)
+
 func trend_mult(cat_id: String, day: int) -> float:
 	var m := 1.0
 	for t in trends:
@@ -39,8 +58,8 @@ func market_size(cat_id: String, day: int) -> float:
 		return 0.0
 	var growth := 1.0 + Rules.MARKET_GROWTH_PER_DAY * float(day)
 	var month := floori(float(day % Rules.DAYS_IN_YEAR) / float(Rules.DAYS_IN_MONTH))
-	var season := 1.35 if month == 10 else 1.0    # "Black Friday"
-	return float(cat.base_demand) * growth * season * trend_mult(cat_id, day)
+	var season := 1.28 if month == 10 else 1.0    # "Black Friday"
+	return float(cat.base_demand) * growth * season * trend_mult(cat_id, day) * economy_factor()
 
 static func decay(age: int, lifetime: float) -> float:
 	return maxf(0.08, exp(-float(age) / lifetime))
@@ -129,7 +148,10 @@ func add_rival_revenue(ri: int, rev: float) -> void:
 
 ## Fim de mês: lucro, caixa, tecnologia e valor de cada rival.
 func month_end() -> void:
-	macro = clampf(macro + (1.0 - macro) * 0.15 + rng.randf_range(-0.07, 0.07), 0.6, 1.4)
+	macro = clampf(macro + (1.0 - macro) * 0.12 + rng.randf_range(-0.09, 0.09), 0.65, 1.45)
+	sentiment = clampf(sentiment + (1.0 - sentiment) * 0.10 + rng.randf_range(-0.07, 0.07), 0.7, 1.4)
+	inflation = clampf(inflation + (0.025 - inflation) * 0.08 + (macro - 1.0) * 0.01 + rng.randf_range(-0.004, 0.006), 0.01, 0.12)
+	supply_chain = clampf(supply_chain + (1.0 - supply_chain) * 0.15 + rng.randf_range(-0.05, 0.05), 0.7, 1.35)
 	for r in rivals:
 		var rev := float(r.rev_month)
 		r.rev_year = lerpf(float(r.rev_year), rev * 12.0, 0.25)
@@ -174,13 +196,17 @@ func tick(day: int) -> void:
 			comp_products.erase(c)
 
 func to_dict() -> Dictionary:
-	return {"comp": comp_products, "trends": trends, "next": _next_id, "rivals": rivals, "macro": macro, "fashion": fashion}
+	return {"comp": comp_products, "trends": trends, "next": _next_id, "rivals": rivals, "macro": macro, "fashion": fashion,
+		"sentiment": sentiment, "inflation": inflation, "supply_chain": supply_chain}
 
 func load_dict(d: Dictionary) -> void:
 	comp_products = d.get("comp", []).duplicate(true)
 	trends = d.get("trends", []).duplicate(true)
 	_next_id = int(d.get("next", 1))
 	macro = float(d.get("macro", 1.0))
+	sentiment = float(d.get("sentiment", 1.0))
+	inflation = float(d.get("inflation", 0.025))
+	supply_chain = float(d.get("supply_chain", 1.0))
 	fashion = d.get("fashion", {}).duplicate()
 	rivals = d.get("rivals", []).duplicate(true)
 	if rivals.is_empty():

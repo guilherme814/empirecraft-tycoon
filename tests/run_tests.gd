@@ -11,7 +11,7 @@ func check(cond: bool, msg: String) -> void:
 		print("  FALHOU: ", msg)
 
 func _initialize() -> void:
-	print("Executando testes do EmpireCraft...")
+	print("Executando testes do Device Empire...")
 	test_data()
 	test_hiring()
 	test_training_research()
@@ -22,6 +22,8 @@ func _initialize() -> void:
 	test_v3_systems()
 	test_brand_loyalty()
 	test_version_sync()
+	test_old_save_compat()
+	test_macro_economy()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -319,3 +321,35 @@ func test_version_sync() -> void:
 	var ep := FileAccess.get_file_as_string("res://export_presets.cfg")
 	check(ep.contains('version/name="%s"' % Rules.VERSION), "export_presets com version/name %s" % Rules.VERSION)
 	check(ep.contains("version/code=%d" % Rules.VERSION_CODE), "export_presets com version/code %d" % Rules.VERSION_CODE)
+
+func test_old_save_compat() -> void:
+	# save mínimo de um formato antigo (v2): campos novos precisam assumir padrões
+	var old := {"version": 2, "name": "Velha", "day": 100, "money": 123456.0, "reputation": 40.0, "seed": 5,
+		"products": [{"id": 1, "name": "Antigo", "cat": "phone", "specs": {"performance": 40}, "price": 300.0,
+		"state": "released", "quality": 50.0, "release": 10, "unit_cost": 90.0}], "market": {"macro": 1.1}}
+	var c := Company.from_dict(old)
+	check(c != null, "save v2 carrega")
+	check(c.day == 100 and is_equal_approx(c.money, 123456.0), "save v2 preserva dia e caixa")
+	check(is_equal_approx(c.loyalty, Loyalty.START), "save v2: lealdade padrão")
+	check(is_equal_approx(c.market.sentiment, 1.0) and is_equal_approx(c.market.supply_chain, 1.0), "save v2: macro padrão")
+	for i in 40:
+		c.advance_day()
+	check(c.day == 140, "save v2 continua simulando")
+	var future := {"version": Company.SAVE_VERSION + 1}
+	check(Company.from_dict(future) == null, "save de versão futura é recusado")
+
+func test_macro_economy() -> void:
+	var c := Company.new(31)
+	var base := c.market.market_size("phone", 100)
+	c.market.apply_macro_shift(-0.3, -0.3)
+	var low := c.market.market_size("phone", 100)
+	check(low < base, "recessão reduz o mercado (%f < %f)" % [low, base])
+	check(base > 1.0 and base < 200.0, "escala do mercado preservada (%f)" % base)
+	var cost0 := Company.new(31).market.cost_pressure()
+	var m := Company.new(31).market
+	m.apply_macro_shift(0.0, 0.0, -0.3)
+	check(m.cost_pressure() > cost0, "escassez de componentes encarece a produção")
+	check(m.supply_chain >= 0.65 and m.macro >= 0.55, "índices respeitam limites")
+	var back := Company.new(1)
+	back.market.load_dict(m.to_dict())
+	check(is_equal_approx(back.market.supply_chain, m.supply_chain), "macro persiste no save")

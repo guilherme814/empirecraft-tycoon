@@ -1,4 +1,6 @@
-# EmpireCraft Tycoon
+# Device Empire
+
+> Antigo nome de trabalho: EmpireCraft Tycoon (o pacote Android `com.empirecraft.tycoon` e o arquivo `EmpireCraft.apk` continuam iguais para as atualizações não quebrarem).
 
 Tycoon de empreendedorismo e tecnologia para celular (Android), em **Godot 4.2** + GDScript.
 Você monta uma empresa de dispositivos: contrata equipe, pesquisa tecnologias, projeta produtos,

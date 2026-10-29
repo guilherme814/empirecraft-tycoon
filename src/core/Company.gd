@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 const TAX_RATE := 0.15
 const LOAN_RATE := 0.012
 const MAX_DEALS := 4
@@ -440,7 +440,7 @@ func chip_cost(cat_id: String, design: Dictionary) -> float:
 
 func estimate_final_cost(cat_id: String, specs: Dictionary, design: Dictionary, os_id: String, mfr_id: String) -> float:
 	var cat: Dictionary = GameData.category(cat_id)
-	return (estimate_unit_cost(cat_id, specs, design) + chip_cost(cat_id, design)) * float(mfr_stats(mfr_id).cost) * (1.0 - deal_cost_discount()) \
+	return (estimate_unit_cost(cat_id, specs, design) + chip_cost(cat_id, design)) * float(mfr_stats(mfr_id).cost) * (1.0 - deal_cost_discount()) * market.cost_pressure() \
 		+ float(os_info(os_id).get("royalty", 0.0)) * float(cat.unit_cost)
 
 func os_option_ids() -> Array:
@@ -686,11 +686,13 @@ func _sell() -> void:
 			if units > 0:
 				_book_sale(p, units, cat_id)
 			p.ema_units = p.ema_units * 0.9 + float(units) * 0.1
-			var ratio: float = effective_quality(p) / exp_q
-			if ratio > 1.1:
-				reputation = minf(100.0, reputation + 0.01)
-			elif ratio < 0.7:
-				reputation = maxf(0.0, reputation - 0.01)
+			# só produtos que ainda vendem mexem na reputação (um catálogo antigo parado não a derruba)
+			if units > 0:
+				var ratio: float = effective_quality(p) / exp_q
+				if ratio > 1.1:
+					reputation = minf(100.0, reputation + 0.01)
+				elif ratio < 0.7:
+					reputation = maxf(0.0, reputation - 0.01)
 
 # ───────────────────────── tempo ─────────────────────────
 
@@ -768,6 +770,10 @@ func _random_event() -> void:
 			_expense(-float(eff.money), "events")
 	if eff.has("reputation"):
 		reputation = clampf(reputation + float(eff.reputation), 0.0, 100.0)
+	if eff.has("market"):
+		var me: Dictionary = eff.market
+		market.apply_macro_shift(float(me.get("macro", 0.0)), float(me.get("sentiment", 0.0)),
+			float(me.get("supply_chain", 0.0)), float(me.get("inflation", 0.0)))
 	if eff.has("research_points"):
 		research_points += float(eff.research_points)
 	var unlocked: Array = []
@@ -1243,7 +1249,7 @@ func effective_quality(p: Product) -> float:
 func current_unit_cost(p: Product) -> float:
 	var cat: Dictionary = GameData.category(p.category)
 	var royalty := float(os_info(p.os_id).get("royalty", 0.0)) * float(cat.unit_cost)
-	return p.unit_cost * float(mfr_stats(p.mfr).cost) * (1.0 - deal_cost_discount()) + royalty
+	return p.unit_cost * float(mfr_stats(p.mfr).cost) * (1.0 - deal_cost_discount()) * market.cost_pressure() + royalty
 
 ## Defeitos de fábrica: chance mensal por produto, maior em terceirizadas baratas.
 func _recalls() -> void:

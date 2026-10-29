@@ -1,4 +1,4 @@
-# EmpireCraft Tycoon: Design e arquitetura
+# Device Empire: Design e arquitetura
 
 ## Pilares
 1. **Decisões, não cliques.** Tudo que é repetitivo tem automação nativa (Preencher, Treinar todos, Pesquisar tudo).

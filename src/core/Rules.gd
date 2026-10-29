@@ -33,7 +33,7 @@ const SPEC_AXIS_MAX := 100
 const SPEC_STEP := 5
 
 # Mercado
-const OUTSIDE_OPTION := 1.0       # "não comprar nada": quanto maior, menos share para todos
+const OUTSIDE_OPTION := 1.0
 const EXPECTATION_START := 35.0
 const EXPECTATION_PER_DAY := 0.04
 const EXPECTATION_MAX := 160.0

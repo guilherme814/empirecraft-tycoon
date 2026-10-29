@@ -33,10 +33,10 @@ func _ready() -> void:
 	v.custom_minimum_size = Vector2(760, 0)
 	center.add_child(v)
 
-	var title := UI.label("EMPIRECRAFT", 96, Palette.ACCENT)
+	var title := UI.label("DEVICE", 96, Palette.ACCENT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(title)
-	var sub := UI.label("T Y C O O N", 40, Palette.TEXT)
+	var sub := UI.label("E M P I R E", 40, Palette.TEXT)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sub)
 	var ver := UI.label("v" + Rules.VERSION, 26, Palette.MUTED)
