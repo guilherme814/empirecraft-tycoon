@@ -42,7 +42,7 @@ func signature() -> String:
 	var st: Array = []
 	for p in c.products:
 		st.append(p.id * 10 + (1 if p.state == Product.STATE_RELEASED else (2 if p.state == Product.STATE_READY else 0)))
-	return "%s|%s|%d|%d|%s|%s|%d|%d|%d" % [str(ids), str(st), _pid, c.research_level("res_marketing"), _channel, str(_regions), _bi, _di, int(c.money / 5000.0) + int(c.reputation / 5.0) * 100000]
+	return "%s|%s|%d|%d|%s|%s|%d|%d|%d" % [str(ids), str(st), _pid, c.research_level("res_marketing"), _channel, str(_regions), _bi, _di, int(c.money / 5000.0) + int(c.reputation / 5.0) * 100000 + int(c.loyalty) * 7]
 
 func _eligible() -> Array:
 	return company.products.filter(func(p): return p.state == Product.STATE_RELEASED or p.state == Product.STATE_READY)
@@ -153,6 +153,22 @@ func _right_side() -> void:
 		var lab := UI.label("", 22, Palette.MUTED)
 		bv.add_child(lab)
 		_bars[int(k.id)] = {"bar": bar, "label": lab, "k": k}
+	var lc := UI.card(Palette.PANEL, 18)
+	_right.add_child(lc)
+	var lv := UI.vbox(8)
+	lc.add_child(lv)
+	lv.add_child(UI.heading("Lealdade à marca"))
+	lv.add_child(UI.kv(Loyalty.tier(c.loyalty), "%d%%  ·  vendas ×%.2f" % [int(c.loyalty), Loyalty.sales_mult(c)], Palette.INFO, 26))
+	lv.add_child(UI.bar(c.loyalty / 100.0, Palette.INFO, 16))
+	var lines: Array = []
+	for cat in GameData.categories():
+		if c.category_unlocked(cat.id):
+			lines.append("%s %d un." % [cat.name, Loyalty.preorders(c, cat.id)])
+	lv.add_child(UI.wrap("Pré-vendas de fãs no lançamento: " + "  ·  ".join(lines), 22, Palette.TEXT))
+	lv.add_child(UI.wrap("Sobe com lançamentos bem avaliados e produtos sem falhas; cai com defeitos graves, recalls e promessas não cumpridas.", 21))
+	for i in range(c.loyalty_log.size() - 1, maxi(-1, c.loyalty_log.size() - 5), -1):
+		var e: Dictionary = c.loyalty_log[i]
+		lv.add_child(UI.kv(str(e.why), "%s%.1f" % ["+" if float(e.d) > 0.0 else "", float(e.d)], Palette.GOOD if float(e.d) > 0.0 else Palette.BAD, 22))
 	var aw := UI.card(Palette.PANEL, 18)
 	_right.add_child(aw)
 	var av := UI.vbox(8)

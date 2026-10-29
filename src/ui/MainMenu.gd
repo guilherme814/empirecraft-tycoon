@@ -39,6 +39,9 @@ func _ready() -> void:
 	var sub := UI.label("T Y C O O N", 40, Palette.TEXT)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sub)
+	var ver := UI.label("v" + Rules.VERSION, 26, Palette.MUTED)
+	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(ver)
 	v.add_child(Control.new())
 
 	_name_edit = LineEdit.new()

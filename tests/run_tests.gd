@@ -20,6 +20,8 @@ func _initialize() -> void:
 	test_determinism()
 	test_bankruptcy()
 	test_v3_systems()
+	test_brand_loyalty()
+	test_version_sync()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -245,3 +247,75 @@ func test_v3_systems() -> void:
 	for i in 60:
 		c2.advance_day()
 	check(not c2.game_over, "jogo carregado segue funcionando")
+
+func _ready_product(c: Company) -> Product:
+	var p: Product = c.create_product("T", "phone", c.default_specs("phone")).product
+	var d := 0
+	while p.state == Product.STATE_DEV and d < 500:
+		c.advance_day()
+		d += 1
+	return p
+
+func test_brand_loyalty() -> void:
+	var c := Company.new(21)
+	c.money = 800000.0
+	for prof in ["engineer", "programmer"]:
+		c.auto_fill(prof, 1, 0.0)
+	check(is_equal_approx(c.loyalty, Loyalty.START), "lealdade inicial")
+	check(Loyalty.preorders(c, "phone") <= 1, "poucos fãs no início")
+	c.loyalty = 60.0
+	var n60 := Loyalty.preorders(c, "phone")
+	c.loyalty = 30.0
+	var n30 := Loyalty.preorders(c, "phone")
+	check(n60 > n30 and n30 > 0, "mais lealdade, mais pré-vendas (%d > %d)" % [n60, n30])
+	# o lançamento vende para os fãs já no dia 1
+	c.loyalty = 60.0
+	var p := _ready_product(c)
+	var before := p.units_total
+	check(c.release(p.id).ok, "lançar com fãs")
+	check(p.units_total - before >= n30, "fãs compraram no lançamento (%d un.)" % (p.units_total - before))
+	# resultado do lançamento mexe na lealdade
+	var good := Product.new()
+	good.critic = 90.0
+	good.rating = 4.6
+	var c2 := Company.new(22)
+	var l0 := c2.loyalty
+	Loyalty.on_launch(c2, good)
+	check(c2.loyalty > l0, "lançamento aclamado sobe a lealdade")
+	var bad := Product.new()
+	bad.critic = 30.0
+	bad.rating = 1.8
+	c2.loyalty = 40.0
+	Loyalty.on_launch(c2, bad)
+	check(c2.loyalty < 40.0, "lançamento ruim derruba a lealdade")
+	c2.loyalty = 3.0
+	Loyalty.change(c2, -50.0, "teste")
+	check(c2.loyalty == 0.0, "lealdade não fica negativa")
+	Loyalty.change(c2, 500.0, "teste")
+	check(c2.loyalty == 100.0, "lealdade limitada a 100")
+	# falhas graves abertas corroem a lealdade mês a mês
+	var c3 := Company.new(23)
+	c3.money = 800000.0
+	for prof in ["engineer", "programmer"]:
+		c3.auto_fill(prof, 1, 0.0)
+	var q := _ready_product(c3)
+	c3.release(q.id)
+	for i in 40:
+		c3.advance_day()
+	q.flaws = [{"id": "bug_crash", "found": true, "fixed": false}, {"id": "bug_crash", "found": true, "fixed": false}]
+	q.ema_units = 5.0
+	c3.loyalty = 50.0
+	Loyalty.monthly(c3)
+	check(c3.loyalty < 50.0, "falhas graves abertas reduzem lealdade (%f)" % c3.loyalty)
+	# save/load preserva
+	c3.loyalty = 42.5
+	var back := Company.from_dict(JSON.parse_string(JSON.stringify(c3.to_dict())))
+	check(is_equal_approx(back.loyalty, 42.5), "lealdade persiste no save")
+	check(back.loyalty_log.size() == c3.loyalty_log.size(), "histórico de lealdade persiste")
+
+func test_version_sync() -> void:
+	var pg := FileAccess.get_file_as_string("res://project.godot")
+	check(pg.contains('config/version="%s"' % Rules.VERSION), "project.godot na versão %s" % Rules.VERSION)
+	var ep := FileAccess.get_file_as_string("res://export_presets.cfg")
+	check(ep.contains('version/name="%s"' % Rules.VERSION), "export_presets com version/name %s" % Rules.VERSION)
+	check(ep.contains("version/code=%d" % Rules.VERSION_CODE), "export_presets com version/code %d" % Rules.VERSION_CODE)

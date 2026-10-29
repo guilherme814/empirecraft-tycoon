@@ -8,8 +8,9 @@ Inspirado na linhagem dos tycoons de PC (Game Dev Tycoon, Devices Tycoon), redes
 poucas telas, alvos grandes, **automação nativa** (contratar até lotar, treinar todos, pesquisar tudo)
 e economia pensada para sessões curtas.
 
-## Estado atual (v0.2)
-Loop jogável completo: **Equipe → Pesquisa → Produto → Lançamento → Vendas → Mercado**.
+## Estado atual (v0.4)
+Loop jogável completo: **Equipe → Pesquisa → Produto → Testes → Lançamento → Avaliações → Vendas → Mercado**,
+com marketing, feedback de clientes e equipe, chips próprios, SO próprio e **lealdade à marca** (fãs compram no dia 1).
 Veja [docs/DESIGN.md](docs/DESIGN.md) para as regras, a arquitetura e o roteiro.
 
 ## Rodando

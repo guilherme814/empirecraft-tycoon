@@ -48,6 +48,8 @@ var lab_jobs: Array = []          # ensaios em andamento
 var chips: Array = []             # processadores projetados
 var chip_dev: Variant = null      # chip em desenvolvimento {design, work, req}
 var requests: Array = []          # pedidos da equipe
+var loyalty: float = Loyalty.START  # lealdade à marca (0..100)
+var loyalty_log: Array = []       # últimas mudanças {day, d, why}
 
 func _init(p_seed: int = 0) -> void:
 	seed_value = p_seed if p_seed != 0 else int(Time.get_ticks_usec() % 2147483646) + 1
@@ -590,6 +592,12 @@ func release(prod_id: int, price: float = -1.0, promise: float = 0.0) -> Diction
 	var best := market.best_quality(p.category)
 	var adv: float = effective_quality(p) / maxf(best, 1.0) - 1.0
 	p.promise_gap = maxf(0.0, promise - adv) if promise > 0.0 else 0.0
+	# fãs compram no primeiro dia e já chegam sabendo do produto (antes das avaliações)
+	var fans := Loyalty.preorders(self, p.category)
+	p.awareness = maxf(p.awareness, Loyalty.initial_awareness(self))
+	if fans > 0:
+		_book_sale(p, fans, p.category)
+		add_log("%d %s compraram %s no lançamento (lealdade %d%%)" % [fans, "fã" if fans == 1 else "fãs", p.pname, int(loyalty)], "good", "success")
 	add_log("%s foi lançado por %s!" % [p.pname, Fmt.money(p.price)], "good", "release")
 	Reviews.launch(self, p)
 	return _ok()
@@ -624,7 +632,7 @@ func attractiveness(p: Product) -> float:
 	var dec := Market.decay(age, float(cat.lifetime))
 	var hype := 1.0 + 0.6 * maxf(0.0, 1.0 - float(age) / 30.0) * (1.0 + effect("hype") + 1.5 * p.promise)
 	var rep_factor := 0.5 + reputation / 100.0
-	return q_factor * price_factor * dec * hype * rep_factor * rating_factor(p) * Marketing.factor(Marketing.awareness_of(self, p)) * (1.04 if is_fashion_color(str(p.design.get("color", ""))) else 1.0)
+	return q_factor * price_factor * dec * hype * rep_factor * rating_factor(p) * Loyalty.sales_mult(self) * Marketing.factor(Marketing.awareness_of(self, p)) * (1.04 if is_fashion_color(str(p.design.get("color", ""))) else 1.0)
 
 ## Nota dos clientes realimenta as vendas: 1★ = 0.75, 3★ = 1.0, 5★ = 1.25.
 func rating_factor(p: Product) -> float:
@@ -634,6 +642,18 @@ func rating_factor(p: Product) -> float:
 
 func is_fashion_color(color_id: String) -> bool:
 	return color_id != "" and color_id == str(market.fashion.get("color", ""))
+
+func _book_sale(p: Product, units: int, cat_id: String) -> void:
+	var revenue: float = float(units) * p.price
+	var cost: float = float(units) * current_unit_cost(p)
+	_income(revenue, "sales")
+	var comm := revenue * deal_commission(cat_id)
+	if comm > 0.0:
+		_expense(comm, "commission")
+	_expense(cost, "cogs")
+	p.units_total += units
+	p.revenue_total += revenue
+	p.cost_total += cost
 
 func _sell() -> void:
 	var exp_q := market.expectation(day)
@@ -664,16 +684,7 @@ func _sell() -> void:
 			var units := int(floor(units_f))
 			p.units_carry = units_f - float(units)
 			if units > 0:
-				var revenue: float = float(units) * p.price
-				var cost: float = float(units) * current_unit_cost(p)
-				_income(revenue, "sales")
-				var comm := revenue * deal_commission(cat_id)
-				if comm > 0.0:
-					_expense(comm, "commission")
-				_expense(cost, "cogs")
-				p.units_total += units
-				p.revenue_total += revenue
-				p.cost_total += cost
+				_book_sale(p, units, cat_id)
 			p.ema_units = p.ema_units * 0.9 + float(units) * 0.1
 			var ratio: float = effective_quality(p) / exp_q
 			if ratio > 1.1:
@@ -726,6 +737,7 @@ func _month_end() -> void:
 	_recalls()
 	Reviews.monthly(self)
 	Feedback.monthly(self)
+	Loyalty.monthly(self)
 	stocks.month_end(self)
 	history.append({"day": day, "money": money, "value": stocks.value})
 	if history.size() > 120:
@@ -1241,6 +1253,7 @@ func _recalls() -> void:
 			var loss: float = maxf(2000.0, p.ema_units * 30.0 * current_unit_cost(p) * 0.4)
 			_expense(loss, "recall")
 			reputation = maxf(0.0, reputation - 2.0)
+			Loyalty.on_recall(self, p)
 			for i in 3:
 				p.reviews.append(Reviews.customer(self, p, true))
 				p.rating = lerpf(p.rating, 1.5, 0.15)
@@ -1283,6 +1296,7 @@ func to_dict() -> Dictionary:
 		"stocks": stocks.to_dict(), "own_os": own_os, "factory": factory_level,
 		"ledger": ledger, "ledger_last": ledger_last, "history": history, "loan": loan, "deals": deals,
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
+		"loyalty": loyalty, "loyalty_log": loyalty_log,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1329,5 +1343,7 @@ static func from_dict(d: Dictionary) -> Company:
 	c.chips = d.get("chips", []).duplicate(true)
 	c.chip_dev = d.get("chip_dev", null)
 	c.requests = d.get("requests", []).duplicate(true)
+	c.loyalty = float(d.get("loyalty", Loyalty.START))
+	c.loyalty_log = d.get("loyalty_log", []).duplicate(true)
 	c.rng.state = str(d.get("rng_state", "0")).to_int()
 	return c

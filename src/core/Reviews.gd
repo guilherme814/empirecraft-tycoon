@@ -157,6 +157,7 @@ static func launch(c: Company, p: Product) -> void:
 		c.reputation = maxf(0.0, c.reputation - 2.5)
 	elif p.critic >= 65.0:
 		c.reputation = minf(100.0, c.reputation + 0.8)
+	Loyalty.on_launch(c, p)
 	c.add_log("Avaliações de %s: crítica %d, clientes %.1f/5" % [p.pname, int(p.critic), p.rating],
 		"good" if p.critic >= 60.0 else "bad", "event_good" if p.critic >= 60.0 else "event_bad")
 	c.review_ready.emit(p.id)

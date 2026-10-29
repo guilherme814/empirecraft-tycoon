@@ -4,7 +4,7 @@ config_version=5
 [application]
 
 config/name="EmpireCraft Tycoon"
-config/version="0.2.0"
+config/version="0.4.0"
 config/description="Tycoon de Empreendedorismo e Tecnologia"
 run/main_scene="res://src/scenes/MainMenu.tscn"
 config/icon="res://icon.svg"

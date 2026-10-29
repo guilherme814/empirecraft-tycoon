@@ -25,6 +25,7 @@ func rebuild() -> void:
 	_stat(row, "trend_up", "Resultado no mês", Fmt.money(profit_now), Palette.GOOD if profit_now >= 0.0 else Palette.BAD)
 	_stat(row, "nav_team", "Custos fixos/mês", Fmt.money(c.monthly_payroll() + c.monthly_rent()), Palette.TEXT)
 	_stat(row, "star", "Reputação", "%d / 100" % int(c.reputation), Palette.INFO)
+	_stat(row, "heart", "Lealdade", "%d%%  ·  %s" % [int(c.loyalty), Loyalty.tier(c.loyalty)], Palette.INFO)
 
 	# projetos
 	var proj := UI.card()

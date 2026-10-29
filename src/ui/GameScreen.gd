@@ -369,6 +369,8 @@ func _show_launch(p: Product) -> void:
 	else:
 		v.add_child(UI.wrap("%d ensaio(s) concluído(s)." % tested, 23, Palette.GOOD))
 	v.add_child(UI.button("Ir ao Laboratório de testes", func(): _close_overlay(); _show_page("lab"), "info", 66))
+	var fan_n := Loyalty.preorders(c, p.category)
+	v.add_child(UI.wrap("Fãs (lealdade %d%%): %d pré-vendas no primeiro dia." % [int(c.loyalty), fan_n], 24, Palette.INFO))
 	v.add_child(UI.wrap("Prometa uma vantagem na campanha: mais atenção no lançamento, mas se o produto não entregar, a reputação cai.", 22, Palette.MUTED))
 	for pr in [0.0, 0.1, 0.25, 0.4]:
 		var fee: float = float(Company.PROMISE_COSTS[pr])
