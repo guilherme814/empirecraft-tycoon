@@ -1,18 +1,31 @@
 [
-  {"name": "Tendência de Mercado",  "text": "Uma categoria está em alta! Demanda +40% por 60 dias.", "kind": "good", "weight": 3,
-   "effect": {"trend": {"cat": "random", "mult": 1.4, "days": 60}, "reputation": 2}},
-  {"name": "Crise Econômica",       "text": "Recessão: a demanda geral cai 25% por 90 dias.", "kind": "bad", "weight": 1,
-   "effect": {"trend": {"cat": "all", "mult": 0.75, "days": 90}}},
-  {"name": "Feira de Tecnologia",   "text": "Sua empresa brilhou na feira: reputação e pesquisa em alta.", "kind": "good", "weight": 2,
-   "effect": {"reputation": 4, "research_points": 40}},
-  {"name": "Vazamento de Dados",    "text": "Informações vazaram. Reputação e caixa sofrem.", "kind": "bad", "weight": 1,
-   "effect": {"reputation": -5, "money": -8000}},
-  {"name": "Prêmio de Inovação",    "text": "Sua empresa ganhou um prêmio de inovação!", "kind": "good", "weight": 1,
-   "effect": {"reputation": 6}},
-  {"name": "Investidor-anjo",       "text": "Um investidor-anjo aportou capital na empresa.", "kind": "good", "weight": 1,
-   "effect": {"money": 25000}},
-  {"name": "Licenciamento",         "text": "Uma oferta de licenciamento de patentes rendeu um bônus.", "kind": "good", "weight": 2,
-   "effect": {"money": 12000}},
-  {"name": "Rival lança novidade",  "text": "Um concorrente lançou um produto forte.", "kind": "bad", "weight": 2,
-   "effect": {"comp_launch": true}}
+  {"name": "Tendência de Mercado", "text": "Uma categoria está em alta e consumidores estão mais abertos a novos produtos.", "kind": "good", "weight": 3,
+   "effect": {"trend": {"cat": "random", "mult": 1.35, "days": 60}, "market": {"macro": 0.08, "sentiment": 0.10}, "reputation": 2}},
+
+  {"name": "Crise Econômica", "text": "A economia desacelera e o consumo cai em todos os segmentos.", "kind": "bad", "weight": 2,
+   "effect": {"trend": {"cat": "all", "mult": 0.82, "days": 90}, "market": {"macro": -0.18, "sentiment": -0.12}}},
+
+  {"name": "Escassez de Componentes", "text": "A cadeia de suprimentos foi afetada e os custos de produção aumentaram.", "kind": "bad", "weight": 2,
+   "effect": {"market": {"supply_chain": -0.22, "inflation": 0.03}, "money": -12000}},
+
+  {"name": "Pico de Demanda", "text": "O mercado reagiu positivamente a uma categoria tecnológica e a procura dispara.", "kind": "good", "weight": 2,
+   "effect": {"trend": {"cat": "random", "mult": 1.45, "days": 45}, "market": {"sentiment": 0.12, "macro": 0.06}}},
+
+  {"name": "Feira de Tecnologia", "text": "Sua empresa sobressaiu em uma feira e o mercado percebeu seu potencial.", "kind": "good", "weight": 2,
+   "effect": {"reputation": 4, "research_points": 40, "market": {"sentiment": 0.08}}},
+
+  {"name": "Vazamento de Dados", "text": "Uma falha de segurança causou perda de confiança e impacto financeiro.", "kind": "bad", "weight": 1,
+   "effect": {"reputation": -5, "money": -8000, "market": {"sentiment": -0.10}}},
+
+  {"name": "Prêmio de Inovação", "text": "Sua empresa venceu um prêmio internacional e fortaleceu a percepção de valor da marca.", "kind": "good", "weight": 1,
+   "effect": {"reputation": 6, "market": {"sentiment": 0.06}}},
+
+  {"name": "Investidor-anjo", "text": "Um investidor reconheceu o potencial do negócio e injetou capital na companhia.", "kind": "good", "weight": 1,
+   "effect": {"money": 25000, "market": {"macro": 0.04}}},
+
+  {"name": "Licenciamento de Patentes", "text": "Uma parceria de licenciamento gerou receita adicional e reforçou sua posição no mercado.", "kind": "good", "weight": 2,
+   "effect": {"money": 12000, "reputation": 2}},
+
+  {"name": "Rival Lança Novidade", "text": "Um concorrente lançou um produto forte e a pressão competitiva aumentou.", "kind": "bad", "weight": 2,
+   "effect": {"comp_launch": true, "market": {"sentiment": -0.04}}}
 ]
