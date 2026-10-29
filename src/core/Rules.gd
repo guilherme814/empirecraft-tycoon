@@ -31,7 +31,7 @@ const SPEC_AXIS_MAX := 100
 const SPEC_STEP := 5
 
 # Mercado
-const OUTSIDE_OPTION := 1.0       # "não comprar nada": quanto maior, menos share para todos
+const OUTSIDE_OPTION := 1.0
 const EXPECTATION_START := 35.0
 const EXPECTATION_PER_DAY := 0.04
 const EXPECTATION_MAX := 160.0
@@ -45,3 +45,9 @@ const SUPPLY_CHAIN_MIN := 0.7
 const SUPPLY_CHAIN_MAX := 1.35
 const INFLATION_MIN := 0.01
 const INFLATION_MAX := 0.14
+
+# Marketing e produto
+const MARKETING_CHANNELS := ["social", "retail", "streaming", "influencer", "launch_event"]
+const PRODUCT_TEST_TYPES := ["field", "beta", "usability", "focus_group"]
+const MAX_FEEDBACK_MEMORY := 24
+const MAX_TEST_HISTORY := 12
