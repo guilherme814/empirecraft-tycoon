@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 const TAX_RATE := 0.15
 const LOAN_RATE := 0.012
 const MAX_DEALS := 4
@@ -43,6 +43,11 @@ var ledger_last: Dictionary = {}  # mês anterior
 var loan: float = 0.0
 var history: Array = []           # fim de cada mês: {day, money, value}
 var deals: Array = []             # {id, until}
+var campaigns: Array = []         # campanhas de marketing ativas
+var lab_jobs: Array = []          # ensaios em andamento
+var chips: Array = []             # processadores projetados
+var chip_dev: Variant = null      # chip em desenvolvimento {design, work, req}
+var requests: Array = []          # pedidos da equipe
 
 func _init(p_seed: int = 0) -> void:
 	seed_value = p_seed if p_seed != 0 else int(Time.get_ticks_usec() % 2147483646) + 1
@@ -412,7 +417,7 @@ func estimate_quality(cat_id: String, specs: Dictionary, design: Dictionary = {}
 
 ## Qualidade final esperada, já com sistema e fabricante escolhidos.
 func estimate_final_quality(cat_id: String, specs: Dictionary, design: Dictionary, os_id: String, mfr_id: String) -> float:
-	return estimate_quality(cat_id, specs, design) * os_mult(os_id, cat_id) * float(mfr_stats(mfr_id).q)
+	return estimate_quality(cat_id, specs, design) * os_mult(os_id, cat_id) * float(mfr_stats(mfr_id).q) * chip_mult(cat_id, specs, design)
 
 ## Estatísticas ao vivo do editor (qualidade, custo, preço justo, margem, prazo).
 func device_stats(cat_id: String, specs: Dictionary, design: Dictionary, os_id: String, mfr_id: String) -> Dictionary:
@@ -421,9 +426,19 @@ func device_stats(cat_id: String, specs: Dictionary, design: Dictionary, os_id: 
 	var fp := fair_price(cat_id, q)
 	return {"quality": q, "unit_cost": uc, "fair_price": fp, "margin": (fp - uc) / maxf(fp, 1.0)}
 
+func chip_mult(cat_id: String, specs: Dictionary, design: Dictionary) -> float:
+	var cid := int(design.get("chip", 0))
+	if cid == 0:
+		return 1.0
+	return Chips.quality_mult(self, Chips.get_chip(self, cid), cat_id, specs)
+
+func chip_cost(cat_id: String, design: Dictionary) -> float:
+	var cid := int(design.get("chip", 0))
+	return 0.0 if cid == 0 else Chips.cost_delta(Chips.get_chip(self, cid), cat_id)
+
 func estimate_final_cost(cat_id: String, specs: Dictionary, design: Dictionary, os_id: String, mfr_id: String) -> float:
 	var cat: Dictionary = GameData.category(cat_id)
-	return estimate_unit_cost(cat_id, specs, design) * float(mfr_stats(mfr_id).cost) * (1.0 - deal_cost_discount()) \
+	return (estimate_unit_cost(cat_id, specs, design) + chip_cost(cat_id, design)) * float(mfr_stats(mfr_id).cost) * (1.0 - deal_cost_discount()) \
 		+ float(os_info(os_id).get("royalty", 0.0)) * float(cat.unit_cost)
 
 func os_option_ids() -> Array:
@@ -511,7 +526,7 @@ func create_product(pname: String, cat_id: String, specs: Dictionary, price: flo
 	p.category = cat_id
 	p.specs = specs.duplicate()
 	p.price = price
-	p.unit_cost = estimate_unit_cost(cat_id, specs, design)
+	p.unit_cost = estimate_unit_cost(cat_id, specs, design) + chip_cost(cat_id, design)
 	p.design = design.duplicate()
 	p.os_id = os_id
 	p.mfr = mfr_id
@@ -547,6 +562,7 @@ func _finish_dev(p: Product) -> void:
 	p.work_done = p.work_required
 	p.quality = clampf(estimate_quality(p.category, p.specs, p.design) + rng.randf_range(-2.0, 2.0), 5.0, 250.0)
 	p.state = Product.STATE_READY
+	Lab.roll_flaws(self, p)
 	if p.price <= 0.0:
 		p.price = roundf(fair_price(p.category, effective_quality(p)))
 	add_log("%s está pronto para lançamento (qualidade %d)" % [p.pname, int(round(p.quality))], "good", "ready")
@@ -608,7 +624,7 @@ func attractiveness(p: Product) -> float:
 	var dec := Market.decay(age, float(cat.lifetime))
 	var hype := 1.0 + 0.6 * maxf(0.0, 1.0 - float(age) / 30.0) * (1.0 + effect("hype") + 1.5 * p.promise)
 	var rep_factor := 0.5 + reputation / 100.0
-	return q_factor * price_factor * dec * hype * rep_factor * rating_factor(p) * (1.04 if is_fashion_color(str(p.design.get("color", ""))) else 1.0)
+	return q_factor * price_factor * dec * hype * rep_factor * rating_factor(p) * Marketing.factor(Marketing.awareness_of(self, p)) * (1.04 if is_fashion_color(str(p.design.get("color", ""))) else 1.0)
 
 ## Nota dos clientes realimenta as vendas: 1★ = 0.75, 3★ = 1.0, 5★ = 1.25.
 func rating_factor(p: Product) -> float:
@@ -674,6 +690,10 @@ func advance_day() -> void:
 	_develop()
 	_research_tick()
 	_os_tick()
+	Chips.tick(self)
+	Marketing.tick(self)
+	Lab.tick(self)
+	Lab.beta_tick(self)
 	_sell()
 	market.tick(day)
 	stocks.daily(self)
@@ -705,6 +725,7 @@ func _month_end() -> void:
 	expense_month = 0.0
 	_recalls()
 	Reviews.monthly(self)
+	Feedback.monthly(self)
 	stocks.month_end(self)
 	history.append({"day": day, "money": money, "value": stocks.value})
 	if history.size() > 120:
@@ -859,7 +880,8 @@ func default_design(cat_id: String) -> Dictionary:
 	var shapes: Array = GameData.designs().shapes.get(cat_id, [])
 	return {"shape": str(shapes[0].id) if not shapes.is_empty() else "classic", "finish": "alu", "color": "graphite",
 		"w": 5, "h": 5, "d": 5, "corner": 5, "strap": 5, "features": [],
-		"trim": "silver", "wall": "aurora", "cam": "plate", "notch": "punch", "band": "silicone", "led": "blue", "brand": true}
+		"trim": "silver", "wall": "aurora", "cam": "plate", "notch": "punch", "band": "silicone", "led": "blue", "brand": true,
+		"package": "basic", "acc": [], "chip": 0}
 
 func design_item_unlocked(item: Dictionary) -> bool:
 	return str(item.req) == "" or research_level(str(item.req)) >= int(item.lvl)
@@ -885,7 +907,29 @@ func design_valid(cat_id: String, design: Dictionary) -> bool:
 		var ft := feature_item(cat_id, str(fid))
 		if ft.is_empty() or not design_item_unlocked(ft):
 			return false
+	var pk := package_item(str(design.get("package", "basic")))
+	if pk.is_empty() or not design_item_unlocked(pk):
+		return false
+	for aid in design.get("acc", []):
+		var ac := accessory_item(str(aid))
+		if ac.is_empty() or not design_item_unlocked(ac) or not (ac.cats as Array).has(cat_id):
+			return false
+	var cid := int(design.get("chip", 0))
+	if cid != 0 and Chips.get_chip(self, cid).is_empty():
+		return false
 	return true
+
+func package_item(id: String) -> Dictionary:
+	for x in GameData.designs().get("packages", []):
+		if x.id == id:
+			return x
+	return {}
+
+func accessory_item(id: String) -> Dictionary:
+	for x in GameData.designs().get("accessories", []):
+		if x.id == id:
+			return x
+	return {}
 
 func feature_item(cat_id: String, id: String) -> Dictionary:
 	for it in GameData.features(cat_id):
@@ -910,6 +954,15 @@ func design_mods(cat_id: String, design: Dictionary) -> Dictionary:
 		if not ft.is_empty():
 			q += float(ft.q)
 			cost *= float(ft.cost)
+	var pk := package_item(str(design.get("package", "basic")))
+	if not pk.is_empty():
+		q += float(pk.q)
+		cost *= float(pk.cost)
+	for aid in design.get("acc", []):
+		var ac := accessory_item(str(aid))
+		if not ac.is_empty():
+			q += float(ac.q)
+			cost *= float(ac.cost)
 	# medidas (1-9): maior = mais qualidade e mais custo; mais fino = mais caro e mais elegante
 	var size := (float(design.get("w", 5)) + float(design.get("h", 5))) * 0.5
 	q += 0.012 * (size - 5.0)
@@ -931,7 +984,7 @@ func os_info(id: String) -> Dictionary:
 	if id == "own":
 		var d: Dictionary = GameData.os_data().own
 		var v := int(own_os.get("version", 0))
-		var eco := minf(0.12, 0.05 * log(1.0 + os_ecosystem() / float(d.eco_base)) / log(10.0)) * (1.0 + 0.15 * float(os_focus().eco))
+		var eco := minf(0.12, 0.05 * log(1.0 + os_ecosystem() / float(d.eco_base)) / log(10.0)) * (1.0 + 0.15 * float(os_axis_totals().eco))
 		return {"id": "own", "name": own_os.get("name", d.name), "q": float(d.base_q) + float(d.q_per_version) * float(maxi(v - 1, 0)) + eco,
 			"royalty": 0.0, "version": v, "eco": eco}
 	for o in GameData.os_data().licensed:
@@ -975,8 +1028,59 @@ func os_focus_used() -> int:
 		t += int(os_focus()[k])
 	return t
 
-func os_focus_relevance(cat_id: String) -> float:
+## Foco + pontos dos recursos ativos de software.
+func os_axis_totals() -> Dictionary:
 	var f := os_focus()
+	for fid in own_os.get("features", []):
+		var ft := os_feature(str(fid))
+		if not ft.is_empty():
+			f[str(ft.axis)] = int(f[str(ft.axis)]) + int(ft.pts)
+	return f
+
+func os_feature(id: String) -> Dictionary:
+	for ft in GameData.os_data().get("features", []):
+		if ft.id == id:
+			return ft
+	return {}
+
+func os_feature_slots() -> int:
+	return 1 + int(own_os.get("version", 0))
+
+func os_feature_blocker(id: String) -> String:
+	var ft := os_feature(id)
+	if ft.is_empty():
+		return "Recurso inválido"
+	if int(own_os.get("version", 0)) < 1:
+		return "Lance a v1 do seu sistema"
+	if research_level("res_software") < int(ft.res):
+		return "Pesquise Engenharia de Software nv.%d" % int(ft.res)
+	if (own_os.get("features", []) as Array).has(id):
+		return ""
+	if (own_os.get("features", []) as Array).size() >= os_feature_slots():
+		return "Sem espaço (%d recursos)" % os_feature_slots()
+	if not (own_os.get("owned", []) as Array).has(id) and money < float(ft.cost):
+		return "Custa %s" % Fmt.money(float(ft.cost))
+	return ""
+
+func toggle_os_feature(id: String) -> Dictionary:
+	var why := os_feature_blocker(id)
+	if why != "":
+		return _fail(why)
+	var act_list: Array = own_os.get("features", [])
+	var owned: Array = own_os.get("owned", [])
+	if act_list.has(id):
+		act_list.erase(id)
+	else:
+		if not owned.has(id):
+			_expense(float(os_feature(id).cost), "dev")
+			owned.append(id)
+		act_list.append(id)
+	own_os["features"] = act_list
+	own_os["owned"] = owned
+	return _ok()
+
+func os_focus_relevance(cat_id: String) -> float:
+	var f := os_axis_totals()
 	var rel: Dictionary = OS_RELEVANCE.get(cat_id, {})
 	var t := 0.0
 	for k in rel:
@@ -1122,7 +1226,7 @@ func set_manufacturer(prod_id: int, id: String) -> Dictionary:
 	return _ok("Contrato com %s fechado" % (contractor(id).get("name", "fábrica própria")))
 
 func effective_quality(p: Product) -> float:
-	return p.quality * os_mult(p.os_id, p.category) * float(mfr_stats(p.mfr).q)
+	return p.quality * os_mult(p.os_id, p.category) * float(mfr_stats(p.mfr).q) * chip_mult(p.category, p.specs, p.design)
 
 func current_unit_cost(p: Product) -> float:
 	var cat: Dictionary = GameData.category(p.category)
@@ -1132,7 +1236,7 @@ func current_unit_cost(p: Product) -> float:
 ## Defeitos de fábrica: chance mensal por produto, maior em terceirizadas baratas.
 func _recalls() -> void:
 	for p in released_products():
-		var risk: float = float(mfr_stats(p.mfr).risk)
+		var risk: float = float(mfr_stats(p.mfr).risk) + 0.012 * float(Lab.severity_sum(p))
 		if risk > 0.0 and rng.randf() < risk:
 			var loss: float = maxf(2000.0, p.ema_units * 30.0 * current_unit_cost(p) * 0.4)
 			_expense(loss, "recall")
@@ -1146,6 +1250,9 @@ func company_value() -> float:
 	return stocks.value
 
 # ───────────────────────── resumo e save ─────────────────────────
+
+func get_product(prod_id: int) -> Product:
+	return _find_in(products, prod_id)
 
 func released_products() -> Array:
 	return products.filter(func(p): return p.state == Product.STATE_RELEASED)
@@ -1175,6 +1282,7 @@ func to_dict() -> Dictionary:
 		"last_income": last_income, "last_expense": last_expense,
 		"stocks": stocks.to_dict(), "own_os": own_os, "factory": factory_level,
 		"ledger": ledger, "ledger_last": ledger_last, "history": history, "loan": loan, "deals": deals,
+		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1216,5 +1324,10 @@ static func from_dict(d: Dictionary) -> Company:
 	c.loan = float(d.get("loan", 0.0))
 	c.history = d.get("history", []).duplicate(true)
 	c.deals = d.get("deals", []).duplicate(true)
+	c.campaigns = d.get("campaigns", []).duplicate(true)
+	c.lab_jobs = d.get("lab_jobs", []).duplicate(true)
+	c.chips = d.get("chips", []).duplicate(true)
+	c.chip_dev = d.get("chip_dev", null)
+	c.requests = d.get("requests", []).duplicate(true)
 	c.rng.state = str(d.get("rng_state", "0")).to_int()
 	return c

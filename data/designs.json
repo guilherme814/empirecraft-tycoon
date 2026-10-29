@@ -298,5 +298,129 @@
    "id": "mesh",
    "name": "Malha metálica"
   }
+ ],
+ "packages": [
+  {
+   "id": "basic",
+   "name": "Caixa simples",
+   "q": 0.0,
+   "cost": 1.0,
+   "desc": "O básico.",
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "eco",
+   "name": "Papelão reciclado",
+   "q": 0.004,
+   "cost": 1.01,
+   "desc": "Imagem sustentável.",
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "premium",
+   "name": "Caixa premium",
+   "q": 0.014,
+   "cost": 1.03,
+   "desc": "Unboxing marcante.",
+   "req": "res_package",
+   "lvl": 1
+  },
+  {
+   "id": "collector",
+   "name": "Edição de colecionador",
+   "q": 0.026,
+   "cost": 1.06,
+   "desc": "Para fãs: caixa magnética, selo e pôster.",
+   "req": "res_package",
+   "lvl": 2
+  }
+ ],
+ "accessories": [
+  {
+   "id": "charger",
+   "name": "Carregador",
+   "q": 0.006,
+   "cost": 1.03,
+   "cats": [
+    "phone",
+    "laptop",
+    "watch",
+    "console"
+   ],
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "case",
+   "name": "Capa protetora",
+   "q": 0.004,
+   "cost": 1.015,
+   "cats": [
+    "phone",
+    "watch"
+   ],
+   "req": "",
+   "lvl": 0
+  },
+  {
+   "id": "earbuds",
+   "name": "Fones de ouvido",
+   "q": 0.012,
+   "cost": 1.05,
+   "cats": [
+    "phone",
+    "laptop"
+   ],
+   "req": "res_package",
+   "lvl": 1
+  },
+  {
+   "id": "strap2",
+   "name": "Pulseira extra",
+   "q": 0.008,
+   "cost": 1.03,
+   "cats": [
+    "watch"
+   ],
+   "req": "res_package",
+   "lvl": 1
+  },
+  {
+   "id": "controller2",
+   "name": "2º controle",
+   "q": 0.014,
+   "cost": 1.06,
+   "cats": [
+    "console"
+   ],
+   "req": "res_package",
+   "lvl": 1
+  },
+  {
+   "id": "dock",
+   "name": "Dock/Base",
+   "q": 0.012,
+   "cost": 1.05,
+   "cats": [
+    "laptop",
+    "console",
+    "phone"
+   ],
+   "req": "res_package",
+   "lvl": 2
+  },
+  {
+   "id": "sleeve",
+   "name": "Bolsa/Sleeve",
+   "q": 0.005,
+   "cost": 1.02,
+   "cats": [
+    "laptop"
+   ],
+   "req": "",
+   "lvl": 0
+  }
  ]
 }

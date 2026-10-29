@@ -5,6 +5,7 @@ signal company_changed
 signal ticked(day: int)
 signal changed                       # o jogador fez uma ação (contratar, pesquisar...)
 signal notice(text: String, kind: String)
+signal ui_request(kind: String, pid: int)   # "launch" | "reviews": a tela principal abre o painel
 
 var company: Company = null
 var _last_autosave_day: int = 0
@@ -27,7 +28,12 @@ func _attach() -> void:
 	_last_autosave_day = company.day
 	if not company.log_added.is_connected(_on_log):
 		company.log_added.connect(_on_log)
+	if not company.review_ready.is_connected(_on_review):
+		company.review_ready.connect(_on_review)
 	company_changed.emit()
+
+func _on_review(pid: int) -> void:
+	ui_request.emit("reviews", pid)
 
 func _on_log(text: String, kind: String, sfx: String) -> void:
 	if sfx != "":

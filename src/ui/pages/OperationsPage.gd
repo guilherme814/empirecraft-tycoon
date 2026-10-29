@@ -31,7 +31,7 @@ func signature() -> String:
 	var deal_ids: Array = []
 	for d in c.active_deals():
 		deal_ids.append(d.id)
-	return "%d|%s|%d|%d|%s|%s|%d|%d|%d" % [int(c.own_os.get("version", 0)), str(c.own_os.get("focus", {})), 1 if dev != null else 0,
+	return "%d|%s|%d|%d|%s|%s|%d|%d|%d" % [int(c.own_os.get("version", 0)), str(c.own_os.get("focus", {})) + str(c.own_os.get("features", [])) + str(c.research_level("res_software")), 1 if dev != null else 0,
 		c.factory_level, str(deal_ids), c.os_accent(), rl, int(c.money / 20000.0), int(c.reputation / 5.0)]
 
 func rebuild() -> void:
@@ -107,6 +107,28 @@ func _build_os(parent: Control) -> void:
 		v.add_child(btn)
 		if why != "":
 			v.add_child(UI.label(why, 24, Palette.BAD))
+	if ver >= 1:
+		v.add_child(UI.label("Recursos de software  (%d / %d espaços)" % [(c.own_os.get("features", []) as Array).size(), c.os_feature_slots()], 24, Palette.MUTED))
+		var fg := GridContainer.new()
+		fg.columns = 2
+		fg.add_theme_constant_override("h_separation", 8)
+		fg.add_theme_constant_override("v_separation", 8)
+		v.add_child(fg)
+		for ft in GameData.os_data().features:
+			var on: bool = (c.own_os.get("features", []) as Array).has(str(ft.id))
+			var owned: bool = (c.own_os.get("owned", []) as Array).has(str(ft.id))
+			var why := c.os_feature_blocker(str(ft.id))
+			var label := "%s%s  +%d %s" % ["✓ " if on else "", str(ft.name), int(ft.pts), str(Company.OS_AXIS_NAMES[str(ft.axis)]).substr(0, 4)]
+			if not on and not owned:
+				label += "  " + Fmt.money(float(ft.cost))
+			var fb := UI.button(label, func(): act(c.toggle_os_feature(str(ft.id))), "primary" if on else "normal", 66, 0, "lock" if why != "" and not on and not why.begins_with("Custa") and not why.begins_with("Sem espaço") else "")
+			fb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			fb.clip_text = true
+			fb.disabled = why != "" and not on
+			fb.add_theme_font_size_override("font_size", 21)
+			fb.tooltip_text = str(ft.desc)
+			fg.add_child(fb)
+		v.add_child(UI.wrap("Cada recurso ativo soma pontos ao foco do sistema (bônus de qualidade por categoria). Ative até %d por vez; os já comprados podem ser trocados de graça." % c.os_feature_slots(), 20, Color("9fc0e8")))
 	v.add_child(UI.wrap("Cada versão aumenta a qualidade. O foco define em quais aparelhos o sistema brilha: Visual (celulares/relógios), Desempenho (notebooks/consoles).", 21, Color("9fc0e8")))
 
 func _build_licensed(parent: Control) -> void:

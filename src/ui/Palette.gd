@@ -12,6 +12,7 @@ const ACCENT := Color("ff9a2e")
 const GOOD := Color("4cd18a")
 const BAD := Color("ff5d6c")
 const INFO := Color("5aa9ff")
+const WARN := Color("ffc857")
 const ON_COLOR := Color("14161c")   # texto sobre botões coloridos
 
 static var _theme: Theme = null

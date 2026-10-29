@@ -257,5 +257,85 @@
    "key": "none",
    "per_level": 0
   }
+ },
+ {
+  "id": "res_marketing",
+  "name": "Marketing Avançado",
+  "desc": "Desbloqueia canais de mídia (web, cinema, eSports, TV).",
+  "max": 3,
+  "rp_base": 70,
+  "rp_growth": 1.8,
+  "money_base": 12000,
+  "money_growth": 1.8,
+  "requires": "res_hype",
+  "requires_level": 1,
+  "effect": {
+   "key": "none",
+   "per_level": 0
+  }
+ },
+ {
+  "id": "res_lab",
+  "name": "Laboratório de Testes",
+  "desc": "Novos ensaios (água, sinal, câmera) e testes mais rápidos.",
+  "max": 3,
+  "rp_base": 60,
+  "rp_growth": 1.8,
+  "money_base": 10000,
+  "money_growth": 1.8,
+  "requires": "res_specs",
+  "requires_level": 1,
+  "effect": {
+   "key": "none",
+   "per_level": 0
+  }
+ },
+ {
+  "id": "res_chips",
+  "name": "Projeto de Chips",
+  "desc": "Permite projetar processadores próprios; níveis liberam nós de fabricação menores.",
+  "max": 4,
+  "rp_base": 120,
+  "rp_growth": 1.9,
+  "money_base": 30000,
+  "money_growth": 1.9,
+  "requires": "res_tech",
+  "requires_level": 2,
+  "effect": {
+   "key": "none",
+   "per_level": 0
+  }
+ },
+ {
+  "id": "res_software",
+  "name": "Engenharia de Software",
+  "desc": "Libera recursos extras para o seu sistema operacional.",
+  "max": 3,
+  "rp_base": 90,
+  "rp_growth": 1.8,
+  "money_base": 18000,
+  "money_growth": 1.8,
+  "requires": "res_os",
+  "requires_level": 1,
+  "effect": {
+   "key": "none",
+   "per_level": 0
+  }
+ },
+ {
+  "id": "res_package",
+  "name": "Embalagem e Acessórios",
+  "desc": "Embalagens premium e acessórios na caixa.",
+  "max": 2,
+  "rp_base": 45,
+  "rp_growth": 1.8,
+  "money_base": 8000,
+  "money_growth": 1.8,
+  "requires": "res_design",
+  "requires_level": 1,
+  "effect": {
+   "key": "none",
+   "per_level": 0
+  }
  }
 ]

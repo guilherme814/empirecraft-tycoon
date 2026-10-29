@@ -102,11 +102,75 @@ func _ready() -> void:
 	screen._show_page("finance")
 	await get_tree().process_frame
 	ok(c.stocks.holding("Orbital") == 100, "compra de ações via página")
+	# v0.4: marketing, laboratório, hardware, feedback e software
+	c.money += 2000000.0
+	c.research_points += 5000.0
+	for rid in ["res_tech", "res_tech", "res_tech", "res_specs", "res_hype", "res_design", "res_os", "res_marketing", "res_lab", "res_chips", "res_software", "res_package"]:
+		for i in 4:
+			c.research_points += 800.0
+			c.do_research(rid)
+	var rel: Array = c.released_products()
+	ok(not rel.is_empty(), "há produto lançado para testar as páginas novas")
+	screen._show_page("lab")
+	await get_tree().process_frame
+	var lab_pg: Control = screen._pages["lab"]
+	lab_pg.act(Lab.run_test(c, rel[0].id, "drop"))
+	lab_pg.act(Lab.start_beta(c, rel[0].id))
+	for i in 12:
+		Game.advance_day()
+	await get_tree().process_frame
+	ok(rel[0].tests.has("drop"), "ensaio concluído")
+	ok(not rel[0].beta.is_empty(), "beta concluído")
+	screen._show_page("marketing")
+	await get_tree().process_frame
+	var mk: Control = screen._pages["marketing"]
+	mk.act(Marketing.start(c, rel[0].id, "web", ["na", "eu"], 1000.0, 10))
+	await get_tree().process_frame
+	ok(c.campaigns.size() == 1, "campanha ativa")
+	screen._show_page("chips")
+	await get_tree().process_frame
+	var cp: Control = screen._pages["chips"]
+	var cd := Chips.default_design(c)
+	cd["name"] = "Teste X1"
+	cp.act(Chips.start(c, cd))
+	for i in 400:
+		Game.advance_day()
+		if c.chip_dev == null:
+			break
+	await get_tree().process_frame
+	ok(c.chips.size() == 1, "chip projetado")
+	prods.refresh()
+	if c.chips.is_empty():
+		print("chip falhou: ", Chips.blocker(c, cd))
+		get_tree().quit(1)
+		return
+	prods._design["chip"] = int(c.chips[0].id)
+	prods._go(2)
+	await get_tree().process_frame
+	prods._go(1)
+	await get_tree().process_frame
+	screen._show_page("feedback")
+	await get_tree().process_frame
+	screen._pages["feedback"]._tab = 1
+	screen._pages["feedback"]._touch()
+	await get_tree().process_frame
+	screen._pages["feedback"]._tab = 0
+	screen._pages["feedback"]._touch()
+	await get_tree().process_frame
+	screen._show_page("ops")
+	await get_tree().process_frame
+	c.own_os["version"] = 1
+	var tf := c.toggle_os_feature("dark")
+	ok(tf.ok, "recurso de software ativado")
+	screen._pages["ops"].act(tf)
+	await get_tree().process_frame
 	# salvar e carregar
+	var saved_day := c.day
 	Game.save()
 	ok(Saves.has_save(), "save gravado")
 	ok(Game.load_game(), "save carregado")
-	ok(Game.company.day == 400, "dia preservado no save")
+	ok(Game.company.day == saved_day, "dia preservado no save")
+	ok(Game.company.chips.size() == 1 and Game.company.campaigns.size() >= 0, "chips e campanhas preservados no save")
 	Saves.delete_save()
 	print("UI smoke: %s" % ("OK" if failures == 0 else "%d falha(s)" % failures))
 	get_tree().quit(0 if failures == 0 else 1)

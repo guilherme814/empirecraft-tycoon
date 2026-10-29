@@ -224,6 +224,28 @@ func _step_style() -> void:
 		_:
 			_form.add_child(UI.label("Cor do LED / teclado", 24, Palette.MUTED))
 			_swatches("led")
+	_form.add_child(UI.label("Embalagem", 24, Palette.MUTED))
+	var pg := _grid(2)
+	for it in GameData.designs().packages:
+		pg.add_child(_opt("%s  %s" % [it.name, _fmt_mod(float(it.q), float(it.cost))], str(_design.get("package", "basic")) == str(it.id), _lock_text(it),
+			func(): _design["package"] = str(it.id); _touch()))
+	_form.add_child(UI.label("Acessórios na caixa", 24, Palette.MUTED))
+	var ag := _grid(2)
+	var accs: Array = _design.get("acc", [])
+	for it in GameData.designs().accessories:
+		if not (it.cats as Array).has(_cat_id):
+			continue
+		var on := accs.has(str(it.id))
+		ag.add_child(_opt("%s%s  %s" % ["✓ " if on else "", it.name, _fmt_mod(float(it.q), float(it.cost))], on, _lock_text(it),
+			func():
+				var l: Array = _design.get("acc", [])
+				if l.has(str(it.id)):
+					l.erase(str(it.id))
+				else:
+					l.append(str(it.id))
+				_design["acc"] = l
+				_touch()))
+	_hints_note()
 	var brand_on: bool = bool(_design.get("brand", true))
 	_form.add_child(_opt("Nome da marca no aparelho: " + ("sim" if brand_on else "não"), brand_on, "", func(): _design["brand"] = not brand_on; _touch()))
 
@@ -248,6 +270,17 @@ func _step_hardware() -> void:
 		g.add_child(_opt("%s%s  %s" % ["✓ " if on else "", it.name, _fmt_mod(float(it.q), float(it.cost))], on, _lock_text(it),
 			func(): _toggle_feature(str(it.id))))
 	_hints_note()
+	_form.add_child(UI.label("Processador", 24, Palette.MUTED))
+	var cg := _grid(1)
+	var cur_chip := int(_design.get("chip", 0))
+	cg.add_child(_opt("SoC genérico  (padrão)", cur_chip == 0, "", func(): _design["chip"] = 0; _touch()))
+	for ch in c.chips:
+		var thr := Chips.throttle(c, ch, _cat_id, _specs)
+		var st := Chips.chip_stats(ch)
+		var txt := "%s  ·  %.2f×  ·  sustenta %d%%  ·  %s" % [str(ch.name), float(st.index), int(thr * 100.0), Fmt.money(float(st.unit_cost))]
+		cg.add_child(_opt(txt, cur_chip == int(ch.id), "", func(): _design["chip"] = int(ch.id); _touch()))
+	if c.chips.is_empty():
+		_form.add_child(UI.wrap("Projete processadores próprios na aba Hardware.", 20, Color("9fc0e8")))
 
 func _step_system() -> void:
 	var c := company
@@ -458,8 +491,17 @@ func _product_card(p: Product) -> Control:
 		v.add_child(opts)
 		if p.state == Product.STATE_READY:
 			v.add_child(UI.label("Pronto! Ajuste o preço e lance.", 24, Palette.GOOD))
-			v.add_child(UI.button("Lançar", func(): act(c.release(p.id)), "good", 80))
+			v.add_child(UI.button("Lançar", func(): Game.ui_request.emit("launch", p.id), "good", 80))
 		else:
+			var open_f := Lab.severity_sum(p)
+			if open_f > 0:
+				v.add_child(UI.label("Defeitos abertos (gravidade %d): corrija no Laboratório" % open_f, 21, Palette.BAD))
+			var rr := UI.hbox(10)
+			rr.add_child(UI.label("★ %.1f" % p.rating, 26, Palette.WARN))
+			rr.add_child(UI.label("crítica %d" % int(p.critic), 24, Palette.MUTED))
+			rr.add_child(UI.spacer())
+			rr.add_child(UI.button("Avaliações", func(): Game.ui_request.emit("reviews_list", p.id), "normal", 52, 170))
+			v.add_child(rr)
 			w["label"] = UI.label(_stats_text(p), 24, Palette.MUTED)
 			v.add_child(w.label)
 			var last := UI.hbox(8)

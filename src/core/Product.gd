@@ -32,6 +32,13 @@ var critic: float = 0.0         # média da crítica (0-100)
 var reviews: Array = []         # últimas avaliações
 var promise: float = 0.0        # vantagem prometida no lançamento (0, .10, .25, .40)
 var promise_gap: float = 0.0    # quanto da promessa não foi cumprida
+var awareness: float = 0.0      # consciência de marca do produto (marketing)
+var flaws: Array = []           # falhas ocultas: {id, found, fixed}
+var tests: Dictionary = {}      # ensaios concluídos: id -> {day, m, found}
+var beta: Dictionary = {}       # resultado do teste beta
+var beta_job: Dictionary = {}   # beta em andamento
+var chip_id: int:
+	get: return int(design.get("chip", 0))
 
 func progress() -> float:
 	return clampf(work_done / maxf(work_required, 1.0), 0.0, 1.0)
@@ -45,7 +52,8 @@ func to_dict() -> Dictionary:
 		"release": release_day, "units": units_total, "revenue": revenue_total, "cost": cost_total,
 		"dev_cost": dev_cost, "carry": units_carry, "ema": ema_units,
 		"design": design, "os": os_id, "mfr": mfr,
-		"rating": rating, "rating_n": rating_n, "critic": critic, "reviews": reviews, "promise": promise, "gap": promise_gap}
+		"rating": rating, "rating_n": rating_n, "critic": critic, "reviews": reviews, "promise": promise, "gap": promise_gap,
+		"aw": awareness, "flaws": flaws, "tests": tests, "beta": beta, "beta_job": beta_job}
 
 static func from_dict(d: Dictionary) -> Product:
 	var p := Product.new()
@@ -77,4 +85,9 @@ static func from_dict(d: Dictionary) -> Product:
 	p.reviews = d.get("reviews", []).duplicate(true)
 	p.promise = float(d.get("promise", 0.0))
 	p.promise_gap = float(d.get("gap", 0.0))
+	p.awareness = float(d.get("aw", 0.0))
+	p.flaws = d.get("flaws", []).duplicate(true)
+	p.tests = d.get("tests", {}).duplicate(true)
+	p.beta = d.get("beta", {}).duplicate(true)
+	p.beta_job = d.get("beta_job", {}).duplicate(true)
 	return p

@@ -66,6 +66,11 @@ svg("nav_market", '<path d="M8 8v48h48"/><rect x="16" y="32" width="8" height="1
 svg("nav_ops", '<path d="M6 54V28l14 8V28l14 8V20h8V8h10v46z"/><path d="M6 54h52"/><path d="M42 36v8M50 36v8"/>')
 svg("nav_finance", '<rect x="10" y="8" width="44" height="48" rx="6"/><path d="M20 22h24M20 32h24M20 42h14"/>')
 svg("nav_stocks", '<path d="M8 8v48h48"/><path d="M16 20v22M32 12v26M48 24v22"/><rect x="12" y="26" width="8" height="10" rx="1"/><rect x="28" y="18" width="8" height="14" rx="1"/><rect x="44" y="30" width="8" height="10" rx="1"/>')
+svg("nav_marketing", '<path d="M10 24v16h8l22 12V12L18 24z"/><path d="M18 40l4 14h8l-4-14"/><path d="M48 22q5 10 0 20"/>')
+svg("nav_test", '<path d="M32 6l22 8v16q0 16-22 28Q10 46 10 30V14z"/><path d="M21 32l8 8 15-17"/>')
+svg("nav_feedback", '<path d="M8 12h48v32H30l-14 12V44H8z"/><path d="M20 24h24M20 33h14"/>')
+svg("nav_chip", '<rect x="16" y="16" width="32" height="32" rx="4"/><rect x="25" y="25" width="14" height="14" rx="2"/><path d="M24 6v10M32 6v10M40 6v10M24 48v10M32 48v10M40 48v10M6 24h10M6 32h10M6 40h10M48 24h10M48 32h10M48 40h10"/>')
+svg("nav_package", '<path d="M32 6l22 11v30L32 58 10 47V17z"/><path d="M10 17l22 11 22-11M32 28v30"/>')
 
 # ── velocidade ──
 solid("pause", '<rect x="16" y="12" width="12" height="40" rx="3"/><rect x="36" y="12" width="12" height="40" rx="3"/>')

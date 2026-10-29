@@ -1,0 +1,55 @@
+{
+ "requests": {
+  "raise": {
+   "text": [
+    "%s pede aumento: sente que está abaixo do mercado.",
+    "%s recebeu uma proposta de outra empresa e quer ser valorizado."
+   ],
+   "opts": [
+    "Conceder +10%",
+    "Bônus de 1 mês",
+    "Recusar"
+   ]
+  },
+  "training": {
+   "text": [
+    "%s quer fazer um curso para evoluir.",
+    "%s pede treinamento: está sentindo que estagnou."
+   ],
+   "opts": [
+    "Pagar treinamento",
+    "Agora não"
+   ]
+  },
+  "burnout": {
+   "text": [
+    "%s está sobrecarregado e pede uma folga.",
+    "%s relata cansaço: o ritmo está pesado."
+   ],
+   "opts": [
+    "Dar 3 dias de folga",
+    "Oferecer bônus",
+    "Ignorar"
+   ]
+  },
+  "idea": {
+   "text": [
+    "%s tem uma ideia de melhoria e quer testá-la.",
+    "%s sugere uma pequena pesquisa paralela."
+   ],
+   "opts": [
+    "Apoiar a ideia",
+    "Recusar"
+   ]
+  },
+  "praise": {
+   "text": [
+    "%s está orgulhoso do último lançamento!",
+    "%s elogiou o ambiente de trabalho."
+   ],
+   "opts": [
+    "Agradecer à equipe"
+   ]
+  }
+ }
+}

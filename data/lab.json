@@ -1,0 +1,259 @@
+{
+ "tests": [
+  {
+   "id": "drop",
+   "name": "Queda e impacto",
+   "cost": 6000,
+   "days": 6,
+   "icon": "nav_test",
+   "desc": "Solta o aparelho de várias alturas."
+  },
+  {
+   "id": "battery",
+   "name": "Bateria e carga",
+   "cost": 5000,
+   "days": 8,
+   "icon": "nav_test",
+   "desc": "Mede autonomia e segurança da célula."
+  },
+  {
+   "id": "thermal",
+   "name": "Térmica sob carga",
+   "cost": 7000,
+   "days": 7,
+   "icon": "nav_test",
+   "desc": "Estresse de CPU/GPU com câmera térmica."
+  },
+  {
+   "id": "water",
+   "name": "Água e poeira",
+   "cost": 5500,
+   "days": 5,
+   "icon": "nav_test",
+   "desc": "Câmara de imersão e poeira.",
+   "res": 1
+  },
+  {
+   "id": "signal",
+   "name": "Sinal e antenas",
+   "cost": 6500,
+   "days": 6,
+   "icon": "nav_test",
+   "desc": "Câmara anecoica.",
+   "res": 1
+  },
+  {
+   "id": "software",
+   "name": "QA de software",
+   "cost": 8000,
+   "days": 9,
+   "icon": "nav_test",
+   "desc": "Testes automatizados e caça a bugs.",
+   "res": 0
+  },
+  {
+   "id": "camera",
+   "name": "Câmera e imagem",
+   "cost": 5000,
+   "days": 5,
+   "icon": "nav_test",
+   "desc": "Cartas de teste e cenas reais.",
+   "res": 2
+  }
+ ],
+ "flaws": [
+  {
+   "id": "screen_crack",
+   "name": "Tela quebra fácil",
+   "test": "drop",
+   "cats": [
+    "phone",
+    "watch",
+    "laptop"
+   ],
+   "p": 0.14,
+   "sev": 2,
+   "axis": "display",
+   "review": "a tela rachou na primeira queda",
+   "fix": "Reforçar vidro"
+  },
+  {
+   "id": "hinge_loose",
+   "name": "Dobradiça frouxa",
+   "test": "drop",
+   "cats": [
+    "laptop"
+   ],
+   "p": 0.12,
+   "sev": 1,
+   "axis": "",
+   "review": "a dobradiça ficou frouxa em poucas semanas",
+   "fix": "Nova dobradiça"
+  },
+  {
+   "id": "strap_break",
+   "name": "Pulseira solta",
+   "test": "drop",
+   "cats": [
+    "watch"
+   ],
+   "p": 0.12,
+   "sev": 1,
+   "axis": "",
+   "review": "a pulseira soltou sozinha",
+   "fix": "Novo engate"
+  },
+  {
+   "id": "battery_swell",
+   "name": "Bateria estufa",
+   "test": "battery",
+   "cats": [
+    "phone",
+    "laptop",
+    "watch"
+   ],
+   "p": 0.12,
+   "sev": 3,
+   "axis": "battery",
+   "review": "a bateria inchou e esquenta no carregamento",
+   "fix": "Trocar célula"
+  },
+  {
+   "id": "short_battery",
+   "name": "Autonomia abaixo do prometido",
+   "test": "battery",
+   "cats": [
+    "phone",
+    "laptop",
+    "watch"
+   ],
+   "p": 0.18,
+   "sev": 2,
+   "axis": "battery",
+   "review": "a bateria dura bem menos do que o anunciado",
+   "fix": "Otimizar energia"
+  },
+  {
+   "id": "overheat",
+   "name": "Superaquecimento",
+   "test": "thermal",
+   "cats": [
+    "phone",
+    "laptop",
+    "console",
+    "watch"
+   ],
+   "p": 0.2,
+   "sev": 2,
+   "axis": "thermal",
+   "review": "esquenta demais e reduz o desempenho",
+   "fix": "Novo dissipador"
+  },
+  {
+   "id": "loud_fan",
+   "name": "Ventoinha barulhenta",
+   "test": "thermal",
+   "cats": [
+    "laptop",
+    "console"
+   ],
+   "p": 0.14,
+   "sev": 1,
+   "axis": "thermal",
+   "review": "a ventoinha é irritantemente barulhenta",
+   "fix": "Ventoinha silenciosa"
+  },
+  {
+   "id": "water_leak",
+   "name": "Infiltra água",
+   "test": "water",
+   "cats": [
+    "phone",
+    "watch",
+    "console",
+    "laptop"
+   ],
+   "p": 0.12,
+   "sev": 2,
+   "axis": "",
+   "review": "morreu depois de pegar um pouco de chuva",
+   "fix": "Nova vedação"
+  },
+  {
+   "id": "weak_signal",
+   "name": "Sinal fraco",
+   "test": "signal",
+   "cats": [
+    "phone",
+    "watch",
+    "laptop"
+   ],
+   "p": 0.14,
+   "sev": 2,
+   "axis": "",
+   "review": "o sinal cai com facilidade",
+   "fix": "Reposicionar antenas"
+  },
+  {
+   "id": "bug_crash",
+   "name": "Travamentos do sistema",
+   "test": "software",
+   "cats": [
+    "phone",
+    "watch",
+    "laptop",
+    "console"
+   ],
+   "p": 0.2,
+   "sev": 2,
+   "axis": "",
+   "review": "o sistema trava com frequência",
+   "fix": "Correção de software"
+  },
+  {
+   "id": "bug_data",
+   "name": "Perda de dados",
+   "test": "software",
+   "cats": [
+    "phone",
+    "laptop",
+    "console"
+   ],
+   "p": 0.07,
+   "sev": 3,
+   "axis": "storage",
+   "review": "perdi arquivos depois de uma atualização",
+   "fix": "Reescrever o sistema de arquivos"
+  },
+  {
+   "id": "camera_focus",
+   "name": "Foco da câmera falha",
+   "test": "camera",
+   "cats": [
+    "phone",
+    "laptop"
+   ],
+   "p": 0.14,
+   "sev": 1,
+   "axis": "camera",
+   "review": "o foco da câmera é lento e erra",
+   "fix": "Ajustar módulo"
+  },
+  {
+   "id": "stick_drift",
+   "name": "Analógico com drift",
+   "test": "drop",
+   "cats": [
+    "console"
+   ],
+   "p": 0.14,
+   "sev": 2,
+   "axis": "",
+   "review": "o analógico do controle tem drift",
+   "fix": "Novo sensor hall"
+  }
+ ],
+ "beta_cost": 12000,
+ "beta_days": 10,
+ "fix_frac": 0.08
+}

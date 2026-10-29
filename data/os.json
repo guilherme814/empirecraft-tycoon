@@ -45,5 +45,88 @@
    1100
   ],
   "eco_base": 4000
- }
+ },
+ "features": [
+  {
+   "id": "dark",
+   "name": "Modo escuro",
+   "axis": "visual",
+   "pts": 1,
+   "cost": 8000,
+   "res": 0,
+   "desc": "Tema escuro em todo o sistema."
+  },
+  {
+   "id": "widgets",
+   "name": "Widgets e temas",
+   "axis": "visual",
+   "pts": 2,
+   "cost": 14000,
+   "res": 1,
+   "desc": "Personalização profunda da tela."
+  },
+  {
+   "id": "power",
+   "name": "Economia de energia",
+   "axis": "perf",
+   "pts": 1,
+   "cost": 9000,
+   "res": 0,
+   "desc": "Gerencia apps em segundo plano."
+  },
+  {
+   "id": "gamemode",
+   "name": "Modo jogo",
+   "axis": "perf",
+   "pts": 2,
+   "cost": 16000,
+   "res": 1,
+   "desc": "Prioriza CPU/GPU e reduz latência."
+  },
+  {
+   "id": "appstore",
+   "name": "Loja de apps própria",
+   "axis": "eco",
+   "pts": 2,
+   "cost": 20000,
+   "res": 1,
+   "desc": "Ecossistema cresce mais rápido."
+  },
+  {
+   "id": "cloud",
+   "name": "Nuvem integrada",
+   "axis": "eco",
+   "pts": 2,
+   "cost": 22000,
+   "res": 2,
+   "desc": "Backup e sincronização entre aparelhos."
+  },
+  {
+   "id": "sandbox",
+   "name": "Sandbox de apps",
+   "axis": "secure",
+   "pts": 2,
+   "cost": 15000,
+   "res": 1,
+   "desc": "Apps isolados, menos malware."
+  },
+  {
+   "id": "biometric",
+   "name": "Biometria avançada",
+   "axis": "secure",
+   "pts": 2,
+   "cost": 18000,
+   "res": 2,
+   "desc": "Digital e rosto com chip dedicado."
+  },
+  {
+   "id": "assistant",
+   "name": "Assistente de voz (IA)",
+   "axis": "eco",
+   "pts": 3,
+   "cost": 40000,
+   "res": 3,
+   "desc": "Assistente inteligente integrado."
+  }
+ ]
 }

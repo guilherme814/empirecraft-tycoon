@@ -18,6 +18,7 @@ static func rate(c: Company, p: Product) -> Dictionary:
 	if c.is_fashion_color(str(p.design.get("color", ""))):
 		overall += 0.03
 	overall += float(c.mfr_stats(p.mfr).q - 1.0) * 0.3
+	overall -= minf(0.4, 0.05 * float(Lab.severity_sum(p)))
 	if p.promise_gap > 0.0 and c.day - p.release_day < 90:
 		overall -= minf(0.45, p.promise_gap * 1.2)
 	return {"overall": clampf(overall, 0.0, 1.0), "qs": qs, "ps": ps, "ratio": ratio}
@@ -37,53 +38,75 @@ static func _axis_extremes(p: Product) -> Dictionary:
 			worst = a
 	return {"best": best, "worst": worst}
 
-static func _customer_text(c: Company, p: Product, stars: int, info: Dictionary) -> String:
+static func _customer_text(c: Company, p: Product, stars: int, info: Dictionary) -> Dictionary:
 	var rng := c.rng
 	var data: Dictionary = GameData.reviews()
 	var ex := _axis_extremes(p)
 	var bits: Array = []
+	var tags: Array = []
 	var pos: Dictionary = data.axis_pos
 	var neg: Dictionary = data.axis_neg
 	if stars >= 4:
 		if pos.has(ex.best):
 			bits.append(_pick(rng, pos[ex.best]))
+			tags.append("+" + str(ex.best))
 		if float(info.ratio) < 1.0:
 			bits.append(_pick(rng, data.price_pos))
+			tags.append("+price")
 		elif c.is_fashion_color(str(p.design.get("color", ""))):
 			bits.append(_pick(rng, data.fashion))
+			tags.append("+fashion")
 		elif c.os_mult(p.os_id, p.category) >= 1.02:
 			bits.append(_pick(rng, data.os_pos))
+			tags.append("+os")
 		else:
 			bits.append(_pick(rng, data.design_pos))
+			tags.append("+design")
 	elif stars == 3:
 		if pos.has(ex.best):
 			bits.append(_pick(rng, pos[ex.best]))
+			tags.append("+" + str(ex.best))
 		if neg.has(ex.worst):
 			bits.append(_pick(rng, neg[ex.worst]))
+			tags.append("-" + str(ex.worst))
 	else:
 		if float(info.ratio) > 1.15:
 			bits.append(_pick(rng, data.price_neg))
+			tags.append("-price")
 		if neg.has(ex.worst):
 			bits.append(_pick(rng, neg[ex.worst]))
+			tags.append("-" + str(ex.worst))
 		if float(info.qs) < 0.35:
 			bits.append(_pick(rng, data.outdated))
+			tags.append("-outdated")
 		elif c.os_mult(p.os_id, p.category) < 0.95:
 			bits.append(_pick(rng, data.os_neg))
+			tags.append("-os")
+	# falhas não corrigidas aparecem nas avaliações de quem dá nota baixa/média
+	if stars <= 3:
+		var open := Lab.open_flaws(p)
+		if not open.is_empty():
+			var f: Dictionary = Lab.flaw_def(str(open[rng.randi() % open.size()].id))
+			bits.append("Além disso, " + str(f.review) + ".")
+			tags.append("-flaw:" + str(f.id))
 	bits.append(_pick(rng, data.closers[str(stars)]))
-	return " ".join(bits)
+	return {"text": " ".join(bits), "tags": tags}
 
 static func customer(c: Company, p: Product, defect: bool = false) -> Dictionary:
 	var rng := c.rng
 	var info := rate(c, p)
 	var base: float = 1.0 + 4.0 * float(info.overall)
 	var stars := clampi(int(round(base + rng.randf_range(-0.9, 0.9))), 1, 5)
-	var text := _customer_text(c, p, stars, info)
+	var ct := _customer_text(c, p, stars, info)
+	var text: String = ct.text
+	var tags: Array = ct.tags
 	if defect:
 		stars = mini(stars, 2)
 		text = _pick(rng, GameData.reviews().defect) + " " + _pick(rng, GameData.reviews().closers["2"])
+		tags = ["-defect"]
 	var n: Dictionary = GameData.names()
 	var who := "%s %s." % [_pick(rng, n.first), str(_pick(rng, n.last)).substr(0, 1)]
-	return {"day": c.day, "who": who, "stars": stars, "text": text, "kind": "cliente"}
+	return {"day": c.day, "who": who, "stars": stars, "text": text, "kind": "cliente", "tags": tags}
 
 static func critic(c: Company, p: Product, outlet: String) -> Dictionary:
 	var rng := c.rng
@@ -95,7 +118,7 @@ static func critic(c: Company, p: Product, outlet: String) -> Dictionary:
 		if score >= int(k):
 			band = k
 			break
-	var text := "%s. %s" % [_pick(rng, heads[band]), _customer_text(c, p, clampi(int(round(1.0 + 4.0 * float(score) / 100.0)), 1, 5), info)]
+	var text := "%s. %s" % [_pick(rng, heads[band]), str(_customer_text(c, p, clampi(int(round(1.0 + 4.0 * float(score) / 100.0)), 1, 5), info).text)]
 	return {"day": c.day, "who": outlet, "stars": score, "text": text, "kind": "critica"}
 
 static func _add(p: Product, r: Dictionary) -> void:

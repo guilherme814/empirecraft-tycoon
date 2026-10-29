@@ -85,6 +85,33 @@ func _ready() -> void:
 	c.stocks.buy(c, "Nova Corp", 500)
 	Game.changed.emit()
 	await _shot("stocks")
+	# v0.4: laboratório, marketing, hardware, feedback
+	for rid in ["res_marketing", "res_lab", "res_chips", "res_chips", "res_chips", "res_software", "res_package"]:
+		for i in 3:
+			c.research_points += 900.0
+			c.money += 100000.0
+			c.do_research(rid)
+	var rel: Array = c.released_products()
+	if not rel.is_empty():
+		Lab.run_test(c, rel[0].id, "drop")
+		Lab.run_test(c, rel[0].id, "thermal")
+		Lab.start_beta(c, rel[0].id)
+		Marketing.start(c, rel[0].id, "web", ["na", "eu", "latam"], 2000.0, 30)
+	var cd := Chips.default_design(c)
+	cd["name"] = "Aurora A1"
+	cd["cores"] = 6
+	Chips.start(c, cd)
+	for i in 60:
+		Game.advance_day()
+	for k in 3:
+		Feedback.monthly(c)
+	for pg in [["lab", "lab"], ["marketing", "marketing"], ["chips", "chips"], ["feedback", "feedback"]]:
+		screen._show_page(pg[0])
+		Game.changed.emit()
+		await _shot(pg[1])
+	if screen._overlay != null:
+		screen._close_overlay()
+	var p0: Variant = c.products.filter(func(p): return p.state == Product.STATE_RELEASED)
 	# vitrine: cada categoria em dois níveis de especificação/acabamento
 	screen.queue_free()
 	var show := Control.new()
@@ -123,6 +150,10 @@ func _ready() -> void:
 	get_tree().quit()
 
 func _shot(name: String) -> void:
+	var gs: Node = get_node_or_null("GameScreen")
+	for ch in get_children():
+		if ch.has_method("_close_overlay") and ch.get("_overlay") != null:
+			ch._close_overlay()
 	for i in 4:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

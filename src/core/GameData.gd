@@ -82,3 +82,15 @@ static func deals() -> Array:
 
 static func reviews() -> Dictionary:
 	return _load("reviews")
+
+static func marketing() -> Dictionary:
+	return _load("marketing")
+
+static func lab() -> Dictionary:
+	return _load("lab")
+
+static func chips() -> Dictionary:
+	return _load("chips")
+
+static func feedback() -> Dictionary:
+	return _load("feedback")
