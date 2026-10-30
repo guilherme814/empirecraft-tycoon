@@ -50,6 +50,11 @@ var chip_dev: Variant = null      # chip em desenvolvimento {design, work, req}
 var requests: Array = []          # pedidos da equipe
 var loyalty: float = Loyalty.START  # lealdade à marca (0..100)
 var loyalty_log: Array = []       # últimas mudanças {day, d, why}
+var cash_items: Dictionary = {}     # mês atual: movimentos fora do resultado (empréstimo, bolsa, obras)
+var cash_items_last: Dictionary = {}
+var market_stats: Dictionary = {}  # último dia por categoria: {size, mine, rivals, none} (transitório)
+var cash_start: float = Rules.START_MONEY  # caixa no início do mês (fluxo de caixa)
+var cash_flow_last: float = 0.0   # fluxo de caixa do mês passado
 
 func _init(p_seed: int = 0) -> void:
 	seed_value = p_seed if p_seed != 0 else int(Time.get_ticks_usec() % 2147483646) + 1
@@ -77,6 +82,15 @@ func _income(v: float, cat: String = "other") -> void:
 	money += v
 	income_month += v
 	ledger[cat] = float(ledger.get(cat, 0.0)) + v
+
+## Movimentos de caixa que NÃO são receita/despesa (empréstimo, bolsa, obras): entram no fluxo de caixa, não no lucro.
+func _cash_in(v: float, cat: String) -> void:
+	money += v
+	cash_items[cat] = float(cash_items.get(cat, 0.0)) + v
+
+func _cash_out(v: float, cat: String) -> void:
+	money -= v
+	cash_items[cat] = float(cash_items.get(cat, 0.0)) - v
 
 func _expense(v: float, cat: String = "other") -> void:
 	money -= v
@@ -118,17 +132,26 @@ func capacity(prof: String) -> int:
 func free_seats(prof: String) -> int:
 	return maxi(0, capacity(prof) - staff_of(prof).size())
 
+## Amortecimento inicial: 50% dos custos fixos nos primeiros 90 dias ou enquanto o escritório é pequeno.
+func fixed_cost_factor() -> float:
+	var top := 1
+	for k in office_level:
+		top = maxi(top, int(office_level[k]))
+	if day <= Rules.EARLY_DAYS or top <= Rules.EARLY_OFFICE_LEVEL:
+		return Rules.EARLY_FIXED_FACTOR
+	return 1.0
+
 func monthly_payroll() -> float:
 	var t := 0.0
 	for e in staff:
 		t += e.salary()
-	return t
+	return t * fixed_cost_factor()
 
 func monthly_rent() -> float:
 	var upkeep := 0.0
 	if factory_level > 0:
 		upkeep = float(GameData.manufacturers().own_factory.upkeep[factory_level - 1])
-	return Rules.RENT_BASE + Rules.RENT_PER_STAFF * float(staff.size()) + upkeep
+	return (Rules.RENT_BASE + Rules.RENT_PER_STAFF * float(staff.size())) * fixed_cost_factor() + upkeep
 
 func office_upgrade_cost(prof: String) -> float:
 	var lvl: int = int(office_level.get(prof, 1))
@@ -142,7 +165,7 @@ func upgrade_office(prof: String) -> Dictionary:
 		return _fail("Escritório já está no nível máximo")
 	if money < cost:
 		return _fail("Dinheiro insuficiente")
-	_expense(cost, "capex")
+	_cash_out(cost, "capex")
 	office_level[prof] = int(office_level[prof]) + 1
 	add_log("Escritório de %s ampliado (nível %d)" % [GameData.profession(prof).name, office_level[prof]], "good", "success")
 	return _ok()
@@ -643,6 +666,14 @@ func rating_factor(p: Product) -> float:
 func is_fashion_color(color_id: String) -> bool:
 	return color_id != "" and color_id == str(market.fashion.get("color", ""))
 
+## Piso de demanda: produtos medianos a preço justo não ficam parados (decai com a idade do produto).
+func demand_floor(p: Product, exp_q: float) -> float:
+	var eq := effective_quality(p)
+	if eq < 0.5 * exp_q or p.price > 1.3 * fair_price(p.category, eq):
+		return 0.0
+	var cat: Dictionary = GameData.category(p.category)
+	return Rules.MIN_DAILY_DEMAND * Market.decay(day - p.release_day, float(cat.lifetime)) * minf(1.0, eq / exp_q)
+
 func _book_sale(p: Product, units: int, cat_id: String) -> void:
 	var revenue: float = float(units) * p.price
 	var cost: float = float(units) * current_unit_cost(p)
@@ -678,11 +709,15 @@ func _sell() -> void:
 		for i in comp_list.size():
 			var cp: Dictionary = comp_list[i]
 			market.add_rival_revenue(int(cp.rival), size * float(comp_a[i]) / denom * float(cp.price))
+		var mine_units := 0
 		for p in list:
 			var share: float = float(attr[p.id]) / denom
-			var units_f: float = size * share * rng.randf_range(0.85, 1.15) * (1.0 + deal_sales_bonus(cat_id)) + p.units_carry
+			var raw_f: float = size * share * rng.randf_range(0.85, 1.15) * (1.0 + deal_sales_bonus(cat_id))
+			raw_f = maxf(raw_f, demand_floor(p, exp_q))
+			var units_f: float = raw_f + p.units_carry
 			var units := int(floor(units_f))
 			p.units_carry = units_f - float(units)
+			mine_units += units
 			if units > 0:
 				_book_sale(p, units, cat_id)
 			p.ema_units = p.ema_units * 0.9 + float(units) * 0.1
@@ -693,6 +728,9 @@ func _sell() -> void:
 					reputation = minf(100.0, reputation + 0.01)
 				elif ratio < 0.7:
 					reputation = maxf(0.0, reputation - 0.01)
+		var rival_units := size * comp / denom
+		var none_units := size * Rules.OUTSIDE_OPTION / denom
+		market_stats[cat_id] = {"size": size, "mine": float(mine_units), "rivals": rival_units, "none": none_units}
 
 # ───────────────────────── tempo ─────────────────────────
 
@@ -731,6 +769,10 @@ func _month_end() -> void:
 	last_expense = expense_month
 	ledger_last = ledger.duplicate()
 	ledger = {}
+	cash_items_last = cash_items.duplicate()
+	cash_items = {}
+	cash_flow_last = money - cash_start
+	cash_start = money
 	var profit := last_income - last_expense
 	add_log("Fechamento do mês: %s %s" % ["lucro" if profit >= 0.0 else "prejuízo", Fmt.money(absf(profit))],
 		"good" if profit >= 0.0 else "bad", "month" if profit >= 0.0 else "")
@@ -876,7 +918,7 @@ func take_loan(amount: float) -> Dictionary:
 	if amount <= 0.0 or loan + amount > loan_limit():
 		return _fail("Limite de crédito: %s" % Fmt.money(loan_limit()))
 	loan += amount
-	_income(amount, "loan")
+	_cash_in(amount, "loan")
 	return _ok("Empréstimo de %s" % Fmt.money(amount))
 
 func repay_loan(amount: float) -> Dictionary:
@@ -886,7 +928,7 @@ func repay_loan(amount: float) -> Dictionary:
 	if money < amount:
 		return _fail("Dinheiro insuficiente")
 	loan -= amount
-	_expense(amount, "loan")
+	_cash_out(amount, "loan")
 	return _ok("Pagou %s da dívida" % Fmt.money(amount))
 
 func net_worth() -> float:
@@ -1199,7 +1241,7 @@ func build_factory() -> Dictionary:
 	if why != "":
 		return _fail(why)
 	var f := factory_info()
-	_expense(float(f.build[factory_level]), "capex")
+	_cash_out(float(f.build[factory_level]), "capex")
 	factory_level += 1
 	add_log("Fábrica própria nível %d inaugurada" % factory_level, "good", "success")
 	return _ok()
@@ -1302,7 +1344,8 @@ func to_dict() -> Dictionary:
 		"stocks": stocks.to_dict(), "own_os": own_os, "factory": factory_level,
 		"ledger": ledger, "ledger_last": ledger_last, "history": history, "loan": loan, "deals": deals,
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
-		"loyalty": loyalty, "loyalty_log": loyalty_log,
+		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
+		"cash_items": cash_items, "cash_items_last": cash_items_last,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1351,5 +1394,9 @@ static func from_dict(d: Dictionary) -> Company:
 	c.requests = d.get("requests", []).duplicate(true)
 	c.loyalty = float(d.get("loyalty", Loyalty.START))
 	c.loyalty_log = d.get("loyalty_log", []).duplicate(true)
+	c.cash_start = float(d.get("cash_start", c.money))
+	c.cash_flow_last = float(d.get("cash_flow_last", 0.0))
+	c.cash_items = d.get("cash_items", {}).duplicate()
+	c.cash_items_last = d.get("cash_items_last", {}).duplicate()
 	c.rng.state = str(d.get("rng_state", "0")).to_int()
 	return c

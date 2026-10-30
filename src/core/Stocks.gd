@@ -66,7 +66,7 @@ func buy(c: Company, name: String, qty: int) -> Dictionary:
 	var total := unit * float(qty)
 	if c.money < total:
 		return c._fail("Dinheiro insuficiente")
-	c._expense(total)
+	c._cash_out(total, "stocks")
 	var h: Dictionary = holdings.get(name, {"n": 0, "cost": 0.0})
 	h.n = int(h.n) + qty
 	h.cost = float(h.cost) + total
@@ -80,7 +80,7 @@ func sell(c: Company, name: String, qty: int) -> Dictionary:
 		return c._fail("Você não tem essas ações")
 	qty = mini(qty, have)
 	var total := float(qty) * float(c.market.rivals[i].price) * (1.0 - FEE)
-	c._income(total)
+	c._cash_in(total, "stocks")
 	var h: Dictionary = holdings[name]
 	var frac := float(qty) / float(have)
 	h.cost = float(h.cost) * (1.0 - frac)
@@ -105,7 +105,7 @@ func ipo(c: Company, pct: float) -> Dictionary:
 	pct = minf(pct, MAX_PUBLIC - public_pct)
 	update_value(c)
 	var raise := pct * value * 0.95
-	c._income(raise)
+	c._cash_in(raise, "stocks")
 	if public_pct == 0.0:
 		ipo_day = c.day
 		ipo_price = price
@@ -120,7 +120,7 @@ func buyback(c: Company, pct: float) -> Dictionary:
 	var cost := pct * value * 1.05
 	if c.money < cost:
 		return c._fail("Dinheiro insuficiente (%s)" % Fmt.money(cost))
-	c._expense(cost)
+	c._cash_out(cost, "stocks")
 	public_pct -= pct
 	return c._ok("Recomprou %d%% das ações" % int(pct * 100.0))
 

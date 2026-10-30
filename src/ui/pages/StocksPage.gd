@@ -158,7 +158,7 @@ func live() -> void:
 		if ref == null:
 			continue
 		var chg := _change(r.hist)
-		(ref.price as Label).text = "$ %.2f" % float(r.price)
+		(ref.price as Label).text = Fmt.money_exact(float(r.price))
 		(ref.chg as Label).text = "%+.1f%%" % (chg * 100.0)
 		(ref.chg as Label).add_theme_color_override("font_color", Palette.GOOD if chg >= 0.0 else Palette.BAD)
 		(ref.chart as Chart).set_series(r.hist, Palette.GOOD if chg >= 0.0 else Palette.BAD)
@@ -171,5 +171,5 @@ func live() -> void:
 			(ref.hold as Label).text = "Você não tem ações"
 	if not _own_refs.is_empty():
 		var st := c.stocks
-		(_own_refs.price as Label).text = "$ %.2f por ação" % st.price
+		(_own_refs.price as Label).text = Fmt.money_exact(float(st.price)) + " por ação"
 		(_own_refs.chart as Chart).set_series(st.hist, Palette.ACCENT)

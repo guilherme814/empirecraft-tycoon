@@ -2,8 +2,8 @@ class_name Rules
 extends RefCounted
 ## Constantes de balanceamento. Mexa aqui para ajustar a economia do jogo.
 
-const VERSION := "0.4.0"
-const VERSION_CODE := 4
+const VERSION := "0.4.1"
+const VERSION_CODE := 5
 const START_YEAR := 2010
 const DAYS_IN_MONTH := 30
 const DAYS_IN_YEAR := 360
@@ -31,6 +31,13 @@ const TRAIN_RP_PER_POINT := 0.02
 const SPEC_BUDGET_BASE := 160
 const SPEC_AXIS_MAX := 100
 const SPEC_STEP := 5
+
+# Amortecimento do começo: custos fixos pela metade nos primeiros dias ou com escritórios pequenos
+const EARLY_DAYS := 90
+const EARLY_OFFICE_LEVEL := 2
+const EARLY_FIXED_FACTOR := 0.5
+# Piso de demanda: produto razoável (preço justo, qualidade >= 50% da esperada) vende ao menos isto por dia
+const MIN_DAILY_DEMAND := 2.0
 
 # Mercado
 const OUTSIDE_OPTION := 1.0

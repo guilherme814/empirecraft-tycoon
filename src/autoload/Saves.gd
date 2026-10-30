@@ -2,6 +2,7 @@ extends Node
 ## Persistência: save em JSON versionado e configurações.
 
 const SAVE_PATH := "user://save_0.json"
+const BACKUP_PATH := "user://save_0.bak.json"
 const SETTINGS_PATH := "user://settings.cfg"
 
 var autosave_days: int = 30
@@ -34,19 +35,35 @@ func save_company(c: Company) -> bool:
 		return false
 	f.store_string(JSON.stringify(c.to_dict()))
 	f.close()
+	# guarda a versão anterior antes de substituir (recuperação se algo der errado)
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.copy_absolute(SAVE_PATH, BACKUP_PATH)
 	DirAccess.rename_absolute(tmp, SAVE_PATH)
 	return true
 
-func load_company() -> Company:
-	if not has_save():
-		return null
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+func _read(path: String) -> Variant:
+	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
 		return null
 	var data: Variant = JSON.parse_string(f.get_as_text())
 	f.close()
-	if not (data is Dictionary):
+	return data
+
+func load_company() -> Company:
+	if not has_save():
 		return null
+	var data: Variant = _read(SAVE_PATH)
+	if not (data is Dictionary):
+		# save principal corrompido: tenta o backup automático
+		data = _read(BACKUP_PATH) if FileAccess.file_exists(BACKUP_PATH) else null
+		if not (data is Dictionary):
+			return null
+	var old_v := int(data.get("version", 1))
+	if old_v < Company.SAVE_VERSION:
+		# antes de migrar, guarda uma cópia do formato antigo (nunca sobrescreve uma cópia já existente)
+		var mig := "user://save_0.v%d.bak.json" % old_v
+		if not FileAccess.file_exists(mig):
+			DirAccess.copy_absolute(SAVE_PATH, mig)
 	return Company.from_dict(data)   # null se o save for inválido/futuro
 
 func delete_save() -> void:

@@ -121,7 +121,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # manifesto de atualização: versão, SHA-256 do APK e notas (lido pelo jogo em Configurações)
+          VERSION=$(grep -oP 'config/version="\K[^"]+' project.godot)
+          CODE=$(grep -oP 'version/code=\K[0-9]+' export_presets.cfg)
+          SHA=$(sha256sum build/EmpireCraft.apk | cut -d' ' -f1)
+          NOTES=$(head -n1 docs/RELEASE_NOTES.txt)
+          jq -n --arg v "$VERSION" --argjson c "$CODE" --arg s "$SHA" --arg n "$NOTES" \
+            --arg u "https://github.com/${GITHUB_REPOSITORY}/releases/download/latest-build/EmpireCraft.apk" \
+            '{version:$v, code:$c, apk_url:$u, sha256:$s, min_save:1, notes:$n}' > build/version.json
+          cat build/version.json
           gh release delete latest-build --cleanup-tag -y || true
-          gh release create latest-build build/EmpireCraft.apk \
+          gh release create latest-build build/EmpireCraft.apk build/version.json \
             --prerelease --title "Build mais recente" \
             --notes "APK de debug gerado automaticamente a partir do commit ${GITHUB_SHA::7}."

@@ -172,6 +172,21 @@ func _ready() -> void:
 	ok(Game.company.day == saved_day, "dia preservado no save")
 	ok(Game.company.chips.size() == 1 and Game.company.campaigns.size() >= 0, "chips e campanhas preservados no save")
 	Saves.delete_save()
+	# backup do save: grava duas vezes e o anterior fica guardado; principal corrompido recupera do backup
+	var bk := Company.new(51)
+	bk.day = 10
+	Saves.save_company(bk)
+	bk.day = 20
+	Saves.save_company(bk)
+	ok(FileAccess.file_exists(Saves.BACKUP_PATH), "backup criado ao regravar")
+	var f := FileAccess.open(Saves.SAVE_PATH, FileAccess.WRITE)
+	f.store_string("{corrompido")
+	f.close()
+	var restored := Saves.load_company()
+	ok(restored != null and restored.day == 10, "recupera do backup quando o save principal está corrompido")
+	Saves.delete_save()
+	if FileAccess.file_exists(Saves.BACKUP_PATH):
+		DirAccess.remove_absolute(Saves.BACKUP_PATH)
 	print("UI smoke: %s" % ("OK" if failures == 0 else "%d falha(s)" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 

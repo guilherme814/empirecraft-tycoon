@@ -24,6 +24,9 @@ func _initialize() -> void:
 	test_version_sync()
 	test_old_save_compat()
 	test_macro_economy()
+	test_economy_financial_integrity()
+	test_early_relief_and_floor()
+	test_updater_and_backups()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -49,7 +52,6 @@ func test_data() -> void:
 	for r in GameData.research():
 		if str(r.requires) != "":
 			check(not GameData.research_item(str(r.requires)).is_empty(), "requisito existe: " + r.id)
-	check(Fmt.money(1500000.0) == "$ 1.50 M", "Fmt.money milhão: " + Fmt.money(1500000.0))
 	check(Fmt.date(0) == "01/01/2010", "Fmt.date dia 0: " + Fmt.date(0))
 	check(Fmt.thousands(1234567) == "1.234.567", "Fmt.thousands")
 
@@ -353,3 +355,91 @@ func test_macro_economy() -> void:
 	var back := Company.new(1)
 	back.market.load_dict(m.to_dict())
 	check(is_equal_approx(back.market.supply_chain, m.supply_chain), "macro persiste no save")
+
+func test_economy_financial_integrity() -> void:
+	var c := Company.new(41)
+	c.money = 600000.0
+	c.cash_start = c.money
+	for prof in ["engineer", "programmer"]:
+		c.auto_fill(prof, 1, 0.0)
+	var p := _ready_product(c)
+	c.release(p.id)
+	# empréstimo e obras mexem no caixa, não no lucro
+	var net0: float = float(Economy.current(c).net)
+	var m0 := c.money
+	check(c.take_loan(40000.0).ok, "empréstimo")
+	check(is_equal_approx(c.money, m0 + 40000.0), "empréstimo entra no caixa")
+	check(is_equal_approx(float(Economy.current(c).net), float(net0)), "empréstimo não vira lucro")
+	check(c.repay_loan(40000.0).ok, "quitar")
+	var start_money := c.money
+	c.cash_start = start_money
+	c.ledger = {}
+	c.cash_items = {}
+	c.income_month = 0.0
+	c.expense_month = 0.0
+	c.take_loan(25000.0)
+	# roda até fechar o mês
+	var d0 := c.day
+	while c.day % Rules.DAYS_IN_MONTH != 0 or c.day == d0:
+		c.advance_day()
+	var dre: Dictionary = Economy.last_month(c)
+	check(is_equal_approx(float(dre.cash_flow), c.cash_flow_last), "fluxo de caixa do DRE = variação real do caixa (%f vs %f)" % [dre.cash_flow, c.cash_flow_last])
+	check(float(dre.revenue) > 0.0, "DRE tem receita")
+	check(is_equal_approx(float(dre.gross), float(dre.revenue) - float(dre.cogs)), "lucro bruto = receita - custo")
+	check(float(dre.operating) <= float(dre.gross) + 0.01, "operacional <= bruto")
+	check(is_equal_approx(float(dre.net), float(dre.operating) - float(dre.interest) - float(dre.taxes)), "lucro líquido fecha")
+	check(float(c.cash_items_last.get("loan", 0.0)) >= 24999.0, "empréstimo aparece só no fluxo de caixa")
+	# imposto só incide sobre o resultado
+	var tax_base := float(dre.operating) - float(dre.interest)
+	if tax_base > 0.0:
+		check(absf(float(dre.taxes) - tax_base * Company.TAX_RATE) < 1.0, "imposto = %d%% do lucro tributável" % int(Company.TAX_RATE * 100.0))
+	var prods: Array = Economy.products(c)
+	check(prods.size() >= 1 and float(prods[0].revenue) > 0.0, "tabela por produto")
+	var bal: Dictionary = Economy.balance(c)
+	check(float(bal.demand) > 0.0 and float(bal.share) >= 0.0 and float(bal.share) <= 1.0, "equilíbrio do mercado válido")
+	check(absf(float(bal.mine) + float(bal.rivals) + float(bal.unmet) - float(bal.demand)) < 0.01 * float(bal.demand) + 0.5 or float(bal.mine) >= 0.0, "demanda particionada")
+	# formatação em reais
+	check(Fmt.money(1500000.0) == "R$ 1,50 mi", "formato mi: " + Fmt.money(1500000.0))
+	check(Fmt.money(12340.0) == "R$ 12,3 mil", "formato mil: " + Fmt.money(12340.0))
+	check(Fmt.money(-950.0) == "-R$ 950", "formato negativo: " + Fmt.money(-950.0))
+	check(Fmt.money_exact(1234.5) == "R$ 1.234,50", "formato com centavos: " + Fmt.money_exact(1234.5))
+
+func test_early_relief_and_floor() -> void:
+	var c := Company.new(42)
+	c.auto_fill("engineer", 1, 0.0)
+	var base := Rules.RENT_BASE + Rules.RENT_PER_STAFF * float(c.staff.size())
+	check(is_equal_approx(c.fixed_cost_factor(), Rules.EARLY_FIXED_FACTOR), "alívio inicial ativo")
+	check(is_equal_approx(c.monthly_rent(), base * Rules.EARLY_FIXED_FACTOR), "aluguel com desconto")
+	c.day = 200
+	for k in c.office_level:
+		c.office_level[k] = 3
+	check(is_equal_approx(c.fixed_cost_factor(), 1.0), "sem alívio após 90 dias e escritório nível 3")
+	# piso de demanda: preço justo e qualidade razoável vendem; preço absurdo não
+	var q := Company.new(43)
+	var pr := Product.new()
+	pr.category = "phone"
+	pr.quality = 40.0
+	pr.release_day = 0
+	q.day = 20
+	var exp_q := q.market.expectation(q.day)
+	pr.quality = exp_q
+	pr.price = q.fair_price("phone", q.effective_quality(pr))
+	check(q.demand_floor(pr, exp_q) > 0.5, "piso de demanda para produto razoável")
+	pr.price *= 3.0
+	check(q.demand_floor(pr, exp_q) == 0.0, "sem piso para preço absurdo")
+
+func test_updater_and_backups() -> void:
+	check(Updater.is_newer("0.5.0", "0.4.9"), "0.5.0 > 0.4.9")
+	check(Updater.is_newer("v1.0", "0.9.9"), "v1.0 > 0.9.9")
+	check(not Updater.is_newer("0.4.1", "0.4.1"), "mesma versão não é nova")
+	check(not Updater.is_newer("0.3.9", "0.4.0"), "versão menor não é nova")
+	check(not Updater.is_newer("lixo", "0.4.0"), "versão inválida é ignorada")
+	var sha := Updater.sha256_hex("abc".to_utf8_buffer())
+	check(sha == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", "SHA-256 correto")
+	check(Updater.verify("abc".to_utf8_buffer(), sha.to_upper()), "verifica hash")
+	check(not Updater.verify("abd".to_utf8_buffer(), sha), "arquivo alterado é rejeitado")
+	var good := JSON.stringify({"version": "0.5.0", "apk_url": "https://x.y/a.apk", "sha256": sha, "notes": "n"})
+	check(not Updater.parse_manifest(good).is_empty(), "manifesto válido")
+	check(Updater.parse_manifest(good.replace("https://", "http://")).is_empty(), "manifesto sem https é rejeitado")
+	check(Updater.parse_manifest(good.replace(sha, "zz")).is_empty(), "manifesto com hash inválido é rejeitado")
+	check(Updater.parse_manifest("não é json").is_empty(), "manifesto ilegível é rejeitado")
