@@ -68,6 +68,8 @@ svg("nav_finance", '<rect x="10" y="8" width="44" height="48" rx="6"/><path d="M
 svg("nav_stocks", '<path d="M8 8v48h48"/><path d="M16 20v22M32 12v26M48 24v22"/><rect x="12" y="26" width="8" height="10" rx="1"/><rect x="28" y="18" width="8" height="14" rx="1"/><rect x="44" y="30" width="8" height="10" rx="1"/>')
 svg("nav_marketing", '<path d="M10 24v16h8l22 12V12L18 24z"/><path d="M18 40l4 14h8l-4-14"/><path d="M48 22q5 10 0 20"/>')
 svg("nav_test", '<path d="M32 6l22 8v16q0 16-22 28Q10 46 10 30V14z"/><path d="M21 32l8 8 15-17"/>')
+svg("nav_office", '<rect x="12" y="8" width="40" height="48" rx="4"/><path d="M22 20h8M34 20h8M22 31h8M34 31h8"/><path d="M27 56V44h10v12"/>')
+svg("nav_store", '<path d="M8 24l6-14h36l6 14"/><path d="M8 24q0 8 8 8t8-8q0 8 8 8t8-8q0 8 8 8t8-8"/><path d="M12 34v22h40V34"/><rect x="26" y="42" width="12" height="14"/>')
 svg("heart", '<path d="M32 54C10 38 8 24 14 17c5-6 14-5 18 3 4-8 13-9 18-3 6 7 4 21-18 37z"/>')
 svg("nav_feedback", '<path d="M8 12h48v32H30l-14 12V44H8z"/><path d="M20 24h24M20 33h14"/>')
 svg("nav_chip", '<rect x="16" y="16" width="32" height="32" rx="4"/><rect x="25" y="25" width="14" height="14" rx="2"/><path d="M24 6v10M32 6v10M40 6v10M24 48v10M32 48v10M40 48v10M6 24h10M6 32h10M6 40h10M48 24h10M48 32h10M48 40h10"/>')

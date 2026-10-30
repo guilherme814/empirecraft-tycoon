@@ -27,6 +27,7 @@ func _initialize() -> void:
 	test_economy_financial_integrity()
 	test_early_relief_and_floor()
 	test_updater_and_backups()
+	test_office_layout()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -443,3 +444,53 @@ func test_updater_and_backups() -> void:
 	check(Updater.parse_manifest(good.replace("https://", "http://")).is_empty(), "manifesto sem https é rejeitado")
 	check(Updater.parse_manifest(good.replace(sha, "zz")).is_empty(), "manifesto com hash inválido é rejeitado")
 	check(Updater.parse_manifest("não é json").is_empty(), "manifesto ilegível é rejeitado")
+
+func test_office_layout() -> void:
+	var order := ["engineer", "programmer", "designer", "researcher"]
+	check(OfficeLayout.stage_for(0, 1) == 0 and OfficeLayout.stage_for(6, 1) == 1 and OfficeLayout.stage_for(14, 1) == 2 and OfficeLayout.stage_for(26, 1) == 3, "fases do escritório pela equipe")
+	check(OfficeLayout.stage_for(2, 5) == 3 and OfficeLayout.stage_for(2, 2) == 0, "fase também sobe com o nível do escritório")
+	var lim := OfficeLayout.limit_counts({"engineer": 16, "programmer": 16, "designer": 16, "researcher": 16}, order, 48)
+	var tot := 0
+	for k in lim:
+		tot += int(lim[k])
+	check(tot == 48 and int(lim.engineer) == 12, "limite de funcionários visíveis é dividido por igual")
+	var prev_w := 0.0
+	var prev_d := 0.0
+	for st in 4:
+		var counts := {"engineer": 2 + st * 4, "programmer": 2 + st * 4, "designer": st * 3, "researcher": 1 + st * 3}
+		var L := OfficeLayout.build(counts, order, st)
+		check(L.width >= prev_w and L.depth >= prev_d, "escritório não encolhe quando a equipe cresce (fase %d)" % st)
+		prev_w = L.width
+		prev_d = L.depth
+		var seen := {}
+		for prof in order:
+			check((L.seats_by_prof.get(prof, []) as Array).size() >= int(L.counts[prof]), "há assento para todos de %s (fase %d)" % [prof, st])
+		for seat in L.seats:
+			var key := "%.2f|%.2f" % [seat.pos.x, seat.pos.z]
+			check(not seen.has(key), "assentos não se sobrepõem")
+			seen[key] = true
+			check(seat.pos.x > 0.0 and seat.pos.x < L.width and seat.pos.z > 0.0 and seat.pos.z < L.front_lane, "assento dentro do escritório")
+			# toda rota até todo ponto é feita de segmentos retos nas pistas livres
+			for sp in L.spots:
+				var r := OfficeLayout.route_seat_to(seat, sp)
+				check(r.size() >= 2 and (r[0] as Vector3).distance_to(seat.pos) < 0.01 and (r[r.size() - 1] as Vector3).distance_to(sp.pos) < 0.01, "rota liga assento e ponto")
+				for i in range(1, r.size()):
+					var a: Vector3 = r[i - 1]
+					var b: Vector3 = r[i]
+					check(absf(a.x - b.x) < 0.001 or absf(a.z - b.z) < 0.001, "rota só tem segmentos retos")
+		check(L.spots.size() >= 6, "pontos de pausa e conversa existem (fase %d)" % st)
+		var pairs := 0
+		for sp in L.spots:
+			if sp.kind == "chat":
+				check(int(sp.pair) >= 0 and int(L.spots[int(sp.pair)].pair) == int(sp.id), "pontos de conversa vêm em pares")
+				pairs += 1
+		check(pairs >= 2, "há ao menos um par de conversa")
+		var dr := OfficeLayout.route_spot_to_seat(L.door, L.seats[0])
+		check(dr.size() >= 2 and (dr[dr.size() - 1] as Vector3).distance_to(L.seats[0].pos) < 0.01, "rota da porta até a mesa")
+	# determinismo
+	var a1 := OfficeLayout.build({"engineer": 5, "programmer": 3}, order, 1)
+	var a2 := OfficeLayout.build({"engineer": 5, "programmer": 3}, order, 1)
+	check(a1.width == a2.width and a1.seats.size() == a2.seats.size() and a1.seats[3].pos == a2.seats[3].pos, "planta do escritório é determinística")
+	# o save não ganhou campos: o escritório é só visualização
+	var c := staffed(3)
+	check(not (c.to_dict() as Dictionary).has("office_layout"), "escritório 3D não grava nada no save")

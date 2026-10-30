@@ -167,6 +167,156 @@ func _ready() -> void:
 	# salvar e carregar
 	var saved_day := c.day
 	Game.save()
+	# escritório 3D: funcionários aparecem, sentam, trabalham, saem; toque seleciona
+	var oc: Company = Game.company
+	oc.money = 2000000.0
+	for prof in ["engineer", "programmer", "designer"]:
+		oc.auto_fill(prof, 0, 0.0)
+	screen._show_page("office")
+	Game.changed.emit()
+	await get_tree().process_frame
+	var op: Control = screen._pages["office"]
+	var osc: OfficeScene = op.scene
+	ok(osc.layout != null and osc.workers.size() == mini(oc.staff.size(), OfficeLayout.MAX_VISIBLE), "escritório mostra a equipe (%d)" % osc.workers.size())
+	var seated := true
+	for id in osc.workers:
+		var w: OfficeWorker = osc.workers[id]
+		if w.mode != "work" or w.position.distance_to(w.seat.pos) > 0.05:
+			seated = false
+	ok(seated, "equipe inicial já aparece sentada na mesa")
+	var before_staff := oc.staff.size()
+	for prof in ["researcher", "engineer"]:
+		oc.office_level[prof] = 3
+		oc.search_agency(1, prof)
+		oc.auto_fill(prof, 1, 0.0)
+	ok(oc.staff.size() > before_staff, "contratações novas feitas")
+	Game.changed.emit()
+	await get_tree().process_frame
+	var newbies := 0
+	for id in osc.workers:
+		if (osc.workers[id] as OfficeWorker).kind == "enter":
+			newbies += 1
+	ok(newbies > 0, "recém-contratados entram pela porta")
+	for i in 1200:
+		osc.step(0.1)
+	var settled := true
+	for id in osc.workers:
+		var w2: OfficeWorker = osc.workers[id]
+		if w2.kind == "enter":
+			settled = false
+	ok(settled, "recém-contratados chegam à própria mesa")
+	var seen_break := false
+	var seen_chat := false
+	var chat_pairs_ok := true
+	for i in 6000:
+		osc.step(0.1)
+		var k := osc.counts_by_kind()
+		if int(k.break) > 0:
+			seen_break = true
+		if int(k.chat) > 0:
+			seen_chat = true
+		if i % 50 == 0:
+			var away := int(k.break) + int(k.chat)
+			if away > maxi(1, int(osc.workers.size() * 0.3)) + 1:
+				chat_pairs_ok = false
+	ok(seen_break and seen_chat, "funcionários fazem pausas e conversam")
+	ok(chat_pairs_ok, "só uma parte da equipe sai das mesas ao mesmo tempo")
+	osc.events_enabled = false
+	for i in 1500:
+		osc.step(0.1)
+	var all_back := true
+	for id in osc.workers:
+		var w4: OfficeWorker = osc.workers[id]
+		if w4.mode != "work" or w4.position.distance_to(w4.seat.pos) > 0.06:
+			all_back = false
+	if not all_back:
+		for id in osc.workers:
+			var wd: OfficeWorker = osc.workers[id]
+			if wd.mode != "work" or wd.position.distance_to(wd.seat.pos) > 0.06:
+				print("   preso: ", wd.emp_name, " modo=", wd.mode, " tipo=", wd.kind, " pos=", wd.position, " seat=", wd.seat.pos, " path_i=", wd.path_i, "/", wd.path.size(), " after=", wd.after)
+	ok(all_back, "todos voltam ao trabalho depois das pausas")
+	osc.events_enabled = true
+	# toque seleciona o funcionário certo
+	var target_id: int = osc.workers.keys()[0]
+	var tw: OfficeWorker = osc.workers[target_id]
+	var scr := osc._cam.unproject_position(tw.global_position + Vector3(0, 0.55, 0))
+	ok(osc.pick(scr) == target_id, "toque seleciona o funcionário")
+	osc.select(target_id)
+	await get_tree().process_frame
+	ok(op._card.visible, "card do funcionário aparece")
+	# demissão: sai andando e some
+	var fire_id := -1
+	for pr in ["engineer", "programmer", "designer", "researcher"]:
+		var lst: Array = oc.staff_of(pr)
+		if lst.size() >= 2 and lst.size() % 2 == 0 and fire_id == -1:
+			for em in lst:
+				var fw: OfficeWorker = osc.workers.get((em as Employee).id, null)
+				if fw != null and fw.mode == "work" and fire_id == -1:
+					fire_id = (em as Employee).id
+	ok(fire_id != -1, "há quem demitir sem mudar a planta")
+	oc.fire(fire_id)
+	Game.changed.emit()
+	await get_tree().process_frame
+	if not (osc.workers.has(fire_id) and (osc.workers[fire_id] as OfficeWorker).kind == "leave"):
+		print("   demitido: tem=", osc.workers.has(fire_id), " layout=", osc._layout_sig, " staff=", oc.staff.size())
+	ok(osc.workers.has(fire_id) and (osc.workers[fire_id] as OfficeWorker).kind == "leave", "demitido caminha para a saída")
+	for i in 1500:
+		osc.step(0.1)
+	ok(not osc.workers.has(fire_id), "demitido some do escritório")
+	ok(osc.workers.size() == mini(oc.staff.size(), OfficeLayout.MAX_VISIBLE), "escritório acompanha a equipe após demissão")
+	screen._show_page("dash")
+	# lojas: abrir em vários países, vender, custo mensal, personalizar, fechar, página e prévia 3D
+	oc.money = 5000000.0
+	oc.reputation = 60.0
+	var open_money := oc.money
+	var r1 := Stores.open(oc, {"country": "br", "city": "São Paulo", "size": "store", "facade": "luxury", "staff": 3, "name": ""})
+	var r2 := Stores.open(oc, {"country": "jp", "city": GameData.country("jp").cities[0], "size": "kiosk", "facade": "tech", "staff": 1, "name": "Tokyo Kiosk"})
+	ok(r1.ok and r2.ok and oc.stores.size() == 2, "abre lojas em países diferentes")
+	ok(oc.money < open_money, "abrir loja gasta caixa")
+	ok(not Stores.open(oc, {"country": "xx", "city": "?", "size": "store", "facade": "luxury", "staff": 1}).ok, "país inválido é recusado")
+	oc.reputation = 0.0
+	ok(not Stores.open(oc, {"country": "us", "city": GameData.country("us").cities[0], "size": "flagship", "facade": "tech", "staff": 4}).ok, "reputação baixa bloqueia loja grande")
+	oc.reputation = 60.0
+	var pn := oc.products.size()
+	var rel_l := oc.released_products()
+	if rel_l.is_empty():
+		for pr in oc.products:
+			if pr.state == Product.STATE_READY:
+				oc.release(pr.id)
+	var sold0 := 0
+	for i in 40:
+		oc.advance_day()
+	for st in oc.stores:
+		sold0 += int(st.units)
+	if not oc.released_products().is_empty():
+		ok(sold0 > 0, "lojas vendem produtos lançados (%d un.)" % sold0)
+	var cash0 := oc.money
+	for i in 31:
+		oc.advance_day()
+	var up := Stores.update(oc, int(oc.stores[0].id), "industrial", 2)
+	ok(up.ok and oc.stores[0].facade == "industrial" and int(oc.stores[0].staff) == 2, "personaliza fachada e equipe")
+	var sv := oc.to_dict()
+	var rc := Company.from_dict(JSON.parse_string(JSON.stringify(sv)))
+	ok(rc.stores.size() == 2 and rc.stores[1].country == "jp" and int(rc.stores[0].id) == int(oc.stores[0].id), "lojas sobrevivem ao save/load")
+	var oldd := sv.duplicate()
+	oldd.erase("stores")
+	oldd["version"] = 4
+	ok(Company.from_dict(oldd).stores.is_empty(), "save antigo sem lojas carrega")
+	screen._show_page("stores")
+	Game.changed.emit()
+	await get_tree().process_frame
+	var sp: Control = screen._pages["stores"]
+	ok(sp._scene.workers.size() > 0, "prévia 3D da loja tem funcionários")
+	for z in 30:
+		sp._scene.step(0.1)
+	sp._sel = int(oc.stores[0].id)
+	sp._last_sig = "\u0001"
+	sp.refresh()
+	await get_tree().process_frame
+	var cl := Stores.close(oc, int(oc.stores[0].id))
+	ok(cl.ok and oc.stores.size() == 1, "fecha loja")
+	sp._sel = -1
+	screen._show_page("dash")
 	ok(Saves.has_save(), "save gravado")
 	ok(Game.load_game(), "save carregado")
 	ok(Game.company.day == saved_day, "dia preservado no save")

@@ -94,3 +94,21 @@ static func chips() -> Dictionary:
 
 static func feedback() -> Dictionary:
 	return _load("feedback")
+
+static func countries() -> Array:
+	return _load("countries")
+
+static func country(id: String) -> Dictionary:
+	for c in countries():
+		if c.id == id:
+			return c
+	return {}
+
+static func stores() -> Dictionary:
+	return _load("stores")
+
+static func store_opt(group: String, id: String) -> Dictionary:
+	for it in stores().get(group, []):
+		if it.id == id:
+			return it
+	return {}

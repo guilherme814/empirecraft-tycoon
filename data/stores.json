@@ -1,0 +1,123 @@
+{
+ "sizes": [
+  {
+   "id": "kiosk",
+   "name": "Quiosque",
+   "open": 25000,
+   "rent": 1500,
+   "reach": 0.25,
+   "max_staff": 2,
+   "base_staff": 1,
+   "rep": 0,
+   "res": 0,
+   "desc": "Barato e rápido de abrir. Pouco movimento."
+  },
+  {
+   "id": "store",
+   "name": "Loja",
+   "open": 90000,
+   "rent": 5000,
+   "reach": 0.6,
+   "max_staff": 6,
+   "base_staff": 2,
+   "rep": 15,
+   "res": 1,
+   "desc": "Loja de rua ou shopping com equipe própria."
+  },
+  {
+   "id": "flagship",
+   "name": "Flagship",
+   "open": 350000,
+   "rent": 18000,
+   "reach": 1.5,
+   "max_staff": 14,
+   "base_staff": 4,
+   "rep": 40,
+   "res": 2,
+   "desc": "Loja-conceito: vitrine da marca, eventos e muita visibilidade."
+  }
+ ],
+ "facades": [
+  {
+   "id": "minimal",
+   "name": "Minimalista",
+   "exp": 0.06,
+   "cost": 1.0
+  },
+  {
+   "id": "industrial",
+   "name": "Industrial",
+   "exp": 0.05,
+   "cost": 0.95
+  },
+  {
+   "id": "luxury",
+   "name": "Luxo",
+   "exp": 0.12,
+   "cost": 1.5
+  },
+  {
+   "id": "tech",
+   "name": "Tecnológica",
+   "exp": 0.09,
+   "cost": 1.25
+  }
+ ],
+ "layouts": [
+  {
+   "id": "open",
+   "name": "Aberto",
+   "exp": 0.04,
+   "flow": 1.1
+  },
+  {
+   "id": "gallery",
+   "name": "Galeria",
+   "exp": 0.08,
+   "flow": 1.0
+  },
+  {
+   "id": "experience",
+   "name": "Experiência",
+   "exp": 0.13,
+   "flow": 0.9
+  }
+ ],
+ "services": [
+  {
+   "id": "repair",
+   "name": "Assistência técnica",
+   "exp": 0.08,
+   "month": 1200,
+   "loyalty": 0.25,
+   "desc": "Clientes felizes viram fãs."
+  },
+  {
+   "id": "tradein",
+   "name": "Troca de aparelho",
+   "exp": 0.04,
+   "month": 1500,
+   "sales": 0.1,
+   "desc": "+10% de vendas na loja."
+  },
+  {
+   "id": "cafe",
+   "name": "Café e lounge",
+   "exp": 0.1,
+   "month": 2000,
+   "desc": "Mais conforto, mais tempo na loja."
+  },
+  {
+   "id": "events",
+   "name": "Eventos de lançamento",
+   "exp": 0.05,
+   "month": 3000,
+   "aware": 0.004,
+   "desc": "Aumenta a consciência de marca do produto em destaque."
+  }
+ ],
+ "staff_wage": 900,
+ "redecor_fee": 6000,
+ "max_total": 12,
+ "max_per_country": 3
+}

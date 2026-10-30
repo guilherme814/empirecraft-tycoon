@@ -4,6 +4,8 @@ extends Control
 const PAGE_DEFS := [
 	{"id": "dash", "title": "Painel", "icon": "nav_dash", "script": "res://src/ui/pages/DashboardPage.gd"},
 	{"id": "team", "title": "Equipe", "icon": "nav_team", "script": "res://src/ui/pages/TeamPage.gd"},
+	{"id": "office", "title": "Escritório", "icon": "nav_office", "script": "res://src/ui/pages/OfficePage.gd"},
+	{"id": "stores", "title": "Lojas", "icon": "nav_store", "script": "res://src/ui/pages/StoresPage.gd"},
 	{"id": "products", "title": "Produtos", "icon": "nav_products", "script": "res://src/ui/pages/ProductsPage.gd"},
 	{"id": "lab", "title": "Testes", "icon": "nav_test", "script": "res://src/ui/pages/LabPage.gd"},
 	{"id": "marketing", "title": "Marketing", "icon": "nav_marketing", "script": "res://src/ui/pages/MarketingPage.gd"},
@@ -280,6 +282,9 @@ func _modal(title: String) -> Control:
 	return shade
 
 func _on_ui_request(kind: String, pid: int) -> void:
+	if kind == "goto_team":
+		_show_page("team")
+		return
 	var c: Company = Game.company
 	var p: Product = c.get_product(pid)
 	if p == null:

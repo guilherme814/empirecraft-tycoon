@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 4
+const SAVE_VERSION := 5
 const TAX_RATE := 0.15
 const LOAN_RATE := 0.012
 const MAX_DEALS := 4
@@ -52,6 +52,7 @@ var loyalty: float = Loyalty.START  # lealdade à marca (0..100)
 var loyalty_log: Array = []       # últimas mudanças {day, d, why}
 var cash_items: Dictionary = {}     # mês atual: movimentos fora do resultado (empréstimo, bolsa, obras)
 var cash_items_last: Dictionary = {}
+var stores: Array = []            # lojas próprias (Stores)
 var market_stats: Dictionary = {}  # último dia por categoria: {size, mine, rivals, none} (transitório)
 var cash_start: float = Rules.START_MONEY  # caixa no início do mês (fluxo de caixa)
 var cash_flow_last: float = 0.0   # fluxo de caixa do mês passado
@@ -730,7 +731,8 @@ func _sell() -> void:
 					reputation = maxf(0.0, reputation - 0.01)
 		var rival_units := size * comp / denom
 		var none_units := size * Rules.OUTSIDE_OPTION / denom
-		market_stats[cat_id] = {"size": size, "mine": float(mine_units), "rivals": rival_units, "none": none_units}
+		market_stats[cat_id] = {"size": size, "mine": float(mine_units), "rivals": rival_units, "none": none_units,
+			"attr": attr, "denom": denom, "share": (float(mine_units) / size) if size > 0.0 else 0.0}
 
 # ───────────────────────── tempo ─────────────────────────
 
@@ -746,6 +748,7 @@ func advance_day() -> void:
 	Lab.tick(self)
 	Lab.beta_tick(self)
 	_sell()
+	Stores.daily(self)
 	market.tick(day)
 	stocks.daily(self)
 	for e in staff:
@@ -760,6 +763,7 @@ func _month_end() -> void:
 	_expense(payroll, "payroll")
 	_expense(rent, "rent")
 	_deals_month()
+	Stores.monthly(self)
 	if loan > 0.0:
 		_expense(loan * LOAN_RATE, "interest")
 	var pre_tax := income_month - expense_month
@@ -1345,7 +1349,7 @@ func to_dict() -> Dictionary:
 		"ledger": ledger, "ledger_last": ledger_last, "history": history, "loan": loan, "deals": deals,
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
-		"cash_items": cash_items, "cash_items_last": cash_items_last,
+		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1373,6 +1377,14 @@ static func from_dict(d: Dictionary) -> Company:
 		c.products.append(Product.from_dict(pd))
 	c.market.load_dict(d.get("market", {}))
 	c.next_id = int(d.get("next_id", 1))
+	for sd in d.get("stores", []):
+		var st: Dictionary = (sd as Dictionary).duplicate(true)
+		st["id"] = int(st.get("id", 0))
+		st["staff"] = int(st.get("staff", 1))
+		st["units"] = int(st.get("units", 0))
+		st["revenue"] = float(st.get("revenue", 0.0))
+		st["carry"] = st.get("carry", {})
+		c.stores.append(st)
 	c.game_over = bool(d.get("game_over", false))
 	c.log_entries = d.get("log", []).duplicate(true)
 	c.income_month = float(d.get("income_month", 0.0))

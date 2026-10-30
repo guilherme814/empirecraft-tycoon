@@ -61,6 +61,12 @@ Mover arquivos para `domain/` e `simulation/` fica para quando o `Company.gd` fo
 **sistemas novos entram como classes estáticas em `src/core`** (como `Loyalty`, `Marketing`, `Lab`) que
 operam sobre `Company`/`Product`, e a UI só chama essas funções.
 
+### 2.6. Escritório 3D e lojas (v0.5)
+- `OfficeLayout` (core, puro): planta automática, assentos, pontos de pausa/conversa e rotas retas pelas pistas.
+- `gfx3d/OfficeScene`, `OfficeWorker`, `MeshBuilder`: só visual, sem autoload; a página chama `sync(company)`. Nada é gravado no save.
+- `Stores` (core): abrir/editar/fechar lojas, vendas diárias e custo mensal; `StoreScene` é a prévia 3D (herda de `OfficeScene`).
+- Dados: `data/countries.json`, `data/stores.json`.
+
 ## 3. Organização recomendada
 
 ```

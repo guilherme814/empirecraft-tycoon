@@ -1,0 +1,212 @@
+[
+ {
+  "id": "br",
+  "name": "Brasil",
+  "w": 0.3,
+  "rent": 1.0,
+  "wage": 1.0,
+  "open": 1.0,
+  "rep": 0,
+  "cities": [
+   "São Paulo",
+   "Rio de Janeiro",
+   "Belo Horizonte"
+  ],
+  "color": "4cd18a"
+ },
+ {
+  "id": "ar",
+  "name": "Argentina",
+  "w": 0.1,
+  "rent": 0.9,
+  "wage": 0.8,
+  "open": 0.9,
+  "rep": 10,
+  "cities": [
+   "Buenos Aires",
+   "Córdoba",
+   "Rosário"
+  ],
+  "color": "5aa9ff"
+ },
+ {
+  "id": "mx",
+  "name": "México",
+  "w": 0.18,
+  "rent": 1.0,
+  "wage": 0.9,
+  "open": 1.0,
+  "rep": 15,
+  "cities": [
+   "Cidade do México",
+   "Guadalajara",
+   "Monterrey"
+  ],
+  "color": "4cd18a"
+ },
+ {
+  "id": "us",
+  "name": "Estados Unidos",
+  "w": 0.7,
+  "rent": 2.4,
+  "wage": 2.2,
+  "open": 1.8,
+  "rep": 30,
+  "cities": [
+   "Nova York",
+   "São Francisco",
+   "Austin"
+  ],
+  "color": "ff5d6c"
+ },
+ {
+  "id": "ca",
+  "name": "Canadá",
+  "w": 0.2,
+  "rent": 1.8,
+  "wage": 1.7,
+  "open": 1.5,
+  "rep": 30,
+  "cities": [
+   "Toronto",
+   "Vancouver",
+   "Montreal"
+  ],
+  "color": "ff5d6c"
+ },
+ {
+  "id": "uk",
+  "name": "Reino Unido",
+  "w": 0.3,
+  "rent": 2.2,
+  "wage": 1.9,
+  "open": 1.7,
+  "rep": 35,
+  "cities": [
+   "Londres",
+   "Manchester",
+   "Edimburgo"
+  ],
+  "color": "5aa9ff"
+ },
+ {
+  "id": "de",
+  "name": "Alemanha",
+  "w": 0.35,
+  "rent": 1.9,
+  "wage": 1.8,
+  "open": 1.6,
+  "rep": 35,
+  "cities": [
+   "Berlim",
+   "Munique",
+   "Hamburgo"
+  ],
+  "color": "ffc857"
+ },
+ {
+  "id": "fr",
+  "name": "França",
+  "w": 0.3,
+  "rent": 2.0,
+  "wage": 1.7,
+  "open": 1.6,
+  "rep": 40,
+  "cities": [
+   "Paris",
+   "Lyon",
+   "Marselha"
+  ],
+  "color": "5aa9ff"
+ },
+ {
+  "id": "jp",
+  "name": "Japão",
+  "w": 0.45,
+  "rent": 2.3,
+  "wage": 1.6,
+  "open": 1.7,
+  "rep": 45,
+  "cities": [
+   "Tóquio",
+   "Osaka",
+   "Quioto"
+  ],
+  "color": "ff5d6c"
+ },
+ {
+  "id": "kr",
+  "name": "Coreia do Sul",
+  "w": 0.25,
+  "rent": 1.7,
+  "wage": 1.4,
+  "open": 1.5,
+  "rep": 45,
+  "cities": [
+   "Seul",
+   "Busan",
+   "Incheon"
+  ],
+  "color": "5aa9ff"
+ },
+ {
+  "id": "cn",
+  "name": "China",
+  "w": 0.8,
+  "rent": 1.4,
+  "wage": 0.9,
+  "open": 1.4,
+  "rep": 50,
+  "cities": [
+   "Xangai",
+   "Shenzhen",
+   "Pequim"
+  ],
+  "color": "ff5d6c"
+ },
+ {
+  "id": "in",
+  "name": "Índia",
+  "w": 0.6,
+  "rent": 0.8,
+  "wage": 0.5,
+  "open": 1.1,
+  "rep": 40,
+  "cities": [
+   "Bangalore",
+   "Mumbai",
+   "Délhi"
+  ],
+  "color": "ff9a2e"
+ },
+ {
+  "id": "au",
+  "name": "Austrália",
+  "w": 0.15,
+  "rent": 2.1,
+  "wage": 2.0,
+  "open": 1.6,
+  "rep": 50,
+  "cities": [
+   "Sydney",
+   "Melbourne",
+   "Perth"
+  ],
+  "color": "5aa9ff"
+ },
+ {
+  "id": "ae",
+  "name": "Emirados Árabes",
+  "w": 0.12,
+  "rent": 2.0,
+  "wage": 1.1,
+  "open": 1.8,
+  "rep": 55,
+  "cities": [
+   "Dubai",
+   "Abu Dhabi",
+   "Sharjah"
+  ],
+  "color": "ffc857"
+ }
+]

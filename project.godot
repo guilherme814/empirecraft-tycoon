@@ -4,7 +4,7 @@ config_version=5
 [application]
 
 config/name="Device Empire"
-config/version="0.4.1"
+config/version="0.5.0"
 config/description="Simulador estratégico de gestão empresarial e tecnologia. Desenvolva dispositivos, construa seu império e domine o mercado com inovação, estratégia e visão de longo prazo."
 run/main_scene="res://src/scenes/MainMenu.tscn"
 config/icon="res://icon.svg"
@@ -30,6 +30,7 @@ window/handheld/orientation=4
 [input_devices]
 
 pointing/emulate_touch_from_mouse=true
+pointing/android/enable_pan_and_scale_gestures=true
 
 [rendering]
 
