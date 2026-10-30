@@ -146,7 +146,10 @@ func rebuild() -> void:
 		var ob := UI.button("Abrir loja", func(): var r := Stores.open(c, _spec); if r.ok: _spec = Stores.default_spec(str(_spec.country)); act(r), "good", 76)
 		ob.disabled = why != ""
 		v.add_child(ob)
-	_scene.show_store(cur, c.released_products().size(), Color(str(ct.color)))
+	var view := cur.duplicate()
+	if str(view.get("name", "")).strip_edges() == "":
+		view["name"] = "%s %s" % [c.company_name, view.city]
+	_scene.show_store(view, c.released_products().size(), Color(str(ct.color)))
 
 func _facade(fid: String) -> void:
 	if _sel != -1:

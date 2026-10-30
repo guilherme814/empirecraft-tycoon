@@ -122,11 +122,11 @@ func setup(id: int, profession: String, nm: String) -> void:
 	_bubble = Label3D.new()
 	_bubble.text = "..."
 	_bubble.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_bubble.font_size = 72
-	_bubble.pixel_size = 0.0085
+	_bubble.font_size = 48
+	_bubble.pixel_size = 0.007
 	_bubble.modulate = Color("ffffff")
 	_bubble.outline_modulate = Color("14161c")
-	_bubble.outline_size = 14
+	_bubble.outline_size = 8
 	_bubble.no_depth_test = true
 	_bubble.position = Vector3(0.0, 1.22, 0.0)
 	_bubble.visible = false

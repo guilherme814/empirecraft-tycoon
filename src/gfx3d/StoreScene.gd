@@ -63,7 +63,7 @@ func show_store(spec: Dictionary, released: int, country_color: Color) -> void:
 	f.box(Vector3(W * 0.5, 1.75, 0.04), Vector3(sw, 0.5, 0.08), th.sign, 0.0, 0.0)
 	e.box(Vector3(W * 0.5, 1.48, 0.085), Vector3(sw, 0.035, 0.01), acc, 0.0, 0.0)
 	var L := Label3D.new()
-	L.text = str(spec.name).to_upper()
+	L.text = (str(spec.name) if str(spec.name) != "" else "LOJA").to_upper()
 	L.font_size = 96
 	L.pixel_size = clampf(sw * 0.9 / (0.62 * 96.0 * float(maxi(L.text.length(), 4))), 0.002, 0.0075)
 	L.modulate = acc.lightened(0.25)
@@ -78,12 +78,12 @@ func show_store(spec: Dictionary, released: int, country_color: Color) -> void:
 			x = W * 0.5
 		f.box(Vector3(x, 0.7, 0.3), Vector3(minf(2.0, W / float(shelves) - 0.3), 1.4, 0.4), th.shelf, 0.0, 0.1)
 		for r in 3:
-			f.box(Vector3(x, 0.3 + float(r) * 0.4, 0.34), Vector3(minf(1.9, W / float(shelves) - 0.4), 0.03, 0.34), th.shelf.darkened(0.25), 0.0, 0.0)
+			f.box(Vector3(x, 0.3 + float(r) * 0.4, 0.5), Vector3(minf(1.9, W / float(shelves) - 0.4), 0.03, 0.34), th.shelf.darkened(0.25), 0.0, 0.0)
 			for d in 4:
 				var dx := x - 0.7 + float(d) * 0.46
 				if dx > x + minf(1.9, W / float(shelves) - 0.4) * 0.5:
 					continue
-				e.box(Vector3(dx, 0.4 + float(r) * 0.4, 0.37), Vector3(0.16, 0.2, 0.02), acc if (d + r + k) % 2 == 0 else Color("5aa9ff"), 0.0, 0.0)
+				e.box(Vector3(dx, 0.4 + float(r) * 0.4, 0.515), Vector3(0.16, 0.2, 0.02), acc if (d + r + k) % 2 == 0 else Color("5aa9ff"), 0.0, 0.0)
 	# mesas de demonstração
 	var tables := {"kiosk": 0, "store": 1, "flagship": 2}[str(spec.size)] as int
 	for k in tables:
@@ -129,8 +129,8 @@ func show_store(spec: Dictionary, released: int, country_color: Color) -> void:
 	var cust := {"kiosk": 1, "store": 2, "flagship": 4}[str(spec.size)] as int
 	for i in cust:
 		var w := _person(8000 + i * 5, "engineer" if i % 2 == 0 else "researcher", "Cliente")
-		var cxp := W * 0.35 + float(i) * 0.9 if str(spec.size) != "kiosk" else W * 0.5
-		w.place_standing(Vector3(cxp, 0, D * 0.5 + 0.9), PI)
+		var cxp := 1.2 + float(i) * 1.15 if str(spec.size) != "kiosk" else W * 0.4
+		w.place_standing(Vector3(cxp, 0, D * 0.62 + float(i % 2) * 0.7), PI + 0.4 * float(i % 3 - 1))
 	_fit()
 
 func _person(id: int, prof: String, nm: String) -> OfficeWorker:
