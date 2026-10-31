@@ -112,3 +112,6 @@ static func store_opt(group: String, id: String) -> Dictionary:
 		if it.id == id:
 			return it
 	return {}
+
+static func identity() -> Dictionary:
+	return _load("identity")

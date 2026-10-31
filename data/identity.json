@@ -1,0 +1,181 @@
+{
+ "symbols": [
+  {
+   "id": "shield",
+   "name": "Escudo"
+  },
+  {
+   "id": "hexagon",
+   "name": "Hexágono"
+  },
+  {
+   "id": "diamond",
+   "name": "Diamante"
+  },
+  {
+   "id": "circle",
+   "name": "Círculo"
+  },
+  {
+   "id": "star",
+   "name": "Estrela"
+  },
+  {
+   "id": "bolt",
+   "name": "Raio"
+  },
+  {
+   "id": "triangle",
+   "name": "Triângulo"
+  },
+  {
+   "id": "crown",
+   "name": "Coroa"
+  }
+ ],
+ "colors": [
+  "ff9a2e",
+  "5aa9ff",
+  "4cd18a",
+  "c792ea",
+  "ff5d6c",
+  "ffc857",
+  "3fcfb4",
+  "e9ecf2",
+  "1b2036",
+  "2d3a6b",
+  "7a1f2b",
+  "111111"
+ ],
+ "styles": [
+  {
+   "id": "caps",
+   "name": "MAIÚSCULAS"
+  },
+  {
+   "id": "title",
+   "name": "Título"
+  },
+  {
+   "id": "lower",
+   "name": "minúsculas"
+  },
+  {
+   "id": "wide",
+   "name": "E S P A Ç A D A"
+  }
+ ],
+ "logo_fee": 5000,
+ "decor": [
+  {
+   "group": "desk",
+   "name": "Mesas",
+   "options": [
+    {
+     "id": "white",
+     "name": "Branca",
+     "cost": 0
+    },
+    {
+     "id": "wood",
+     "name": "Madeira",
+     "cost": 6000
+    },
+    {
+     "id": "dark",
+     "name": "Grafite",
+     "cost": 8000
+    }
+   ]
+  },
+  {
+   "group": "chair",
+   "name": "Cadeiras",
+   "options": [
+    {
+     "id": "common",
+     "name": "Comum",
+     "cost": 0
+    },
+    {
+     "id": "ergonomic",
+     "name": "Ergonômica",
+     "cost": 12000
+    },
+    {
+     "id": "executive",
+     "name": "Executiva",
+     "cost": 25000
+    }
+   ]
+  },
+  {
+   "group": "pc",
+   "name": "Computadores",
+   "options": [
+    {
+     "id": "single",
+     "name": "Monitor único",
+     "cost": 0
+    },
+    {
+     "id": "dual",
+     "name": "Monitor duplo",
+     "cost": 15000
+    },
+    {
+     "id": "ultra",
+     "name": "Ultrawide + gabinete",
+     "cost": 30000
+    }
+   ]
+  },
+  {
+   "group": "light",
+   "name": "Iluminação",
+   "options": [
+    {
+     "id": "warm",
+     "name": "Quente",
+     "cost": 0
+    },
+    {
+     "id": "neutral",
+     "name": "Neutra",
+     "cost": 3000
+    },
+    {
+     "id": "cool",
+     "name": "Fria",
+     "cost": 3000
+    },
+    {
+     "id": "neon",
+     "name": "Faixas de LED",
+     "cost": 10000
+    }
+   ]
+  },
+  {
+   "group": "deco",
+   "name": "Decoração",
+   "options": [
+    {
+     "id": "plants",
+     "name": "Plantas",
+     "cost": 0
+    },
+    {
+     "id": "art",
+     "name": "Quadros",
+     "cost": 7000
+    },
+    {
+     "id": "trophy",
+     "name": "Troféus e quadros",
+     "cost": 12000
+    }
+   ]
+  }
+ ]
+}

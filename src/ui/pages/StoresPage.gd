@@ -149,6 +149,7 @@ func rebuild() -> void:
 	var view := cur.duplicate()
 	if str(view.get("name", "")).strip_edges() == "":
 		view["name"] = "%s %s" % [c.company_name, view.city]
+	_scene.logo = c.logo
 	_scene.show_store(view, c.released_products().size(), Color(str(ct.color)))
 
 func _facade(fid: String) -> void:

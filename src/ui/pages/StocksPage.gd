@@ -88,7 +88,9 @@ func _rival_card(r: Dictionary) -> Control:
 	var v := UI.vbox(6)
 	card.add_child(v)
 	var head := UI.hbox(8)
-	head.add_child(UI.icon_label(str(r.focus), name, 28, Palette.TEXT, Palette.ACCENT))
+	var fcs: Variant = r.focus
+	var ficon: String = str((fcs as Array)[0]) if fcs is Array else str(fcs)
+	head.add_child(UI.icon_label(ficon, name, 28, Palette.TEXT, Palette.ACCENT))
 	head.add_child(UI.spacer())
 	var chg := UI.label("", 26)
 	head.add_child(chg)

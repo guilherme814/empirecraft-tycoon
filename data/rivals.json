@@ -1,29 +1,145 @@
 {
  "list": [
   {
-   "name": "Nova Corp",
-   "aggr": 1.0,
-   "focus": "phone"
-  },
-  {
-   "name": "Helix Labs",
-   "aggr": 0.8,
-   "focus": "laptop"
-  },
-  {
-   "name": "Orbital",
+   "name": "Apple",
+   "strategy": "premium",
    "aggr": 1.2,
-   "focus": "console"
+   "focus": [
+    "phone",
+    "laptop",
+    "watch"
+   ],
+   "price_mult": 1.45,
+   "q_mult": 1.12,
+   "tech": 1.18,
+   "value": 60000000.0,
+   "desc": "Premium: preço alto, qualidade e fidelidade de marca."
   },
   {
-   "name": "Kairo Systems",
+   "name": "Samsung",
+   "strategy": "volume",
+   "aggr": 1.3,
+   "focus": [
+    "phone",
+    "watch",
+    "laptop"
+   ],
+   "price_mult": 0.95,
+   "q_mult": 1.0,
+   "tech": 1.1,
+   "value": 45000000.0,
+   "desc": "Volume: linha ampla em todas as faixas de preço."
+  },
+  {
+   "name": "Google",
+   "strategy": "innovator",
    "aggr": 0.9,
-   "focus": "watch"
+   "focus": [
+    "phone",
+    "watch"
+   ],
+   "price_mult": 1.1,
+   "q_mult": 1.1,
+   "tech": 1.1,
+   "value": 40000000.0,
+   "desc": "Software e IA à frente; lança menos, mas com inovação."
   },
   {
-   "name": "Zenite",
-   "aggr": 1.1,
-   "focus": "phone"
+   "name": "Microsoft",
+   "strategy": "premium",
+   "aggr": 0.9,
+   "focus": [
+    "laptop",
+    "console"
+   ],
+   "price_mult": 1.25,
+   "q_mult": 1.05,
+   "tech": 1.12,
+   "value": 55000000.0,
+   "desc": "Foco em produtividade e jogos; preço firme."
+  },
+  {
+   "name": "Xiaomi",
+   "strategy": "value",
+   "aggr": 1.3,
+   "focus": [
+    "phone",
+    "watch",
+    "laptop"
+   ],
+   "price_mult": 0.72,
+   "q_mult": 0.93,
+   "tech": 1.0,
+   "value": 14000000.0,
+   "desc": "Custo-benefício agressivo: preço baixo e muitos lançamentos."
+  },
+  {
+   "name": "Huawei",
+   "strategy": "innovator",
+   "aggr": 1.0,
+   "focus": [
+    "phone",
+    "watch"
+   ],
+   "price_mult": 1.0,
+   "q_mult": 1.05,
+   "tech": 1.08,
+   "value": 16000000.0,
+   "desc": "Engenharia forte (câmera, bateria) e preços médios."
+  },
+  {
+   "name": "Sony",
+   "strategy": "premium",
+   "aggr": 0.9,
+   "focus": [
+    "console",
+    "phone"
+   ],
+   "price_mult": 1.2,
+   "q_mult": 1.08,
+   "tech": 1.1,
+   "value": 18000000.0,
+   "desc": "Entretenimento e áudio/vídeo de alto nível."
+  },
+  {
+   "name": "Intel",
+   "strategy": "volume",
+   "aggr": 0.7,
+   "focus": [
+    "laptop"
+   ],
+   "price_mult": 1.05,
+   "q_mult": 1.04,
+   "tech": 1.15,
+   "value": 20000000.0,
+   "desc": "Plataformas de notebook para todo o mercado."
+  },
+  {
+   "name": "NVIDIA",
+   "strategy": "innovator",
+   "aggr": 0.7,
+   "focus": [
+    "console",
+    "laptop"
+   ],
+   "price_mult": 1.35,
+   "q_mult": 1.15,
+   "tech": 1.2,
+   "value": 35000000.0,
+   "desc": "Desempenho gráfico líder, preço premium."
+  },
+  {
+   "name": "Nintendo",
+   "strategy": "value",
+   "aggr": 0.8,
+   "focus": [
+    "console"
+   ],
+   "price_mult": 0.9,
+   "q_mult": 0.98,
+   "tech": 1.0,
+   "value": 12000000.0,
+   "desc": "Consoles acessíveis e criativos, ciclos longos."
   }
  ]
 }

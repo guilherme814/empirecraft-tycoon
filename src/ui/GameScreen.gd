@@ -24,6 +24,7 @@ var _nav: Dictionary = {}
 var _badges: Dictionary = {}
 var _current: String = ""
 var _content: Control
+var _logo_v: LogoView
 var _name_l: Label
 var _money_l: Label
 var _date_l: Label
@@ -86,6 +87,8 @@ func _build_top_bar() -> Control:
 	bar.add_theme_stylebox_override("panel", Palette.box(Palette.PANEL, 0, 14))
 	var h := UI.hbox(26)
 	bar.add_child(h)
+	_logo_v = LogoView.new().setup(Game.company.logo, 56.0)
+	h.add_child(_logo_v)
 	_name_l = UI.label(Game.company.company_name, 30, Palette.ACCENT)
 	h.add_child(_name_l)
 	_money_l = UI.label("", 32, Palette.GOOD)
@@ -216,6 +219,9 @@ func _refresh_all() -> void:
 	if c == null:
 		return
 	_update_badges()
+	if _logo_v.logo != c.logo:
+		_logo_v.setup(c.logo, 56.0)
+	_name_l.add_theme_color_override("font_color", Color(str(c.logo.c1)))
 	_money_l.text = Fmt.money(c.money)
 	_money_l.add_theme_color_override("font_color", Palette.GOOD if c.money >= 0.0 else Palette.BAD)
 	_date_l.text = Fmt.date(c.day)

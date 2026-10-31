@@ -95,13 +95,13 @@ func _ready() -> void:
 	screen._show_page("stocks")
 	var stk: Control = screen._pages["stocks"]
 	c.money += 200000.0
-	stk.act(c.stocks.buy(c, "Orbital", 100))
+	stk.act(c.stocks.buy(c, "Xiaomi", 100))
 	await get_tree().process_frame
 	screen._show_page("ops")
 	await get_tree().process_frame
 	screen._show_page("finance")
 	await get_tree().process_frame
-	ok(c.stocks.holding("Orbital") == 100, "compra de ações via página")
+	ok(c.stocks.holding("Xiaomi") == 100, "compra de ações via página")
 	# v0.4: marketing, laboratório, hardware, feedback e software
 	c.money += 2000000.0
 	c.research_points += 5000.0
@@ -316,6 +316,37 @@ func _ready() -> void:
 	var cl := Stores.close(oc, int(oc.stores[0].id))
 	ok(cl.ok and oc.stores.size() == 1, "fecha loja")
 	sp._sel = -1
+	screen._show_page("dash")
+	# personalizar: abre o painel, muda o rascunho, confirma
+	screen._show_page("office")
+	await get_tree().process_frame
+	var opg: Control = screen._pages["office"]
+	oc.money = 500000.0
+	opg._toggle_edit()
+	opg._dl["symbol"] = "star"
+	opg._dd["chair"] = "ergonomic"
+	opg._draft_changed()
+	ok(opg.scene.logo.symbol == "star" and opg.scene.decor.chair == "ergonomic", "prévia 3D acompanha o rascunho")
+	ok(oc.logo.symbol != "star", "rascunho não altera a empresa antes de confirmar")
+	opg._cancel()
+	ok(opg.scene.logo.symbol == oc.logo.symbol, "cancelar volta ao visual salvo")
+	opg._toggle_edit()
+	opg._dl["symbol"] = "bolt"
+	opg._dd["desk"] = "dark"
+	opg._dd["light"] = "neon"
+	opg._dd["pc"] = "ultra"
+	opg._dd["deco"] = "trophy"
+	opg._draft_changed()
+	ok(oc.apply_identity(opg._dl, opg._dd).ok, "confirmar identidade")
+	opg._cancel()
+	await get_tree().process_frame
+	Game.changed.emit()
+	await get_tree().process_frame
+	ok(opg.scene.logo.symbol == "bolt" and opg.scene.decor.pc == "ultra", "escritório usa a identidade confirmada")
+	ok(screen._logo_v.logo.symbol == "bolt", "logotipo aparece na barra do jogo")
+	screen._show_page("market")
+	Game.changed.emit()
+	await get_tree().process_frame
 	screen._show_page("dash")
 	ok(Saves.has_save(), "save gravado")
 	ok(Game.load_game(), "save carregado")

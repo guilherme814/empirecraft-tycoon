@@ -22,7 +22,7 @@ func step(dt: float) -> void:
 	_tick_only(dt)
 
 func show_store(spec: Dictionary, released: int, country_color: Color) -> void:
-	var key := "%s|%d" % [str(spec), released]
+	var key := "%s|%d|%s" % [str(spec), released, str(logo)]
 	if key == _key or _static_root == null:
 		return
 	_key = key
@@ -58,17 +58,19 @@ func show_store(spec: Dictionary, released: int, country_color: Color) -> void:
 	f.box(Vector3(-0.11, H * 0.5, D * 0.5), Vector3(0.22, H, D + 0.22), th.wall, 0.0, 0.05)
 	f.box(Vector3(-0.11, 0.3, D * 0.5), Vector3(0.24, 0.6, D), th.wall.darkened(0.15), 0.0, 0.0)
 	g.box(Vector3(-0.02, 1.25, D * 0.5), Vector3(0.05, 1.3, D - 0.8), Color(0.62, 0.8, 1.0, 0.22), 0.0, 0.0)
-	# letreiro
+	# letreiro com o logotipo da empresa
 	var sw := minf(W - 0.8, 4.2)
-	f.box(Vector3(W * 0.5, 1.75, 0.04), Vector3(sw, 0.5, 0.08), th.sign, 0.0, 0.0)
-	e.box(Vector3(W * 0.5, 1.48, 0.085), Vector3(sw, 0.035, 0.01), acc, 0.0, 0.0)
+	var c1 := Color(str(logo.c1))
+	f.box(Vector3(W * 0.5, 1.75, 0.04), Vector3(sw, 0.5, 0.08), Color(str(logo.c2)), 0.0, 0.0)
+	e.box(Vector3(W * 0.5, 1.48, 0.085), Vector3(sw, 0.035, 0.01), c1, 0.0, 0.0)
+	e.poly(Identity.points(str(logo.symbol)), Vector3(W * 0.5 - sw * 0.5 + 0.33, 1.76, 0.09), 0.17, c1)
 	var L := Label3D.new()
-	L.text = (str(spec.name) if str(spec.name) != "" else "LOJA").to_upper()
+	L.text = Identity.format_name(str(spec.name) if str(spec.name) != "" else "LOJA", str(logo.style))
 	L.font_size = 96
-	L.pixel_size = clampf(sw * 0.9 / (0.62 * 96.0 * float(maxi(L.text.length(), 4))), 0.002, 0.0075)
-	L.modulate = acc.lightened(0.25)
+	L.pixel_size = clampf((sw - 0.9) / (0.62 * 96.0 * float(maxi(L.text.length(), 4))), 0.002, 0.0075)
+	L.modulate = c1
 	L.shaded = false
-	L.position = Vector3(W * 0.5, 1.78, 0.095)
+	L.position = Vector3(W * 0.5 + 0.25, 1.78, 0.095)
 	_static_root.add_child(L)
 	# prateleiras de produtos na parede do fundo
 	var shelves := {"kiosk": 1, "store": 2, "flagship": 3}[str(spec.size)] as int

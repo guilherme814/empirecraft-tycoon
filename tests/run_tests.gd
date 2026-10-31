@@ -28,6 +28,7 @@ func _initialize() -> void:
 	test_early_relief_and_floor()
 	test_updater_and_backups()
 	test_office_layout()
+	test_identity_and_rivals()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -228,14 +229,14 @@ func test_v3_systems() -> void:
 	# bolsa e rivais
 	for i in 200:
 		c.advance_day()
-	check(c.market.rivals.size() == 5, "5 rivais")
+	check(c.market.rivals.size() == 10, "10 rivais")
 	for rv in c.market.rivals:
 		check(float(rv.price) > 0.0 and float(rv.value) > 0.0, "rival com preço/valor positivos")
 	check(c.stocks.value > 0.0, "valor da empresa calculado")
 	var m0 := c.money
-	check(c.stocks.buy(c, "Nova Corp", 100).ok and c.stocks.holding("Nova Corp") == 100, "compra ações")
+	check(c.stocks.buy(c, "Xiaomi", 100).ok and c.stocks.holding("Xiaomi") == 100, "compra ações")
 	check(c.money < m0, "compra custa dinheiro")
-	check(c.stocks.sell(c, "Nova Corp", 100).ok and c.stocks.holding("Nova Corp") == 0, "vende ações")
+	check(c.stocks.sell(c, "Xiaomi", 100).ok and c.stocks.holding("Xiaomi") == 0, "vende ações")
 	check(c.money < m0 + 1.0, "ida e volta nas ações perde taxas")
 	# acordos e empréstimo
 	c.reputation = 60.0
@@ -247,7 +248,7 @@ func test_v3_systems() -> void:
 	# save/load completo
 	var c2 := Company.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	check(c2 != null and c2.factory_level == 1 and int(c2.own_os.get("version", 0)) >= 1, "save mantém fábrica e SO")
-	check(c2.market.rivals.size() == 5 and c2.deal_active("retail"), "save mantém rivais e acordos")
+	check(c2.market.rivals.size() == 10 and c2.deal_active("retail"), "save mantém rivais e acordos")
 	check(c2.products[0].os_id == "lumen" and c2.products[0].design.get("shape", "") == "fold", "save mantém design do produto")
 	for i in 60:
 		c2.advance_day()
@@ -494,3 +495,52 @@ func test_office_layout() -> void:
 	# o save não ganhou campos: o escritório é só visualização
 	var c := staffed(3)
 	check(not (c.to_dict() as Dictionary).has("office_layout"), "escritório 3D não grava nada no save")
+
+func test_identity_and_rivals() -> void:
+	var lg := Identity.clean_logo({"symbol": "xxx", "c1": "zzzzzz", "c2": "5aa9ff", "style": "wide"})
+	check(lg.symbol == "shield" and lg.c1 == "ff9a2e" and lg.c2 == "5aa9ff" and lg.style == "wide", "logotipo inválido volta ao padrão, válido é mantido")
+	var dc := Identity.clean_decor({"desk": "wood", "chair": "nope"})
+	check(dc.desk == "wood" and dc.chair == "common" and dc.pc == "single", "decoração: inválido vira padrão")
+	for sy in GameData.identity().symbols:
+		check(Geometry2D.triangulate_polygon(Identity.points(str(sy.id))).size() >= 3, "símbolo %s é um polígono válido" % sy.id)
+	var c := staffed(11)
+	c.money = 100000.0
+	var before := c.money
+	var nd := c.decor.duplicate()
+	nd.desk = "wood"
+	nd.chair = "executive"
+	var r := c.apply_identity(c.logo, nd)
+	check(r.ok and absf((before - c.money) - (Identity.option_cost("desk", "wood") + Identity.option_cost("chair", "executive"))) < 0.01, "cobra só o que mudou")
+	check(not c.apply_identity(c.logo, c.decor).ok, "sem mudança não cobra")
+	c.money = 10.0
+	check(not c.apply_identity({"symbol": "crown", "c1": "ff9a2e", "c2": "1b2036", "style": "caps"}, c.decor).ok, "sem caixa não troca o logotipo")
+	c.money = 100000.0
+	check(c.apply_identity({"symbol": "crown", "c1": "4cd18a", "c2": "111111", "style": "title"}, c.decor).ok, "troca o logotipo")
+	var rc := Company.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	check(rc.logo.symbol == "crown" and rc.logo.c1 == "4cd18a" and rc.decor.chair == "executive" and rc.decor.desk == "wood", "identidade sobrevive ao save/load")
+	check(Company.from_dict({"version": 5}).logo == Identity.default_logo(), "save antigo ganha logotipo padrão")
+	# concorrentes reais
+	var mrng := RandomNumberGenerator.new()
+	mrng.seed = 5
+	var m := Market.new(mrng)
+	m.seed_rivals()
+	var names := []
+	for rv in m.rivals:
+		names.append(rv.name)
+	for must in ["Apple", "Samsung", "Google", "Microsoft", "Xiaomi", "Huawei", "Sony", "Intel", "NVIDIA", "Nintendo"]:
+		check(names.has(must), "rival real presente: " + must)
+	var ap: Dictionary = m.rivals[names.find("Apple")]
+	var xi: Dictionary = m.rivals[names.find("Xiaomi")]
+	check(float(ap.price_mult) > float(xi.price_mult) and float(ap.value) > float(xi.value), "Apple é premium e maior que Xiaomi")
+	check(Market.focus_has(m.rivals[names.find("Nintendo")], "console") and not Market.focus_has(m.rivals[names.find("Nintendo")], "phone"), "segmentos de atuação")
+	check(Market.focus_has({"focus": "phone"}, "phone"), "foco antigo (texto) continua valendo")
+	var pa := 0.0
+	var px := 0.0
+	var n := 0
+	for i in 40:
+		var cp := m.launch_competitor("phone", 100 + i)
+		if cp.company == "Apple":
+			pa += float(cp.price)
+		elif cp.company == "Xiaomi":
+			px += float(cp.price)
+	check(m.comp_products.size() == 40, "rivais lançam produtos")

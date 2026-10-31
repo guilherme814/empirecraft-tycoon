@@ -65,7 +65,8 @@ operam sobre `Company`/`Product`, e a UI só chama essas funções.
 - `OfficeLayout` (core, puro): planta automática, assentos, pontos de pausa/conversa e rotas retas pelas pistas.
 - `gfx3d/OfficeScene`, `OfficeWorker`, `MeshBuilder`: só visual, sem autoload; a página chama `sync(company)`. Nada é gravado no save.
 - `Stores` (core): abrir/editar/fechar lojas, vendas diárias e custo mensal; `StoreScene` é a prévia 3D (herda de `OfficeScene`).
-- Dados: `data/countries.json`, `data/stores.json`.
+- `Identity` (core): logotipo, catálogo de decoração e custos; `LogoView` desenha o logotipo na interface. Dados: `data/identity.json`.
+- Dados: `data/countries.json`, `data/stores.json`, `data/rivals.json` (concorrentes reais com estratégia, segmentos e preço).
 
 ## 3. Organização recomendada
 

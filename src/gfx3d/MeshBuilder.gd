@@ -72,6 +72,20 @@ func prism(center: Vector3, radius: float, height: float, sides: int, color: Col
 		_c.append_array(PackedColorArray([tc, tc, tc]))
 		_i.append_array(PackedInt32Array([k, k + 2, k + 1]))
 
+## Polígono plano (símbolo do logotipo) voltado para +z, no plano XY.
+func poly(pts: PackedVector2Array, center: Vector3, scale: float, color: Color) -> void:
+	var tri := Geometry2D.triangulate_polygon(pts)
+	if tri.size() < 3:
+		return
+	var k := _v.size()
+	for p in pts:
+		_v.append(center + Vector3(p.x * scale, -p.y * scale, 0.0))
+		_n.append(Vector3(0, 0, 1))
+		_c.append(color)
+	# triangulate_polygon devolve horário no plano 2D; o eixo y invertido troca o sentido
+	for i in range(0, tri.size(), 3):
+		_i.append_array(PackedInt32Array([k + tri[i], k + tri[i + 2], k + tri[i + 1]]))
+
 func build() -> ArrayMesh:
 	var m := ArrayMesh.new()
 	if _v.is_empty():

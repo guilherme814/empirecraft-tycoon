@@ -32,10 +32,13 @@ var company_name: String = "Device Empire"
 var hidden_staff: int = 0
 var events_enabled: bool = true   # pausas e conversas (desligável nos testes)
 
+var _sun: DirectionalLight3D
+var _env: Environment
 var _vp: SubViewport
 var _cam: Camera3D
 var _world: Node3D
 var _static_root: Node3D
+var e_pending: Array = []
 var _screens_mi: MeshInstance3D
 var _ring: MeshInstance3D
 var _sel_label: Label3D
@@ -55,6 +58,9 @@ var _press_pos: Vector2 = Vector2.ZERO
 var _press_t: int = 0
 var _dragging: bool = false
 var _staff_total: int = 0
+var logo: Dictionary = Identity.default_logo()
+var decor: Dictionary = Identity.default_decor()
+var preview_style: bool = false     # true: a página controla logo/decoração (modo personalizar)
 var room_w: float = 10.0
 var room_d: float = 10.0
 
@@ -81,6 +87,7 @@ func _ready() -> void:
 	env.ambient_light_energy = 0.82
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.05
+	_env = env
 	_cam = Camera3D.new()
 	_cam.environment = env
 	_cam.projection = Camera3D.PROJECTION_ORTHOGONAL
@@ -93,6 +100,7 @@ func _ready() -> void:
 	sun.rotation_degrees = Vector3(-52, 28, 0)
 	sun.light_color = Color(1.0, 0.95, 0.86)
 	sun.light_energy = 1.05
+	_sun = sun
 	_vp.add_child(sun)
 
 	_static_root = Node3D.new()
@@ -140,7 +148,33 @@ func _ready() -> void:
 
 # ───────────── sincronização com a empresa ─────────────
 
+func set_style(l: Dictionary, d: Dictionary) -> void:
+	if l == logo and d == decor:
+		return
+	logo = l.duplicate()
+	decor = d.duplicate()
+	_apply_light()
+	if layout != null:
+		_build_static()
+		_build_screens()
+
+func _apply_light() -> void:
+	if _sun == null:
+		return
+	match str(decor.get("light", "warm")):
+		"neutral":
+			_sun.light_color = Color(1.0, 1.0, 1.0)
+			_env.ambient_light_color = Color(0.74, 0.76, 0.82)
+		"cool":
+			_sun.light_color = Color(0.84, 0.92, 1.0)
+			_env.ambient_light_color = Color(0.58, 0.68, 0.92)
+		_:
+			_sun.light_color = Color(1.0, 0.95, 0.86)
+			_env.ambient_light_color = Color(0.66, 0.70, 0.84)
+
 func sync(c: Company) -> void:
+	if not preview_style:
+		set_style(c.logo, c.decor)
 	company_name = c.company_name
 	var order: Array = []
 	var raw := {}
@@ -483,6 +517,7 @@ func _build_static() -> void:
 		_static_root.remove_child(ch)
 		ch.queue_free()
 	_lights.clear()
+	e_pending.clear()
 	var f := MeshBuilder.new()   # móveis (iluminado)
 	var e := MeshBuilder.new()   # luzes e telas fixas
 	var g := MeshBuilder.new()   # vidro
@@ -519,21 +554,27 @@ func _add_lights() -> void:
 		_static_root.add_child(l)
 
 func _sign_board(f: MeshBuilder, e: MeshBuilder) -> void:
-	var sw := minf(3.6, layout.width * 0.4)
-	f.box(Vector3(layout.width * 0.5, 1.9, 0.03), Vector3(sw, 0.34, 0.06), Color("1b2036"), 0.0, 0.0)
-	e.box(Vector3(layout.width * 0.5, 1.7, 0.062), Vector3(sw, 0.03, 0.01), ACCENT, 0.0, 0.0)
+	var sw := minf(3.8, layout.width * 0.42)
+	var c1 := Color(str(logo.c1))
+	var c2 := Color(str(logo.c2))
+	f.box(Vector3(layout.width * 0.5, 1.9, 0.03), Vector3(sw, 0.34, 0.06), c2, 0.0, 0.0)
+	e.box(Vector3(layout.width * 0.5, 1.7, 0.062), Vector3(sw, 0.03, 0.01), c1, 0.0, 0.0)
+	e.poly(Identity.points(str(logo.symbol)), Vector3(layout.width * 0.5 - sw * 0.5 + 0.27, 1.9, 0.07), 0.13, c1)
+	for e2 in e_pending:
+		e.box(e2[0], e2[1], Color("4cd18a"), 0.0, 0.0)
+	e_pending.clear()
 
 func _add_labels() -> void:
 	var L := Label3D.new()
-	L.text = company_name.to_upper()
+	L.text = Identity.format_name(company_name, str(logo.style))
 	L.font_size = 96
-	var sw := minf(3.6, layout.width * 0.4)
-	L.pixel_size = clampf(sw * 0.9 / (0.62 * 96.0 * float(maxi(company_name.length(), 4))), 0.002, 0.0075)
-	L.modulate = Color("ffb35c")
+	var sw := minf(3.8, layout.width * 0.42)
+	L.pixel_size = clampf((sw - 0.7) / (0.62 * 96.0 * float(maxi(L.text.length(), 4))), 0.002, 0.0075)
+	L.modulate = Color(str(logo.c1))
 	L.outline_size = 0
 	L.shaded = false
 	L.double_sided = false
-	L.position = Vector3(layout.width * 0.5, 1.9, 0.075)
+	L.position = Vector3(layout.width * 0.5 + 0.2, 1.9, 0.075)
 	_static_root.add_child(L)
 
 func _floor(f: MeshBuilder, e: MeshBuilder) -> void:
@@ -555,6 +596,13 @@ func _floor(f: MeshBuilder, e: MeshBuilder) -> void:
 		var col: Color = PROF_COLORS.get(str(pod.prof), Color("39415f"))
 		col = col.darkened(0.55) if str(pod.prof) != "" else Color("333b57")
 		f.box(Vector3(float(pod.cx), 0.011, float(pod.cz)), Vector3(2.2, 0.01, 2.9), col, 0.0, 0.0)
+	if str(decor.light) == "neon":
+		for pod in layout.pods:
+			var nc: Color = PROF_COLORS.get(str(pod.prof), Color("6f7ba0"))
+			for sx in [-1.1, 1.1]:
+				e.box(Vector3(float(pod.cx) + sx, 0.02, float(pod.cz)), Vector3(0.04, 0.02, 2.9), nc, 0.0, 0.0)
+			for sz in [-1.45, 1.45]:
+				e.box(Vector3(float(pod.cx), 0.02, float(pod.cz) + sz), Vector3(2.2, 0.02, 0.04), nc, 0.0, 0.0)
 	# faixa laranja na borda da frente
 	e.box(Vector3(W * 0.5, 0.03, D + 0.1), Vector3(W + 0.44, 0.05, 0.06), ACCENT.darkened(0.15), 0.0, 0.0)
 	e.box(Vector3(W + 0.1, 0.03, D * 0.5), Vector3(0.06, 0.05, D + 0.44), ACCENT.darkened(0.15), 0.0, 0.0)
@@ -605,30 +653,67 @@ func _walls(f: MeshBuilder, g: MeshBuilder, e: MeshBuilder) -> void:
 	# canto
 	f.box(Vector3(-0.11, OfficeLayout.WALL_H * 0.5, -0.11), Vector3(0.26, OfficeLayout.WALL_H + 0.07, 0.26), Color("e8edf7"), 0.0, 0.0)
 
-func _chair(f: MeshBuilder, pos: Vector3, yaw: float, col: Color) -> void:
+func _chair(f: MeshBuilder, pos: Vector3, yaw: float, col: Color, kind: String = "common") -> void:
 	# `yaw` aponta para onde a pessoa olha; o encosto fica atrás
-	var back := Vector3(sin(yaw), 0, cos(yaw))   # direção de trás (oposta à frente)
+	var back := Vector3(sin(yaw), 0, cos(yaw))
+	var side := Vector3(cos(yaw), 0, -sin(yaw))
+	var c := col
+	var bh := 0.42
+	if kind == "executive":
+		c = Color("4a2f22")
+		bh = 0.62
+	elif kind == "ergonomic":
+		c = Color("2c4a52")
+		bh = 0.52
 	f.prism(pos + Vector3(0, 0.1, 0), 0.19, 0.025, 6, METAL.lightened(0.1))
 	f.prism(pos + Vector3(0, 0.17, 0), 0.03, 0.15, 6, METAL.lightened(0.2))
-	f.box(pos + Vector3(0, 0.255, 0), Vector3(0.44, 0.07, 0.44), col, yaw, 0.1)
-	f.box(pos + back * 0.2 + Vector3(0, 0.5, 0), Vector3(0.42, 0.42, 0.06), col, yaw, 0.1)
+	f.box(pos + Vector3(0, 0.255, 0), Vector3(0.44, 0.07, 0.44), c, yaw, 0.1)
+	f.box(pos + back * 0.2 + Vector3(0, 0.26 + bh * 0.5, 0), Vector3(0.42 if kind != "executive" else 0.5, bh, 0.06), c, yaw, 0.1)
+	if kind != "common":
+		for sd in [-1.0, 1.0]:
+			f.box(pos + side * sd * 0.24 + Vector3(0, 0.4, 0), Vector3(0.05, 0.04, 0.3), METAL, yaw, 0.0)
+	if kind == "executive":
+		f.box(pos + back * 0.2 + Vector3(0, 0.26 + bh + 0.08, 0), Vector3(0.28, 0.14, 0.08), c.lightened(0.1), yaw, 0.1)
+
+## [deslocamento x, largura] de cada monitor da mesa.
+func _monitors(prof: String) -> Array:
+	match str(decor.pc):
+		"dual":
+			return [[-0.33, 0.5], [0.33, 0.5]]
+		"ultra":
+			return [[-0.1, 0.95]]
+	return [[0.0, 0.76 if prof == "programmer" else 0.62]]
 
 func _pod(f: MeshBuilder, pod: Dictionary) -> void:
 	var cx: float = pod.cx
 	var cz: float = pod.cz
 	var prof: String = pod.prof
 	var pc: Color = PROF_COLORS.get(prof, Color("7a859f"))
+	var dcol := DESK
+	var dedge := DESK_EDGE
+	match str(decor.desk):
+		"wood":
+			dcol = Color("c9a173")
+			dedge = Color("94704c")
+		"dark":
+			dcol = Color("4c525e")
+			dedge = Color("2f343e")
 	for si in 2:
 		var s := 1.0 if si == 0 else -1.0
 		# mesa
-		f.box(Vector3(cx, 0.49, cz + s * 0.43), Vector3(1.7, 0.05, 0.76), DESK, 0.0, 0.0)
-		f.box(Vector3(cx - 0.8, 0.245, cz + s * 0.43), Vector3(0.05, 0.49, 0.66), DESK_EDGE)
-		f.box(Vector3(cx + 0.8, 0.245, cz + s * 0.43), Vector3(0.05, 0.49, 0.66), DESK_EDGE)
-		# monitor (moldura); a tela acesa vem em _build_screens
-		var wide := 0.76 if prof == "programmer" else 0.62
-		f.box(Vector3(cx, 0.545, cz + s * 0.3), Vector3(0.24, 0.02, 0.15), METAL)
-		f.box(Vector3(cx, 0.62, cz + s * 0.3), Vector3(0.05, 0.14, 0.04), METAL)
-		f.box(Vector3(cx, 0.8, cz + s * 0.3), Vector3(wide, 0.36, 0.03), METAL.lightened(0.05), 0.0, 0.0)
+		f.box(Vector3(cx, 0.49, cz + s * 0.43), Vector3(1.7, 0.05, 0.76), dcol, 0.0, 0.0)
+		f.box(Vector3(cx - 0.8, 0.245, cz + s * 0.43), Vector3(0.05, 0.49, 0.66), dedge)
+		f.box(Vector3(cx + 0.8, 0.245, cz + s * 0.43), Vector3(0.05, 0.49, 0.66), dedge)
+		# monitor(es) (moldura); a tela acesa vem em _build_screens
+		for md in _monitors(prof):
+			var mx := cx + float(md[0])
+			var wide: float = md[1]
+			f.box(Vector3(mx, 0.545, cz + s * 0.3), Vector3(0.24, 0.02, 0.15), METAL)
+			f.box(Vector3(mx, 0.62, cz + s * 0.3), Vector3(0.05, 0.14, 0.04), METAL)
+			f.box(Vector3(mx, 0.8, cz + s * 0.3), Vector3(wide, 0.36, 0.03), METAL.lightened(0.05), 0.0, 0.0)
+		if str(decor.pc) == "ultra":
+			f.box(Vector3(cx + 0.7, 0.66, cz + s * 0.52), Vector3(0.16, 0.34, 0.32), Color("2a3040"))
+			e_pending.append([Vector3(cx + 0.7, 0.8, cz + s * 0.52 + s * 0.165), Vector3(0.04, 0.02, 0.01)])
 		# teclado, mouse
 		f.box(Vector3(cx - 0.05, 0.52, cz + s * 0.6), Vector3(0.38, 0.016, 0.12), Color("3a4152"))
 		f.box(Vector3(cx + 0.3, 0.52, cz + s * 0.6), Vector3(0.06, 0.018, 0.09), Color("3a4152"))
@@ -652,10 +737,10 @@ func _pod(f: MeshBuilder, pod: Dictionary) -> void:
 		if seed_v % 3 == 0:
 			f.prism(Vector3(cx + 0.62, 0.545, cz + s * 0.6), 0.04, 0.08, 8, Color("ff9a2e") if seed_v % 2 == 0 else Color("f4f1ea"))
 		# cadeira atrás de quem trabalha
-		_chair(f, Vector3(cx, 0, cz + s * OfficeLayout.SEAT_Z), 0.0 if s > 0.0 else PI, pc.darkened(0.45) if prof != "" else Color("3a4152"))
+		_chair(f, Vector3(cx, 0, cz + s * OfficeLayout.SEAT_Z), 0.0 if s > 0.0 else PI, pc.darkened(0.45) if prof != "" else Color("3a4152"), str(decor.chair))
 	# divisória baixa no meio da baia
 	f.box(Vector3(cx, 0.6, cz), Vector3(1.7, 0.22, 0.04), pc.darkened(0.3) if prof != "" else Color("5a6480"), 0.0, 0.0)
-	f.box(Vector3(cx, 0.36, cz), Vector3(1.7, 0.18, 0.2), DESK_EDGE.darkened(0.2))
+	f.box(Vector3(cx, 0.36, cz), Vector3(1.7, 0.18, 0.2), dedge.darkened(0.2))
 
 func _plant(f: MeshBuilder, pos: Vector3, s: float = 1.0, palm: bool = false) -> void:
 	f.prism(pos + Vector3(0, 0.12 * s, 0), 0.15 * s, 0.24 * s, 8, Color("d8d4cc") if not palm else Color("b5683b"), 0.0, Color("3a2a20"))
@@ -768,7 +853,17 @@ func _decor(f: MeshBuilder, e: MeshBuilder) -> void:
 		var x := layout.slot_center_x(k)
 		match k % 4:
 			0:
-				_plant(f, Vector3(x, 0, 0.5), 1.1, st >= 1)
+				if str(decor.deco) == "plants":
+					_plant(f, Vector3(x, 0, 0.5), 1.1, st >= 1)
+				else:
+					f.box(Vector3(x, 1.2, 0.04), Vector3(1.0, 0.7, 0.04), Color("20242e"), 0.0, 0.0)
+					e.box(Vector3(x, 1.2, 0.065), Vector3(0.88, 0.58, 0.01), Color(str(logo.c1)).darkened(0.35), 0.0, 0.0)
+					e.poly(Identity.points(str(logo.symbol)), Vector3(x, 1.2, 0.075), 0.2, Color(str(logo.c1)))
+					if str(decor.deco) == "trophy":
+						f.box(Vector3(x, 0.35, 0.3), Vector3(1.0, 0.7, 0.4), Color("2a2f3d"), 0.0, 0.1)
+						for tk in 3:
+							f.prism(Vector3(x - 0.3 + float(tk) * 0.3, 0.8, 0.3), 0.07, 0.18, 8, Color("e0b252"))
+							f.box(Vector3(x - 0.3 + float(tk) * 0.3, 0.7, 0.3), Vector3(0.16, 0.04, 0.16), Color("e0b252").darkened(0.3))
 			1:
 				if st >= 1:
 					f.box(Vector3(x, 0.45, 0.35), Vector3(1.3, 0.9, 0.4), Color("d9dfeb"), 0.0, 0.1)
@@ -822,36 +917,39 @@ func _build_screens() -> void:
 		var pod: Dictionary = layout.pods[int(seat.pod)]
 		var cx: float = pod.cx
 		var cz: float = pod.cz
-		var s := 1.0 if (seat.pos as Vector3).z > cz else -1.0
+		var sgn := 1.0 if (seat.pos as Vector3).z > cz else -1.0
 		var prof: String = seat.prof
 		var occupied := _seat_prof.has(int(seat.i))
-		var wide := 0.7 if prof == "programmer" else 0.56
-		var zf := cz + s * 0.3 + s * 0.017   # frente da tela (voltada ao funcionário)
+		var zf := cz + sgn * 0.3 + sgn * 0.017
 		var c: Color = PROF_COLORS.get(prof, Color("7a859f"))
-		if not occupied:
-			b.box(Vector3(cx, 0.8, zf), Vector3(wide, 0.3, 0.004), Color("161b27"), 0.0, 0.0)
-			continue
-		b.box(Vector3(cx, 0.8, zf), Vector3(wide, 0.3, 0.004), Color("0e1830"), 0.0, 0.0)
-		var sd := int(seat.i) * 13 + 5
-		var zl := zf + s * 0.004
-		match prof:
-			"programmer":
-				for ln in 7:
-					var ind := 0.0 if (ln + sd) % 3 != 0 else 0.08
-					var len := 0.15 + 0.06 * float((ln * 7 + sd) % 5)
-					b.box(Vector3(cx - wide * 0.5 + 0.05 + ind + len * 0.5, 0.8 + 0.115 - float(ln) * 0.037, zl), Vector3(len, 0.014, 0.003), [c, Color("4cd18a"), Color("ffc857"), Color("ff7aa8")][(ln + sd) % 4], 0.0, 0.0)
-			"designer":
-				b.box(Vector3(cx - 0.12, 0.8, zl), Vector3(0.22, 0.2, 0.003), c, 0.0, 0.0)
-				b.box(Vector3(cx + 0.1, 0.84, zl), Vector3(0.16, 0.12, 0.003), Color("ff7aa8"), 0.0, 0.0)
-				b.box(Vector3(cx + 0.12, 0.74, zl), Vector3(0.2, 0.05, 0.003), Color("ffc857"), 0.0, 0.0)
-			"engineer":
-				for ln in 4:
-					b.box(Vector3(cx - 0.12, 0.8 + 0.1 - float(ln) * 0.06, zl), Vector3(0.22, 0.012, 0.003), c.darkened(0.2), 0.0, 0.0)
-				for k in 7:
-					var h := 0.04 + 0.025 * float((k * 3 + sd) % 5)
-					b.box(Vector3(cx + 0.06 + float(k) * 0.03, 0.72 + h * 0.5, zl), Vector3(0.018, h, 0.003), c, 0.0, 0.0)
-			_:
-				for k in 8:
-					var h := 0.05 + 0.03 * float((k * 5 + sd) % 5)
-					b.box(Vector3(cx - 0.2 + float(k) * 0.05, 0.69 + h * 0.5, zl), Vector3(0.03, h, 0.003), c, 0.0, 0.0)
+		for md in _monitors(prof):
+			var mx := cx + float(md[0])
+			var wide: float = float(md[1]) - 0.06
+			if not occupied:
+				b.box(Vector3(mx, 0.8, zf), Vector3(wide, 0.3, 0.004), Color("161b27"), 0.0, 0.0)
+				continue
+			b.box(Vector3(mx, 0.8, zf), Vector3(wide, 0.3, 0.004), Color("0e1830"), 0.0, 0.0)
+			var sd := int(seat.i) * 13 + 5 + int(float(md[0]) * 10.0)
+			var zl := zf + sgn * 0.004
+			var l0 := mx - wide * 0.5
+			match prof:
+				"programmer":
+					for ln in 7:
+						var ind := 0.0 if (ln + sd) % 3 != 0 else 0.08
+						var ln_w := minf(0.15 + 0.06 * float((ln * 7 + sd) % 5), wide - 0.12)
+						b.box(Vector3(l0 + 0.05 + ind + ln_w * 0.5, 0.8 + 0.115 - float(ln) * 0.037, zl), Vector3(ln_w, 0.014, 0.003), [c, Color("4cd18a"), Color("ffc857"), Color("ff7aa8")][(ln + sd) % 4], 0.0, 0.0)
+				"designer":
+					b.box(Vector3(mx - 0.12, 0.8, zl), Vector3(0.22, 0.2, 0.003), c, 0.0, 0.0)
+					b.box(Vector3(mx + 0.1, 0.84, zl), Vector3(0.16, 0.12, 0.003), Color("ff7aa8"), 0.0, 0.0)
+					b.box(Vector3(mx + 0.12, 0.74, zl), Vector3(0.2, 0.05, 0.003), Color("ffc857"), 0.0, 0.0)
+				"engineer":
+					for ln in 4:
+						b.box(Vector3(mx - 0.12, 0.8 + 0.1 - float(ln) * 0.06, zl), Vector3(0.22, 0.012, 0.003), c.darkened(0.2), 0.0, 0.0)
+					for k in 7:
+						var h := 0.04 + 0.025 * float((k * 3 + sd) % 5)
+						b.box(Vector3(mx + 0.06 + float(k) * 0.03, 0.72 + h * 0.5, zl), Vector3(0.018, h, 0.003), c, 0.0, 0.0)
+				_:
+					for k in 8:
+						var h := 0.05 + 0.03 * float((k * 5 + sd) % 5)
+						b.box(Vector3(mx - 0.2 + float(k) * 0.05, 0.69 + h * 0.5, zl), Vector3(0.03, h, 0.003), c, 0.0, 0.0)
 	_screens_mi.mesh = b.build()

@@ -95,9 +95,9 @@ func add_trend(cat_id: String, mult: float, days: int, day: int) -> void:
 func launch_competitor(cat_id: String, day: int) -> Dictionary:
 	var ri := _pick_rival(cat_id)
 	var r: Dictionary = rivals[ri]
-	var q := expectation(day) * rng.randf_range(0.8, 1.3) * float(r.tech)
+	var q := expectation(day) * rng.randf_range(0.8, 1.3) * float(r.tech) * float(r.get("q_mult", 1.0))
 	var cat: Dictionary = GameData.category(cat_id)
-	var price := float(cat.fair_price) * (0.5 + q / 100.0) * rng.randf_range(0.9, 1.1)
+	var price := float(cat.fair_price) * (0.5 + q / 100.0) * rng.randf_range(0.9, 1.1) * float(r.get("price_mult", 1.0))
 	var c := {"id": _next_id, "company": r.name, "rival": ri, "cat": cat_id, "quality": q, "price": price, "born": day}
 	_next_id += 1
 	comp_products.append(c)
@@ -111,10 +111,19 @@ const HIST_LEN := 120
 func seed_rivals() -> void:
 	rivals.clear()
 	for d in GameData.rivals():
-		var value := rng.randf_range(4.0e6, 11.0e6)
-		rivals.append({"name": d.name, "aggr": float(d.aggr), "focus": d.focus, "tech": 1.0, "cash": value * 0.25,
+		var value: float = float(d.get("value", rng.randf_range(4.0e6, 11.0e6))) * rng.randf_range(0.9, 1.1)
+		rivals.append({"name": d.name, "aggr": float(d.aggr), "focus": d.focus, "strategy": d.get("strategy", ""),
+			"price_mult": float(d.get("price_mult", 1.0)), "q_mult": float(d.get("q_mult", 1.0)), "desc": d.get("desc", ""),
+			"tech": float(d.get("tech", 1.0)), "cash": value * 0.25,
 			"value": value, "rev_year": value / 6.0, "rev_month": 0.0, "shock": 0.0,
 			"price": value / SHARES, "hist": [value / SHARES]})
+
+## Aceita foco antigo (texto) e novo (lista de categorias).
+static func focus_has(r: Dictionary, cat_id: String) -> bool:
+	var f: Variant = r.get("focus", "")
+	if f is Array:
+		return (f as Array).has(cat_id)
+	return str(f) == cat_id
 
 func _pick_rival(cat_id: String) -> int:
 	if rivals.is_empty():
@@ -122,7 +131,7 @@ func _pick_rival(cat_id: String) -> int:
 	var best := 0
 	var best_w := -1.0
 	for i in rivals.size():
-		var w: float = rng.randf() * float(rivals[i].aggr) * (2.0 if rivals[i].focus == cat_id else 1.0)
+		var w: float = rng.randf() * float(rivals[i].aggr) * (2.0 if focus_has(rivals[i], cat_id) else 0.35)
 		if w > best_w:
 			best_w = w
 			best = i

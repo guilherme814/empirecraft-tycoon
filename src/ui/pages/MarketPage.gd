@@ -25,6 +25,36 @@ func rebuild() -> void:
 	tv.add_child(UI.kv("Qualidade esperada hoje", "%d" % int(m.expectation(c.day)), Palette.ACCENT, 28))
 	tv.add_child(UI.wrap("Produtos abaixo dessa qualidade vendem pouco. A expectativa sobe com o tempo: pesquise e evolua."))
 
+	# concorrentes do mundo real: estratégia, segmentos e participação simulada
+	var rc := UI.card(Palette.PANEL, 18)
+	_body.add_child(rc)
+	var rv := UI.vbox(6)
+	rc.add_child(rv)
+	rv.add_child(UI.heading("Concorrentes"))
+	var tot := c.last_income * 12.0
+	for r in m.rivals:
+		tot += float(r.rev_year)
+	var my_share := c.last_income * 12.0 / maxf(tot, 1.0)
+	rv.add_child(UI.kv("Você", "%s%% do faturamento simulado" % Fmt.dec(my_share * 100.0, 1), Palette.ACCENT, 24))
+	var order: Array = m.rivals.duplicate()
+	order.sort_custom(func(a, b): return float(a.rev_year) > float(b.rev_year))
+	for r in order:
+		var segs: Array = []
+		var fo: Variant = r.focus
+		for cid in (fo if fo is Array else [fo]):
+			segs.append(str(GameData.category(str(cid)).get("name", cid)))
+		var row := UI.hbox(10)
+		var nm := UI.label(str(r.name), 24, Palette.TEXT)
+		nm.custom_minimum_size = Vector2(190, 0)
+		row.add_child(nm)
+		row.add_child(UI.bar(float(r.rev_year) / maxf(tot, 1.0) * 3.0, Palette.INFO, 12))
+		var pc := UI.label("%s%%" % Fmt.dec(float(r.rev_year) / maxf(tot, 1.0) * 100.0, 1), 24, Palette.INFO)
+		pc.custom_minimum_size = Vector2(90, 0)
+		pc.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(pc)
+		rv.add_child(row)
+		rv.add_child(UI.label("%s · %s" % [", ".join(segs), str(r.get("desc", ""))], 20, Palette.MUTED))
+
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 14)

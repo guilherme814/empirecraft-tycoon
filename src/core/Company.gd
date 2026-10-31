@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 const TAX_RATE := 0.15
 const LOAN_RATE := 0.012
 const MAX_DEALS := 4
@@ -52,6 +52,8 @@ var loyalty: float = Loyalty.START  # lealdade à marca (0..100)
 var loyalty_log: Array = []       # últimas mudanças {day, d, why}
 var cash_items: Dictionary = {}     # mês atual: movimentos fora do resultado (empréstimo, bolsa, obras)
 var cash_items_last: Dictionary = {}
+var logo: Dictionary = Identity.default_logo()      # identidade visual
+var decor: Dictionary = Identity.default_decor()    # mobiliário/decoração do escritório
 var stores: Array = []            # lojas próprias (Stores)
 var market_stats: Dictionary = {}  # último dia por categoria: {size, mine, rivals, none} (transitório)
 var cash_start: float = Rules.START_MONEY  # caixa no início do mês (fluxo de caixa)
@@ -757,6 +759,21 @@ func advance_day() -> void:
 		_month_end()
 	day_advanced.emit(day)
 
+## Confirma identidade e decoração novas; cobra só o que mudou.
+func apply_identity(new_logo: Dictionary, new_decor: Dictionary) -> Dictionary:
+	var nl := Identity.clean_logo(new_logo)
+	var nd := Identity.clean_decor(new_decor)
+	var cost := Identity.change_cost(logo, nl, decor, nd)
+	if cost <= 0.0 and nl == logo and nd == decor:
+		return _fail("Nada mudou")
+	if money < cost:
+		return _fail("Caixa insuficiente: %s" % Fmt.money(cost))
+	if cost > 0.0:
+		_cash_out(cost, "capex")
+	logo = nl
+	decor = nd
+	return _ok("Identidade atualizada")
+
 func _month_end() -> void:
 	var payroll := monthly_payroll()
 	var rent := monthly_rent()
@@ -1349,7 +1366,7 @@ func to_dict() -> Dictionary:
 		"ledger": ledger, "ledger_last": ledger_last, "history": history, "loan": loan, "deals": deals,
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
-		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores,
+		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores, "logo": logo, "decor": decor,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1377,6 +1394,8 @@ static func from_dict(d: Dictionary) -> Company:
 		c.products.append(Product.from_dict(pd))
 	c.market.load_dict(d.get("market", {}))
 	c.next_id = int(d.get("next_id", 1))
+	c.logo = Identity.clean_logo(d.get("logo", {}))
+	c.decor = Identity.clean_decor(d.get("decor", {}))
 	for sd in d.get("stores", []):
 		var st: Dictionary = (sd as Dictionary).duplicate(true)
 		st["id"] = int(st.get("id", 0))

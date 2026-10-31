@@ -11,6 +11,9 @@ Saves de versão mais nova que o jogo são recusados (retorna `null`).
 | 3 | 0.4-wip | Avaliações (`rating`, `critic`, `reviews`), promessa de lançamento, marketing (`campaigns`, `awareness`), laboratório (`lab_jobs`, `flaws`, `tests`), chips, pedidos da equipe | campos novos com padrão |
 | 4 | 0.4.0 | Lealdade à marca (`loyalty`, `loyalty_log`), macroeconomia do mercado (`sentiment`, `inflation`, `supply_chain`) | `loyalty` = 5, macro neutra (1.0 / 2,5% / 1.0) |
 | 5 | 0.5.0 | Lojas próprias (`stores`: país, cidade, tamanho, fachada, equipe, vendas) | lista vazia |
+| 6 | 0.6.0 | Identidade (`logo`) e decoração do escritório (`decor`) | logotipo e móveis padrão |
+
+Saves antigos mantêm os rivais fictícios já gravados; jogos novos usam os rivais reais de `data/rivals.json`.
 
 O escritório 3D não grava nada no save: é só visualização da equipe.
 

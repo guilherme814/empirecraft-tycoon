@@ -82,7 +82,7 @@ func _ready() -> void:
 	Game.changed.emit()
 	await _shot("finance")
 	screen._show_page("stocks")
-	c.stocks.buy(c, "Nova Corp", 500)
+	c.stocks.buy(c, "Xiaomi", 500)
 	Game.changed.emit()
 	await _shot("stocks")
 	# v0.4: laboratório, marketing, hardware, feedback

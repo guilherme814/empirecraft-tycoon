@@ -36,6 +36,14 @@ func _ready() -> void:
 	Game.changed.emit()
 	await _run(40.0)
 	await _shot("office_4_grande")
+	page._toggle_edit()
+	page._dl["symbol"] = "crown"
+	page._dl["c1"] = "4cd18a"
+	page._dl["c2"] = "111111"
+	page._dd = {"desk": "wood", "chair": "executive", "pc": "dual", "light": "neon", "deco": "trophy"}
+	page._draft_changed()
+	await _run(2.0)
+	await _shot("office_6_personalizar")
 	page.scene.set_zoom(2.8)
 	page.scene._pan = Vector2(-1.0, -1.5)
 	page.scene._apply_cam()
