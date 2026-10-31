@@ -246,6 +246,30 @@ func _lens_layout(layout: String, n: int, w: float) -> Dictionary:
 			return {"size": Vector2(0.46, 0.46), "pos": ps, "circle": true, "anchor": "left"}
 		"island":
 			return {"size": Vector2(0.2, 0.12 + 0.17 * float(n)), "pos": _row(n, 0.17, false), "circle": false, "anchor": "left"}
+		"pill":
+			return {"size": Vector2(0.24, 0.12 + 0.17 * float(n)), "pos": _row(n, 0.17, false), "circle": false, "anchor": "center", "rad": 0.12}
+		"diagonal":
+			var dp: Array = []
+			for i in n:
+				var o := (float(i) - float(n - 1) * 0.5) * 0.1
+				dp.append(Vector2(o, -o))
+			return {"size": Vector2(0.24 + 0.1 * float(n - 1), 0.24 + 0.1 * float(n - 1)), "pos": dp, "circle": false, "anchor": "left", "rad": 0.09}
+		"center":
+			var cp: Array = []
+			if n == 1:
+				cp = [Vector2.ZERO]
+			else:
+				for i in n:
+					var a2 := TAU * float(i) / float(n) + PI * 0.25
+					cp.append(Vector2(cos(a2), sin(a2)) * 0.125)
+			return {"size": Vector2(0.52, 0.52), "pos": cp, "circle": true, "anchor": "center"}
+		"ring":
+			var rp: Array = [Vector2.ZERO]
+			match n:
+				2: rp = [Vector2(0, 0.11), Vector2(0, -0.11)]
+				3: rp = [Vector2(-0.1, 0.1), Vector2(0.1, 0.1), Vector2(0, -0.11)]
+				4: rp = [Vector2(-0.11, 0.11), Vector2(0.11, 0.11), Vector2(-0.11, -0.11), Vector2(0.11, -0.11)]
+			return {"size": Vector2(0.34, 0.34), "pos": rp, "circle": false, "anchor": "left", "ring": true}
 		"grid":
 			var gp: Array = [Vector2(-0.1, 0.1), Vector2(0.1, 0.1), Vector2(-0.1, -0.1), Vector2(0.1, -0.1)]
 			return {"size": Vector2(0.44, 0.44), "pos": gp.slice(0, n), "circle": false, "anchor": "left"}
@@ -291,10 +315,17 @@ func _phone(s: Dictionary) -> void:
 			_add(self, RoundedSlab.build(sw * 0.38, 0.075, 0.01, 0.03, 0.002, 4), _dark_mat(0.2), Vector3(0, sh * 0.5 - 0.035, z + 0.008))
 		"island":
 			_add(self, RoundedSlab.build(sw * 0.28, 0.06, 0.01, 0.03, 0.002, 4), _dark_mat(0.2), Vector3(0, sh * 0.5 - 0.06, z + 0.008))
+		"teardrop":
+			_add(self, _cyl(0.03, 0.01, 14), _dark_mat(0.2), Vector3(0, sh * 0.5 - 0.06, z + 0.008), Vector3(90, 0, 0))
+			_add(self, RoundedSlab.build(sw * 0.07, 0.07, 0.01, 0.02, 0.002, 4), _dark_mat(0.2), Vector3(0, sh * 0.5 - 0.03, z + 0.008))
+		"corner":
+			_add(self, _cyl(0.022, 0.01, 14), _dark_mat(0.2), Vector3(-sw * 0.5 + 0.08, sh * 0.5 - 0.06, z + 0.008), Vector3(90, 0, 0))
+		"dual":
+			for dx in [-0.05, 0.05]:
+				_add(self, _cyl(0.02, 0.01, 14), _dark_mat(0.2), Vector3(dx, sh * 0.5 - 0.06, z + 0.008), Vector3(90, 0, 0))
 	# botões laterais e porta
-	_add(self, _box(Vector3(0.02, 0.2, t * 0.55)), _trim_mat(0.4), Vector3(w * 0.5 + 0.004, 0.25, 0))
-	_add(self, _box(Vector3(0.02, 0.14, t * 0.55)), _trim_mat(0.4), Vector3(-w * 0.5 - 0.004, 0.3, 0))
-	_add(self, _box(Vector3(0.02, 0.14, t * 0.55)), _trim_mat(0.4), Vector3(-w * 0.5 - 0.004, 0.1, 0))
+	_phone_buttons(w, t)
+	_phone_bio(w, h, t)
 	_add(self, RoundedSlab.build(0.1, 0.02, 0.02, 0.008, 0.001, 3), _dark_mat(), Vector3(0, -h * 0.5 - 0.003, 0), Vector3(90, 0, 0))
 	for i in 4:
 		_add(self, _cyl(0.008, 0.02, 8), _dark_mat(), Vector3(-0.2 + float(i) * 0.05 - 0.05, -h * 0.5 - 0.003, 0), Vector3(90, 0, 0))
@@ -309,10 +340,14 @@ func _phone(s: Dictionary) -> void:
 	var cx0 := (-w * 0.5 + psz.x * 0.5 + 0.1) if anchor == "left" else 0.0
 	var cy0 := h * 0.5 - psz.y * 0.5 - 0.1
 	var zb := -t * 0.5 - 0.012
-	var plate_mesh: Mesh = RoundedSlab.build(psz.x, psz.y, 0.024, psz.x * 0.5 if bool(lay.circle) else 0.07, 0.004, 10 if bool(lay.circle) else 6)
-	_add(self, plate_mesh, _trim_mat(0.35) if _opt("trim", "") != "" else _dark_mat(0.5), Vector3(cx0, cy0, zb))
+	if not bool(lay.get("ring", false)):
+		var prad: float = float(lay.get("rad", psz.x * 0.5 if bool(lay.circle) else 0.07))
+		var plate_mesh: Mesh = RoundedSlab.build(psz.x, psz.y, 0.024, prad, 0.004, 10 if (bool(lay.circle) or lay.has("rad")) else 6)
+		_add(self, plate_mesh, _trim_mat(0.35) if _opt("trim", "") != "" else _dark_mat(0.5), Vector3(cx0, cy0, zb))
 	for o in lay.pos:
 		var lp := Vector3(cx0 + (o as Vector2).x, cy0 + (o as Vector2).y, zb - 0.02)
+		if bool(lay.get("ring", false)):
+			_add(self, _cyl(0.085, 0.022), _trim_mat(0.25), lp + Vector3(0, 0, 0.004), Vector3(90, 0, 0))
 		_add(self, _cyl(0.062, 0.016), _dark_mat(0.3), lp, Vector3(90, 0, 0))
 		_add(self, _cyl(0.046, 0.02), _glow_mat(Color(0.2, 0.3, 0.9), 0.5), lp + Vector3(0, 0, -0.004), Vector3(90, 0, 0))
 		_add(self, _cyl(0.014, 0.022), _glow_mat(Color(1, 1, 1), 0.9), lp + Vector3(0.02, 0.02, -0.012), Vector3(90, 0, 0))
@@ -323,6 +358,57 @@ func _phone(s: Dictionary) -> void:
 	if bool(_design.get("brand", true)) and _brand_text() != "":
 		_text(self, _brand_text(), 0.075, _trim_color(), Vector3(0, -0.12, -t * 0.5 - 0.004), Vector3(0, 180, 0))
 	_feature_dots(self, Vector3(-0.15, -0.58, -t * 0.5 - 0.006), Vector3(90, 0, 0))
+
+## Botões laterais conforme o estilo escolhido.
+func _phone_buttons(w: float, t: float) -> void:
+	var xr := w * 0.5 + 0.004
+	var xl := -w * 0.5 - 0.004
+	var bt := t * 0.55
+	match _opt("buttons", "classic"):
+		"right":   # tudo no lado direito
+			_add(self, _box(Vector3(0.02, 0.12, bt)), _trim_mat(0.4), Vector3(xr, 0.4, 0))
+			_add(self, _box(Vector3(0.02, 0.12, bt)), _trim_mat(0.4), Vector3(xr, 0.24, 0))
+			_add(self, _box(Vector3(0.02, 0.2, bt)), _trim_mat(0.4), Vector3(xr, -0.05, 0))
+		"action":   # botão de ação em destaque + volume separado
+			_add(self, RoundedSlab.build(0.025, 0.09, bt, 0.012, 0.002, 3), _glow_mat(ACCENT, 0.7), Vector3(xl, 0.42, 0), Vector3(0, 90, 0))
+			_add(self, _box(Vector3(0.02, 0.12, bt)), _trim_mat(0.4), Vector3(xl, 0.25, 0))
+			_add(self, _box(Vector3(0.02, 0.12, bt)), _trim_mat(0.4), Vector3(xl, 0.09, 0))
+			_add(self, _box(Vector3(0.02, 0.2, bt)), _trim_mat(0.4), Vector3(xr, 0.25, 0))
+		"camkey":   # tecla de câmera embaixo, no lado direito
+			_add(self, _box(Vector3(0.02, 0.2, bt)), _trim_mat(0.4), Vector3(xr, 0.3, 0))
+			_add(self, RoundedSlab.build(0.022, 0.13, bt, 0.01, 0.002, 3), _glow_mat(Color("5aa9ff"), 0.6), Vector3(xr, -0.35, 0), Vector3(0, 90, 0))
+			_add(self, _box(Vector3(0.02, 0.14, bt)), _trim_mat(0.4), Vector3(xl, 0.3, 0))
+			_add(self, _box(Vector3(0.02, 0.14, bt)), _trim_mat(0.4), Vector3(xl, 0.1, 0))
+		"minimal":   # só o botão de energia, embutido
+			_add(self, _box(Vector3(0.012, 0.18, bt * 0.8)), _trim_mat(0.4), Vector3(xr - 0.004, 0.25, 0))
+		_:
+			_add(self, _box(Vector3(0.02, 0.2, bt)), _trim_mat(0.4), Vector3(xr, 0.25, 0))
+			_add(self, _box(Vector3(0.02, 0.14, bt)), _trim_mat(0.4), Vector3(xl, 0.3, 0))
+			_add(self, _box(Vector3(0.02, 0.14, bt)), _trim_mat(0.4), Vector3(xl, 0.1, 0))
+
+## Biometria e acabamento do verso.
+func _phone_bio(w: float, h: float, t: float) -> void:
+	var zb := -t * 0.5
+	match _opt("bio", "under"):
+		"back":
+			_add(self, _cyl(0.075, 0.012, 20), _dark_mat(0.3), Vector3(0, 0.0, zb - 0.004), Vector3(90, 0, 0))
+			var br := TorusMesh.new()
+			br.inner_radius = 0.07
+			br.outer_radius = 0.085
+			_add(self, br, _trim_mat(0.3), Vector3(0, 0.0, zb - 0.006), Vector3(90, 0, 0))
+		"side":
+			_add(self, _box(Vector3(0.008, 0.2, t * 0.4)), _dark_mat(0.25), Vector3(w * 0.5 + 0.014, 0.25, 0))
+	match _opt("back", "plain"):
+		"stripe":
+			for sx in [0.25, 0.31]:
+				_add(self, _box(Vector3(0.03, h * 0.96, 0.004)), _trim_mat(0.4), Vector3(sx, 0, zb - 0.002))
+		"split":
+			_add(self, RoundedSlab.build(w * 0.97, h * 0.32, 0.004, 0.03, 0.001, 4), _trim_mat(0.45), Vector3(0, -h * 0.335, zb - 0.002))
+		"ring":
+			var rr := TorusMesh.new()
+			rr.inner_radius = 0.17
+			rr.outer_radius = 0.19
+			_add(self, rr, _trim_mat(0.35), Vector3(0, -0.12, zb - 0.004), Vector3(90, 0, 0))
 
 # ───────── smartwatch ─────────
 
@@ -338,8 +424,8 @@ func _watch(s: Dictionary) -> void:
 	floor_y = -1.78
 	var strap := StandardMaterial3D.new()
 	strap.albedo_color = strap_col
-	strap.roughness = 0.7 if band == "silicone" else (0.45 if band == "leather" else 0.3)
-	strap.metallic = 0.95 if band == "mesh" else 0.0
+	strap.roughness = 0.7 if band == "silicone" else (0.45 if band == "leather" else (0.9 if band == "nylon" else 0.28))
+	strap.metallic = 0.95 if (band == "mesh" or band == "link") else 0.0
 	if shape == "sport":
 		strap.albedo_color = ACCENT
 	for sgn in [1.0, -1.0]:
@@ -353,6 +439,11 @@ func _watch(s: Dictionary) -> void:
 					_add(self, _box(Vector3(strap_w * 0.9, 0.006, 0.004)), _glow_mat(Color(0.9, 0.8, 0.6), 0.0), Vector3(0, yy, 0.012 - 0.02 * 0.0), Vector3(-sgn * 12.0, 0, 0))
 				"mesh":
 					_add(self, _box(Vector3(strap_w * 0.92, 0.008, 0.006)), _trim_mat(0.25), Vector3(0, yy, 0.0), Vector3(-sgn * 12.0, 0, 0))
+				"link":
+					_add(self, _box(Vector3(strap_w * 0.96, 0.02, 0.008)), _dark_mat(0.5), Vector3(0, yy, 0.002), Vector3(-sgn * 12.0, 0, 0))
+				"nylon":
+					for lx in [-0.3, 0.3]:
+						_add(self, _box(Vector3(0.025, 0.14, 0.004)), _glow_mat(ACCENT, 0.5), Vector3(strap_w * lx, yy, 0.012), Vector3(-sgn * 12.0, 0, 0))
 				_:
 					if sgn < 0.0 and i < 3:
 						_add(self, _cyl(0.025, 0.02, 10), detail, Vector3(0, yy - 0.04, 0.012), Vector3(90 - sgn * 12.0, 0, 0))
@@ -369,17 +460,21 @@ func _watch(s: Dictionary) -> void:
 		for i in 12:
 			var a := TAU * float(i) / 12.0
 			_add(self, _box(Vector3(0.025, 0.05, 0.008)), _trim_mat(0.3), Vector3(cos(a) * (cw * 0.5 - 0.03), sin(a) * (ch * 0.5 - 0.03), z + 0.006), Vector3(0, 0, rad_to_deg(a) - 90.0))
-	# mostrador
-	_text(self, "10:09", sw * 0.3, Color(1, 1, 1, 0.95), Vector3(0, sh * 0.2, z + 0.006))
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.11
-	ring.outer_radius = 0.14
-	_add(self, ring, _glow_mat(ACCENT, 1.4), Vector3(0, -sh * 0.12, z + 0.009), Vector3(90, 0, 0))
-	_add(self, _cyl(0.04, 0.012), _glow_mat(Color("4cd18a"), 1.2), Vector3(0, -sh * 0.12, z + 0.009), Vector3(90, 0, 0))
-	_add(self, RoundedSlab.build(sw * 0.5, 0.045, 0.006, 0.02, 0.001, 3), _glow_mat(Color("5aa9ff"), 1.0), Vector3(0, -sh * 0.38, z + 0.008))
-	# coroa e botão
-	_add(self, _cyl(0.07, 0.07), _trim_mat(0.3), Vector3(cw * 0.5 + 0.02, 0.18, 0), Vector3(0, 0, 90))
-	_add(self, _box(Vector3(0.03, 0.14, 0.06)), _trim_mat(0.4), Vector3(cw * 0.5 + 0.01, -0.1, 0))
+	_watch_face(sw, sh, z)
+	# coroa e botões
+	match _opt("crown", "classic"):
+		"dial":
+			_add(self, _cyl(0.1, 0.09, 18), _trim_mat(0.3), Vector3(cw * 0.5 + 0.03, 0.12, 0), Vector3(0, 0, 90))
+			for k in 6:
+				_add(self, _box(Vector3(0.1, 0.014, 0.014)), _dark_mat(0.5), Vector3(cw * 0.5 + 0.03, 0.12 + (float(k) - 2.5) * 0.028, 0.095), Vector3(0, 0, 0))
+		"dual":
+			_add(self, RoundedSlab.build(0.05, 0.16, 0.06, 0.02, 0.003, 3), _trim_mat(0.4), Vector3(cw * 0.5 + 0.02, 0.22, 0), Vector3(0, 90, 0))
+			_add(self, RoundedSlab.build(0.05, 0.16, 0.06, 0.02, 0.003, 3), _glow_mat(ACCENT, 0.6), Vector3(cw * 0.5 + 0.02, -0.08, 0), Vector3(0, 90, 0))
+		"none":
+			_add(self, _box(Vector3(0.012, 0.16, 0.02)), _dark_mat(0.4), Vector3(cw * 0.5 + 0.004, 0.1, 0))
+		_:
+			_add(self, _cyl(0.07, 0.07), _trim_mat(0.3), Vector3(cw * 0.5 + 0.02, 0.18, 0), Vector3(0, 0, 90))
+			_add(self, _box(Vector3(0.03, 0.14, 0.06)), _trim_mat(0.4), Vector3(cw * 0.5 + 0.01, -0.1, 0))
 	# sensores no verso
 	var sensors: int = 1 + int(_f(s, "sensors") * 3.99)
 	for i in sensors:
@@ -387,6 +482,35 @@ func _watch(s: Dictionary) -> void:
 		_add(self, _cyl(0.06, 0.02), _glow_mat(Color("4cd18a"), 1.3),
 			Vector3(cos(ang) * 0.18, sin(ang) * 0.18, -t * 0.5 - 0.012), Vector3(90, 0, 0))
 	_feature_dots(self, Vector3(-0.2, -0.36, -t * 0.5 - 0.02), Vector3(90, 0, 0))
+
+## Mostrador do relógio: digital (padrão), analógico ou minimalista.
+func _watch_face(sw: float, sh: float, z: float) -> void:
+	match _opt("face", "digital"):
+		"analog":
+			var r := minf(sw, sh) * 0.5 - 0.05
+			for i in 12:
+				var a := TAU * float(i) / 12.0
+				var big := i % 3 == 0
+				_add(self, _box(Vector3(0.02 if big else 0.012, 0.07 if big else 0.04, 0.006)), _glow_mat(Color(1, 1, 1), 1.1),
+					Vector3(sin(a) * (r - 0.03), cos(a) * (r - 0.03), z + 0.006), Vector3(0, 0, -rad_to_deg(a)))
+			# ponteiros: 10:09
+			for hand in [[deg_to_rad(-55.0), r * 0.5, 0.03, Color(1, 1, 1)], [deg_to_rad(54.0), r * 0.78, 0.02, Color(1, 1, 1)], [deg_to_rad(150.0), r * 0.85, 0.01, ACCENT]]:
+				var ang: float = hand[0]
+				var ln: float = hand[1]
+				_add(self, _box(Vector3(hand[2], ln, 0.006)), _glow_mat(hand[3], 1.2),
+					Vector3(sin(ang) * ln * 0.5, cos(ang) * ln * 0.5, z + 0.01), Vector3(0, 0, -rad_to_deg(ang)))
+			_add(self, _cyl(0.035, 0.012), _glow_mat(ACCENT, 1.4), Vector3(0, 0, z + 0.013), Vector3(90, 0, 0))
+		"minimal":
+			_text(self, "10:09", sw * 0.42, Color(1, 1, 1, 0.95), Vector3(0, sh * 0.05, z + 0.006))
+			_add(self, RoundedSlab.build(sw * 0.34, 0.03, 0.006, 0.015, 0.001, 3), _glow_mat(ACCENT, 1.2), Vector3(0, -sh * 0.25, z + 0.008))
+		_:
+			_text(self, "10:09", sw * 0.3, Color(1, 1, 1, 0.95), Vector3(0, sh * 0.2, z + 0.006))
+			var ring := TorusMesh.new()
+			ring.inner_radius = 0.11
+			ring.outer_radius = 0.14
+			_add(self, ring, _glow_mat(ACCENT, 1.4), Vector3(0, -sh * 0.12, z + 0.009), Vector3(90, 0, 0))
+			_add(self, _cyl(0.04, 0.012), _glow_mat(Color("4cd18a"), 1.2), Vector3(0, -sh * 0.12, z + 0.009), Vector3(90, 0, 0))
+			_add(self, RoundedSlab.build(sw * 0.5, 0.045, 0.006, 0.02, 0.001, 3), _glow_mat(Color("5aa9ff"), 1.0), Vector3(0, -sh * 0.38, z + 0.008))
 
 # ───────── notebook ─────────
 
@@ -407,13 +531,20 @@ func _laptop(s: Dictionary) -> void:
 	var led := _color_of(_opt("led", "blue"), Color("5aa9ff"))
 	var keys := MultiMesh.new()
 	keys.transform_format = MultiMesh.TRANSFORM_3D
-	keys.mesh = _box(Vector3(0.09, 0.012, 0.09))
+	var kstyle := _opt("kbd", "standard")
+	if kstyle == "round":
+		keys.mesh = _cyl(0.046, 0.016, 12)
+	else:
+		keys.mesh = _box(Vector3(0.09, 0.012, 0.09))
 	var cols := 14
 	var rows := 5
 	keys.instance_count = cols * rows
 	for r in rows:
 		for c in cols:
-			var p := Vector3((float(c) - float(cols - 1) * 0.5) * 0.108 * (w / 1.7), top + 0.005, -0.28 + float(r) * 0.108 - 0.05)
+			var gap := 0.0
+			if kstyle == "split":
+				gap = 0.07 if c >= cols / 2 else -0.07
+			var p := Vector3((float(c) - float(cols - 1) * 0.5) * 0.108 * (w / 1.7) + gap, top + 0.005, -0.28 + float(r) * 0.108 - 0.05)
 			keys.set_instance_transform(r * cols + c, Transform3D(Basis().scaled(Vector3(w / 1.7, 1, 1)), p))
 	var kmi := MultiMeshInstance3D.new()
 	kmi.multimesh = keys
@@ -444,7 +575,16 @@ func _laptop(s: Dictionary) -> void:
 	var sw := w - bezel * 2.0
 	var sh := lid_h - bezel * 2.0
 	_add(hinge, RoundedSlab.build(sw, sh, 0.006, 0.04, 0.002, 4), _screen_mat(_f(s, "display")), Vector3(0, lid_h * 0.5, 0.028))
-	_add(hinge, _cyl(0.014, 0.01, 10), _dark_mat(0.2), Vector3(0, lid_h * 0.5 + sh * 0.5 - 0.03, 0.034), Vector3(90, 0, 0))
+	match _opt("webcam", "dot"):
+		"notch":
+			_add(hinge, RoundedSlab.build(sw * 0.12, 0.05, 0.006, 0.02, 0.001, 3), _dark_mat(0.2), Vector3(0, lid_h * 0.5 + sh * 0.5 - 0.022, 0.034))
+		"bar":
+			_add(hinge, RoundedSlab.build(sw * 0.2, 0.022, 0.006, 0.01, 0.001, 3), _dark_mat(0.2), Vector3(0, lid_h * 0.5 + sh * 0.5 + bezel * 0.5, 0.034))
+			_add(hinge, _cyl(0.007, 0.01, 8), _glow_mat(Color("4cd18a"), 1.0), Vector3(sw * 0.07, lid_h * 0.5 + sh * 0.5 + bezel * 0.5, 0.036), Vector3(90, 0, 0))
+		"none":
+			pass
+		_:
+			_add(hinge, _cyl(0.014, 0.01, 10), _dark_mat(0.2), Vector3(0, lid_h * 0.5 + sh * 0.5 - 0.03, 0.034), Vector3(90, 0, 0))
 	# desktop: janela, ícones e dock
 	_add(hinge, RoundedSlab.build(sw * 0.46, sh * 0.5, 0.004, 0.03, 0.001, 3), _glow_mat(Color(1, 1, 1), 0.35), Vector3(-sw * 0.14, lid_h * 0.5 + sh * 0.06, 0.034))
 	_add(hinge, RoundedSlab.build(sw * 0.3, sh * 0.3, 0.004, 0.03, 0.001, 3), _glow_mat(Color(1, 1, 1), 0.2), Vector3(sw * 0.22, lid_h * 0.5 + sh * 0.16, 0.034))
@@ -454,7 +594,19 @@ func _laptop(s: Dictionary) -> void:
 			Vector3((float(i) - 2.0) * 0.085, lid_h * 0.5 - sh * 0.44, 0.04))
 	_text(hinge, "9:41", 0.07, Color(1, 1, 1, 0.9), Vector3(sw * 0.4, lid_h * 0.5 + sh * 0.46, 0.036))
 	# logo e marca na tampa
-	_add(hinge, _cyl(0.11, 0.008, 24), _glow_mat(ACCENT, 0.4 + 2.2 * _f(s, "performance")), Vector3(0, lid_h * 0.5, -0.03), Vector3(90, 0, 0))
+	var lid_glow := _glow_mat(ACCENT, 0.4 + 2.2 * _f(s, "performance"))
+	match _opt("lid", "logo"):
+		"stripe":
+			_add(hinge, _box(Vector3(w * 0.72, 0.028, 0.006)), lid_glow, Vector3(0, lid_h * 0.5, -0.03))
+		"ring":
+			var lr := TorusMesh.new()
+			lr.inner_radius = 0.13
+			lr.outer_radius = 0.16
+			_add(hinge, lr, lid_glow, Vector3(0, lid_h * 0.5, -0.03), Vector3(90, 0, 0))
+		"plain":
+			pass
+		_:
+			_add(hinge, _cyl(0.11, 0.008, 24), lid_glow, Vector3(0, lid_h * 0.5, -0.03), Vector3(90, 0, 0))
 	if bool(_design.get("brand", true)) and _brand_text() != "":
 		_text(hinge, _brand_text(), 0.08, _trim_color(), Vector3(0, lid_h * 0.5 - 0.22, -0.032), Vector3(0, 180, 0))
 	_feature_dots(hinge, Vector3(-0.3, lid_h * 0.5 - 0.35, -0.034), Vector3(90, 0, 0))
@@ -483,8 +635,17 @@ func _console(s: Dictionary) -> void:
 	var top := ht * 0.5
 	# aberturas de ventilação
 	var slits: int = 4 + int(_f(s, "thermal") * 7.0)
-	for i in slits:
-		_add(body, _box(Vector3(0.62, 0.006, 0.02)), _dark_mat(), Vector3(-0.35, top + 0.003, -0.38 + float(i) * 0.062))
+	match _opt("vent", "slats"):
+		"grille":
+			for r in 5:
+				for c in 8:
+					_add(body, _cyl(0.014, 0.006, 8), _dark_mat(), Vector3(-0.62 + float(c) * 0.075, top + 0.003, -0.36 + float(r) * 0.075))
+		"diagonal":
+			for i in slits:
+				_add(body, _box(Vector3(0.3, 0.006, 0.018)), _dark_mat(), Vector3(-0.62 + float(i) * (0.62 / float(slits)) , top + 0.003, -0.2), Vector3(0, 55, 0))
+		_:
+			for i in slits:
+				_add(body, _box(Vector3(0.62, 0.006, 0.02)), _dark_mat(), Vector3(-0.35, top + 0.003, -0.38 + float(i) * 0.062))
 	# núcleo (Desempenho)
 	var core := TorusMesh.new()
 	core.inner_radius = 0.13
@@ -492,7 +653,16 @@ func _console(s: Dictionary) -> void:
 	_add(body, core, _glow_mat(ACCENT, 0.4 + 2.4 * _f(s, "performance")), Vector3(0.48, top + 0.008, -0.05))
 	_add(body, _cyl(0.07, 0.006), _glow_mat(ACCENT, 0.3 + 1.6 * _f(s, "performance")), Vector3(0.48, top + 0.005, -0.05))
 	# faixa de LED frontal (cor escolhida)
-	_add(body, _box(Vector3(w * 0.62, 0.02, 0.012)), _glow_mat(led, 1.6), Vector3(0, ht * 0.18, d * 0.5 + 0.002))
+	match _opt("glow", "bar"):
+		"dots":
+			for i in 7:
+				_add(body, _cyl(0.014, 0.012, 10), _glow_mat(led, 1.8), Vector3((float(i) - 3.0) * 0.12, ht * 0.18, d * 0.5 + 0.004), Vector3(90, 0, 0))
+		"edge":
+			for sx in [-1.0, 1.0]:
+				_add(body, _box(Vector3(0.016, 0.01, d * 0.9)), _glow_mat(led, 1.8), Vector3(sx * (w * 0.5 - 0.05), top + 0.003, 0))
+			_add(body, _box(Vector3(w * 0.3, 0.012, 0.01)), _glow_mat(led, 1.4), Vector3(0, ht * 0.18, d * 0.5 + 0.002))
+		_:
+			_add(body, _box(Vector3(w * 0.62, 0.02, 0.012)), _glow_mat(led, 1.6), Vector3(0, ht * 0.18, d * 0.5 + 0.002))
 	_add(body, _box(Vector3(0.9, 0.034, 0.012)), _dark_mat(), Vector3(0.28, -ht * 0.12, d * 0.5 + 0.002))
 	# alto-falantes (Áudio)
 	var rws: int = 1 + int(_f(s, "audio") * 2.99)
@@ -511,6 +681,11 @@ func _console(s: Dictionary) -> void:
 	pad.position = Vector3(0.05, -ht * 0.5 + 0.09, 0.95)
 	pad.rotation_degrees = Vector3(0, -12, 0)
 	add_child(pad)
+	if _opt("pad", "classic") == "mini":
+		pad.scale = Vector3.ONE * 0.82
+	elif _opt("pad", "classic") == "pro":
+		for px in [-0.2, 0.2]:
+			_add(pad, _box(Vector3(0.08, 0.04, 0.06)), _dark_mat(0.5), Vector3(px, 0.0, -0.16))
 	var pad_mat := _body_mat()
 	_add(pad, RoundedSlab.build(0.7, 0.34, 0.14, 0.15, 0.02, 8), pad_mat, Vector3.ZERO, Vector3(-90, 0, 0))
 	for sx in [-0.17, 0.11]:

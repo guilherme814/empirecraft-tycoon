@@ -265,6 +265,22 @@
   {
    "id": "grid",
    "name": "Grade"
+  },
+  {
+   "id": "pill",
+   "name": "Cápsula"
+  },
+  {
+   "id": "diagonal",
+   "name": "Diagonal"
+  },
+  {
+   "id": "center",
+   "name": "Disco central"
+  },
+  {
+   "id": "ring",
+   "name": "Anéis"
   }
  ],
  "notches": [
@@ -283,6 +299,18 @@
   {
    "id": "none",
    "name": "Sem recorte"
+  },
+  {
+   "id": "teardrop",
+   "name": "Gota"
+  },
+  {
+   "id": "corner",
+   "name": "Furo no canto"
+  },
+  {
+   "id": "dual",
+   "name": "Furo duplo"
   }
  ],
  "bands": [
@@ -297,6 +325,14 @@
   {
    "id": "mesh",
    "name": "Malha metálica"
+  },
+  {
+   "id": "link",
+   "name": "Elos de aço"
+  },
+  {
+   "id": "nylon",
+   "name": "Náilon"
   }
  ],
  "packages": [
@@ -421,6 +457,184 @@
    ],
    "req": "",
    "lvl": 0
+  }
+ ],
+ "buttons": [
+  {
+   "id": "classic",
+   "name": "Clássico"
+  },
+  {
+   "id": "right",
+   "name": "Tudo à direita"
+  },
+  {
+   "id": "action",
+   "name": "Botão de ação"
+  },
+  {
+   "id": "camkey",
+   "name": "Tecla de câmera"
+  },
+  {
+   "id": "minimal",
+   "name": "Mínimo"
+  }
+ ],
+ "bios": [
+  {
+   "id": "under",
+   "name": "Sob a tela"
+  },
+  {
+   "id": "back",
+   "name": "No verso"
+  },
+  {
+   "id": "side",
+   "name": "Lateral"
+  }
+ ],
+ "backs": [
+  {
+   "id": "plain",
+   "name": "Liso"
+  },
+  {
+   "id": "stripe",
+   "name": "Listras"
+  },
+  {
+   "id": "split",
+   "name": "Bicolor"
+  },
+  {
+   "id": "ring",
+   "name": "Anel"
+  }
+ ],
+ "crowns": [
+  {
+   "id": "classic",
+   "name": "Clássica"
+  },
+  {
+   "id": "dial",
+   "name": "Grande"
+  },
+  {
+   "id": "dual",
+   "name": "Dois botões"
+  },
+  {
+   "id": "none",
+   "name": "Sem coroa"
+  }
+ ],
+ "faces": [
+  {
+   "id": "digital",
+   "name": "Digital"
+  },
+  {
+   "id": "analog",
+   "name": "Analógico"
+  },
+  {
+   "id": "minimal",
+   "name": "Minimalista"
+  }
+ ],
+ "kbds": [
+  {
+   "id": "standard",
+   "name": "Padrão"
+  },
+  {
+   "id": "round",
+   "name": "Teclas redondas"
+  },
+  {
+   "id": "split",
+   "name": "Dividido"
+  }
+ ],
+ "webcams": [
+  {
+   "id": "dot",
+   "name": "Ponto"
+  },
+  {
+   "id": "notch",
+   "name": "Entalhe"
+  },
+  {
+   "id": "bar",
+   "name": "Barra"
+  },
+  {
+   "id": "none",
+   "name": "Sem câmera"
+  }
+ ],
+ "lids": [
+  {
+   "id": "logo",
+   "name": "Logo"
+  },
+  {
+   "id": "stripe",
+   "name": "Faixa"
+  },
+  {
+   "id": "ring",
+   "name": "Anel"
+  },
+  {
+   "id": "plain",
+   "name": "Liso"
+  }
+ ],
+ "vents": [
+  {
+   "id": "slats",
+   "name": "Frestas"
+  },
+  {
+   "id": "grille",
+   "name": "Grade"
+  },
+  {
+   "id": "diagonal",
+   "name": "Diagonal"
+  }
+ ],
+ "glows": [
+  {
+   "id": "bar",
+   "name": "Barra"
+  },
+  {
+   "id": "dots",
+   "name": "Pontos"
+  },
+  {
+   "id": "edge",
+   "name": "Bordas"
+  }
+ ],
+ "pads": [
+  {
+   "id": "classic",
+   "name": "Clássico"
+  },
+  {
+   "id": "mini",
+   "name": "Compacto"
+  },
+  {
+   "id": "pro",
+   "name": "Pro (paddles)"
   }
  ]
 }

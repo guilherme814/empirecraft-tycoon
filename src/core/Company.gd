@@ -962,7 +962,9 @@ func default_design(cat_id: String) -> Dictionary:
 	return {"shape": str(shapes[0].id) if not shapes.is_empty() else "classic", "finish": "alu", "color": "graphite",
 		"w": 5, "h": 5, "d": 5, "corner": 5, "strap": 5, "features": [],
 		"trim": "silver", "wall": "aurora", "cam": "plate", "notch": "punch", "band": "silicone", "led": "blue", "brand": true,
-		"package": "basic", "acc": [], "chip": 0}
+		"package": "basic", "acc": [], "chip": 0,
+		"buttons": "classic", "bio": "under", "back": "plain", "crown": "classic", "face": "digital",
+		"kbd": "standard", "webcam": "dot", "lid": "logo", "vent": "slats", "glow": "bar", "pad": "classic"}
 
 func design_item_unlocked(item: Dictionary) -> bool:
 	return str(item.req) == "" or research_level(str(item.req)) >= int(item.lvl)

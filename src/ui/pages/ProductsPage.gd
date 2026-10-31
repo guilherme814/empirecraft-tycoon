@@ -191,14 +191,47 @@ func _swatches(key: String) -> void:
 		b.pressed.connect(func(): Sfx.play("click"); _design[key] = str(col.id); _touch())
 		sw.add_child(b)
 
+## Sorteia só detalhes estéticos gratuitos (cores e variações), para variar os aparelhos.
+func _randomize_look() -> void:
+	var D: Dictionary = GameData.designs()
+	var pick := func(arr: Array) -> String: return str(arr[randi() % arr.size()].id)
+	_design["color"] = pick.call(D.colors)
+	_design["trim"] = pick.call(D.colors)
+	_design["wall"] = pick.call(D.wallpapers)
+	match _cat_id:
+		"phone":
+			_design["cam"] = pick.call(D.camera_layouts)
+			_design["notch"] = pick.call(D.notches)
+			_design["buttons"] = pick.call(D.buttons)
+			_design["bio"] = pick.call(D.bios)
+			_design["back"] = pick.call(D.backs)
+		"watch":
+			_design["band"] = pick.call(D.bands)
+			_design["face"] = pick.call(D.faces)
+			_design["crown"] = pick.call(D.crowns)
+		"laptop":
+			_design["kbd"] = pick.call(D.kbds)
+			_design["webcam"] = pick.call(D.webcams)
+			_design["lid"] = pick.call(D.lids)
+			_design["led"] = pick.call(D.colors)
+		_:
+			_design["vent"] = pick.call(D.vents)
+			_design["glow"] = pick.call(D.glows)
+			_design["pad"] = pick.call(D.pads)
+			_design["led"] = pick.call(D.colors)
+	Sfx.play("click")
+	_touch()
+
 func _choice_row(label_text: String, key: String, items: Array) -> void:
 	_form.add_child(UI.label(label_text, 24, Palette.MUTED))
-	var g := _grid(mini(4, maxi(items.size(), 1)))
+	var g := _grid(mini(3, maxi(items.size(), 1)))
+	var cur := str(_design.get(key, str(items[0].id) if not items.is_empty() else ""))
 	for it in items:
-		g.add_child(_opt(str(it.name), str(_design.get(key, "")) == str(it.id), "", func(): _design[key] = str(it.id); _touch()))
+		g.add_child(_opt(str(it.name), cur == str(it.id), "", func(): _design[key] = str(it.id); _touch()))
 
 func _step_style() -> void:
 	_locked_hints.clear()
+	_form.add_child(UI.button("Sortear visual (cores e detalhes)", _randomize_look, "info", 64))
 	_form.add_child(UI.label("Acabamento", 24, Palette.MUTED))
 	var g2 := _grid(2)
 	for it in GameData.designs().finishes:
@@ -219,9 +252,23 @@ func _step_style() -> void:
 		"phone":
 			_choice_row("Câmera traseira", "cam", GameData.designs().camera_layouts)
 			_choice_row("Recorte da tela", "notch", GameData.designs().notches)
+			_choice_row("Botões laterais", "buttons", GameData.designs().buttons)
+			_choice_row("Leitor de digital", "bio", GameData.designs().bios)
+			_choice_row("Acabamento do verso", "back", GameData.designs().backs)
 		"watch":
 			_choice_row("Material da pulseira", "band", GameData.designs().bands)
+			_choice_row("Mostrador", "face", GameData.designs().faces)
+			_choice_row("Coroa e botões", "crown", GameData.designs().crowns)
+		"laptop":
+			_choice_row("Teclado", "kbd", GameData.designs().kbds)
+			_choice_row("Webcam", "webcam", GameData.designs().webcams)
+			_choice_row("Detalhe da tampa", "lid", GameData.designs().lids)
+			_form.add_child(UI.label("Cor do LED / teclado", 24, Palette.MUTED))
+			_swatches("led")
 		_:
+			_choice_row("Ventilação", "vent", GameData.designs().vents)
+			_choice_row("Luzes frontais", "glow", GameData.designs().glows)
+			_choice_row("Controle", "pad", GameData.designs().pads)
 			_form.add_child(UI.label("Cor do LED / teclado", 24, Palette.MUTED))
 			_swatches("led")
 	_form.add_child(UI.label("Embalagem", 24, Palette.MUTED))

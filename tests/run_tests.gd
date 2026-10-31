@@ -29,6 +29,7 @@ func _initialize() -> void:
 	test_updater_and_backups()
 	test_office_layout()
 	test_identity_and_rivals()
+	test_device_variants()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -544,3 +545,19 @@ func test_identity_and_rivals() -> void:
 		elif cp.company == "Xiaomi":
 			px += float(cp.price)
 	check(m.comp_products.size() == 40, "rivais lançam produtos")
+
+func test_device_variants() -> void:
+	var D: Dictionary = GameData.designs()
+	var c := Company.new()
+	var keys := {"buttons": "buttons", "bio": "bios", "back": "backs", "crown": "crowns", "face": "faces", "kbd": "kbds",
+		"webcam": "webcams", "lid": "lids", "vent": "vents", "glow": "glows", "pad": "pads"}
+	var d: Dictionary = c.default_design("phone")
+	for k in keys:
+		var arr: Array = D.get(keys[k], [])
+		check(arr.size() >= 3, "designs.%s tem opções" % keys[k])
+		check(d.has(k), "default_design tem %s" % k)
+		var ids: Array = []
+		for it in arr:
+			ids.append(str(it.id))
+		check(ids.has(str(d[k])), "padrão de %s existe na lista" % k)
+	check((D.camera_layouts as Array).size() >= 9 and (D.notches as Array).size() >= 7 and (D.bands as Array).size() >= 5, "novas câmeras, recortes e pulseiras")
