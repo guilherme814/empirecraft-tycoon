@@ -10,6 +10,7 @@ func setup(l: Dictionary, size_px: float, name_text: String = "") -> LogoView:
 	logo = l
 	show_name = name_text
 	custom_minimum_size = Vector2(size_px, size_px)
+	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	if name_text != "":
 		custom_minimum_size.x = size_px + 18.0 + 22.0 * float(name_text.length()) * 0.62
 	queue_redraw()
@@ -23,8 +24,12 @@ func _draw() -> void:
 	var c2 := Color(str(logo.c2))
 	if plate:
 		var r := s * 0.22
-		draw_rect(Rect2(0, 0, s, s), c2)
-		draw_rect(Rect2(0, 0, s, s), c1.darkened(0.2), false, maxf(2.0, s * 0.04))
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = c2
+		sb.set_corner_radius_all(int(r))
+		sb.set_border_width_all(maxi(2, int(s * 0.04)))
+		sb.border_color = c1.darkened(0.2)
+		draw_style_box(sb, Rect2(0, 0, s, s))
 	var pts := Identity.points(str(logo.symbol))
 	var out := PackedVector2Array()
 	for p in pts:

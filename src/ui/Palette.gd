@@ -24,6 +24,13 @@ static func box(color: Color, radius: int = 16, pad: int = 0) -> StyleBoxFlat:
 	s.set_content_margin_all(pad)
 	return s
 
+## Cartão com borda fina e levemente mais clara (acabamento).
+static func card_box(color: Color, radius: int = 18, pad: int = 20) -> StyleBoxFlat:
+	var s := box(color, radius, pad)
+	s.set_border_width_all(1)
+	s.border_color = color.lightened(0.10)
+	return s
+
 static func kind_color(kind: String) -> Color:
 	match kind:
 		"primary": return ACCENT

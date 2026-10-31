@@ -116,7 +116,7 @@ func _chip(icon_name: String, color: Color, value: Label) -> Control:
 ## Dock inferior (como no hub do jogo de referência): ícone + rótulo + selo de pendências.
 func _build_nav() -> Control:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(0, 118)
+	panel.custom_minimum_size = Vector2(0, 124)
 	panel.add_theme_stylebox_override("panel", Palette.box(Palette.PANEL_DEEP, 0, 8))
 	var h := UI.hbox(6)
 	panel.add_child(h)
@@ -131,10 +131,11 @@ func _build_nav() -> Control:
 		v.alignment = BoxContainer.ALIGNMENT_CENTER
 		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		var ic := UI.icon(str(d.icon), 40, Palette.TEXT)
+		var ic := UI.icon(str(d.icon), 44, Palette.TEXT)
 		ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		v.add_child(ic)
-		var l := UI.label(str(d.title), 19, Palette.TEXT)
+		var l := UI.label(str(d.title), 23, Palette.TEXT)
+		l.clip_text = true
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		v.add_child(l)
@@ -183,11 +184,14 @@ func _update_badges() -> void:
 
 func _build_toast() -> void:
 	_toast = PanelContainer.new()
-	_toast.add_theme_stylebox_override("panel", Palette.box(Palette.PANEL_ALT, 16, 18))
+	var ts := Palette.card_box(Palette.PANEL_ALT, 16, 18)
+	ts.border_color = Palette.ACCENT.darkened(0.2)
+	ts.border_width_left = 6
+	_toast.add_theme_stylebox_override("panel", ts)
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_toast.visible = false
 	_toast_l = UI.wrap("", 26, Palette.TEXT)
-	_toast_l.custom_minimum_size = Vector2(620, 0)
+	_toast_l.custom_minimum_size = Vector2(560, 0)
 	_toast.add_child(_toast_l)
 	add_child(_toast)
 
@@ -246,7 +250,7 @@ func _on_notice(text: String, kind: String) -> void:
 	_toast_l.add_theme_color_override("font_color", UI.kind_color(kind))
 	_toast.visible = true
 	_toast.reset_size()
-	_toast.position = Vector2(size.x - _toast.size.x - 24.0, size.y - _toast.size.y - 140.0)   # canto inferior direito
+	_toast.position = Vector2(size.x - _toast.size.x - 24.0, 108.0)   # abaixo da barra superior, à direita
 	_toast_gen += 1
 	var gen := _toast_gen
 	await get_tree().create_timer(3.0).timeout

@@ -2,10 +2,12 @@ class_name UI
 extends RefCounted
 ## Construtores de widgets (a interface é montada por código, sem editor).
 
+const MIN_FONT := 23   # piso de legibilidade em telas de celular
+
 static func label(text: String, size: int = 28, color: Color = Palette.TEXT) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_font_size_override("font_size", maxi(size, MIN_FONT))
 	l.add_theme_color_override("font_color", color)
 	return l
 
@@ -16,7 +18,7 @@ static func wrap(text: String, size: int = 26, color: Color = Palette.MUTED) -> 
 	return l
 
 static func heading(text: String) -> Label:
-	return label(text, 36, Palette.ACCENT)
+	return label(text, 32, Palette.ACCENT)
 
 static func button(text: String, cb: Callable, kind: String = "normal", min_h: int = 84, min_w: int = 0,
 		icon_name: String = "", sound: String = "click") -> Button:
@@ -66,7 +68,7 @@ static func background() -> ColorRect:
 
 static func card(color: Color = Palette.PANEL, pad: int = 20) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", Palette.box(color, 18, pad))
+	p.add_theme_stylebox_override("panel", Palette.card_box(color, 18, pad))
 	return p
 
 static func vbox(sep: int = 12) -> VBoxContainer:

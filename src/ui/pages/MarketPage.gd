@@ -53,7 +53,10 @@ func rebuild() -> void:
 		pc.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(pc)
 		rv.add_child(row)
-		rv.add_child(UI.label("%s · %s" % [", ".join(segs), str(r.get("desc", ""))], 20, Palette.MUTED))
+		rv.add_child(UI.wrap("%s · %s" % [", ".join(segs), str(r.get("desc", ""))], 22, Palette.MUTED))
+		var sp := Control.new()
+		sp.custom_minimum_size = Vector2(0, 8)
+		rv.add_child(sp)
 
 	var grid := GridContainer.new()
 	grid.columns = 2
