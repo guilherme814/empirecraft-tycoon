@@ -59,6 +59,8 @@ func test_data() -> void:
 	for r in GameData.research():
 		if str(r.requires) != "":
 			check(not GameData.research_item(str(r.requires)).is_empty(), "requisito existe: " + r.id)
+		var ids: Array = Rules.RESEARCH_AREAS.map(func(a): return a.id)
+		check(ids.has(str(r.get("area", ""))), "pesquisa com área válida: " + str(r.id))
 	check(Fmt.date(0) == "01/01/2010", "Fmt.date dia 0: " + Fmt.date(0))
 	check(Fmt.thousands(1234567) == "1.234.567", "Fmt.thousands")
 

@@ -13,7 +13,8 @@
   "effect": {
    "key": "tech_level",
    "per_level": 0.04
-  }
+  },
+  "area": "tech"
  },
  {
   "id": "res_specs",
@@ -29,7 +30,8 @@
   "effect": {
    "key": "spec_points",
    "per_level": 12
-  }
+  },
+  "area": "tech"
  },
  {
   "id": "res_speed",
@@ -45,7 +47,8 @@
   "effect": {
    "key": "dev_speed",
    "per_level": 0.08
-  }
+  },
+  "area": "tech"
  },
  {
   "id": "res_cost",
@@ -61,7 +64,8 @@
   "effect": {
    "key": "unit_cost_discount",
    "per_level": 0.03
-  }
+  },
+  "area": "prod"
  },
  {
   "id": "res_hype",
@@ -77,7 +81,8 @@
   "effect": {
    "key": "hype",
    "per_level": 0.25
-  }
+  },
+  "area": "biz"
  },
  {
   "id": "res_train",
@@ -93,7 +98,8 @@
   "effect": {
    "key": "train_discount",
    "per_level": 0.06
-  }
+  },
+  "area": "prod"
  },
  {
   "id": "res_design",
@@ -109,7 +115,8 @@
   "effect": {
    "key": "design_bonus",
    "per_level": 0.03
-  }
+  },
+  "area": "design"
  },
  {
   "id": "res_laptop",
@@ -126,7 +133,8 @@
    "key": "unlock",
    "per_level": 1,
    "target": "laptop"
-  }
+  },
+  "area": "lines"
  },
  {
   "id": "res_wearable",
@@ -143,7 +151,8 @@
    "key": "unlock",
    "per_level": 1,
    "target": "watch"
-  }
+  },
+  "area": "lines"
  },
  {
   "id": "res_console",
@@ -160,7 +169,8 @@
    "key": "unlock",
    "per_level": 1,
    "target": "console"
-  }
+  },
+  "area": "lines"
  },
  {
   "id": "res_shapes",
@@ -176,7 +186,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "design"
  },
  {
   "id": "res_finish",
@@ -192,7 +203,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "design"
  },
  {
   "id": "res_os",
@@ -208,7 +220,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "lines"
  },
  {
   "id": "res_factory",
@@ -224,7 +237,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "prod"
  },
  {
   "id": "res_capital",
@@ -240,7 +254,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "biz"
  },
  {
   "id": "res_features",
@@ -256,7 +271,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "tech"
  },
  {
   "id": "res_marketing",
@@ -272,7 +288,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "biz"
  },
  {
   "id": "res_lab",
@@ -288,7 +305,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "prod"
  },
  {
   "id": "res_chips",
@@ -304,7 +322,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "tech"
  },
  {
   "id": "res_software",
@@ -320,7 +339,8 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "tech"
  },
  {
   "id": "res_package",
@@ -336,6 +356,7 @@
   "effect": {
    "key": "none",
    "per_level": 0
-  }
+  },
+  "area": "design"
  }
 ]

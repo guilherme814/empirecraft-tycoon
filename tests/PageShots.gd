@@ -54,6 +54,12 @@ func _ready() -> void:
 	screen._pages["market"]._sel = "Apple"
 	screen._pages["market"].rebuild()
 	await _shot("market")
+	c.research_points = 900.0
+	c.do_research("res_tech")
+	c.do_research("res_tech")
+	screen._show_page("research")
+	screen._pages["research"].rebuild()
+	await _shot("research")
 	get_tree().quit()
 
 func _shot(n: String) -> void:

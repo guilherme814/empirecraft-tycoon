@@ -25,6 +25,7 @@ Testes: `test_save_roundtrip` (ida e volta) e `test_old_save_compat` (save v2 m�
 - v6 → 0.7.1: novo campo `sandbox` (padrão: falso). Ligado, caixa e pontos de pesquisa são repostos a um piso enorme a cada ação e a cada dia.
 - v7 → v8 (0.7.2): novos campos `log_serial` (contador das notificações), `notif_seen` (última lida) e `own_os.look` (aparência do sistema próprio). Saves antigos usam padrões; entradas antigas do log ficam sem número e contam como lidas.
 - v8 → v9 (0.8.0): rivais ganham `launches`, `star`, `rivalry`, `war_until`; 4 rivais novos (Nothing, OnePlus, Lenovo, Valve) entram no fim da lista ao carregar (índices antigos não mudam; ações e histórico preservados).
+- v9 → 0.8.1: sem mudança no save; `data/research.json` ganhou o campo `area` (só apresentação).
 - v4 → 0.4.1: novos campos `cash_start`, `cash_flow_last`, `cash_items`, `cash_items_last` (padrão: caixa atual / vazios).
 - Empréstimo, bolsa e obras passam a ser movimentos de caixa fora do lucro (antes contavam como receita/despesa).
 

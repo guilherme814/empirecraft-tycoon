@@ -2,8 +2,16 @@ class_name Rules
 extends RefCounted
 ## Constantes de balanceamento. Mexa aqui para ajustar a economia do jogo.
 
-const VERSION := "0.8.0"
-const VERSION_CODE := 15
+const VERSION := "0.8.1"
+const VERSION_CODE := 16
+## Áreas da árvore de pesquisa (menu lateral da aba Pesquisa).
+const RESEARCH_AREAS := [
+	{"id": "tech", "name": "Tecnologia", "icon": "nav_chip"},
+	{"id": "design", "name": "Design", "icon": "designer"},
+	{"id": "prod", "name": "Produção", "icon": "nav_ops"},
+	{"id": "biz", "name": "Negócios", "icon": "nav_marketing"},
+	{"id": "lines", "name": "Novas linhas", "icon": "nav_products"},
+]
 const START_YEAR := 2010
 const DAYS_IN_MONTH := 30
 const DAYS_IN_YEAR := 360
