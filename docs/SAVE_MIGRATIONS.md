@@ -27,6 +27,7 @@ Testes: `test_save_roundtrip` (ida e volta) e `test_old_save_compat` (save v2 m�
 - v8 → v9 (0.8.0): rivais ganham `launches`, `star`, `rivalry`, `war_until`; 4 rivais novos (Nothing, OnePlus, Lenovo, Valve) entram no fim da lista ao carregar (índices antigos não mudam; ações e histórico preservados).
 - v9 → 0.8.1: sem mudança no save; `data/research.json` ganhou o campo `area` (só apresentação).
 - 0.8.2: sem mudança no save (erros de programação e resumo por país são calculados na hora).
+- 0.8.3: sem mudança no save (logo nos aparelhos usa o logotipo já salvo).
 - v4 → 0.4.1: novos campos `cash_start`, `cash_flow_last`, `cash_items`, `cash_items_last` (padrão: caixa atual / vazios).
 - Empréstimo, bolsa e obras passam a ser movimentos de caixa fora do lucro (antes contavam como receita/despesa).
 

@@ -78,7 +78,7 @@ func _look_row(parent: Control, title: String, key: String, items: Array) -> voi
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.custom_minimum_size.x = 0
 		b.clip_text = true
-		b.add_theme_font_size_override("font_size", 22)
+		b.add_theme_font_size_override("font_size", 23)
 		g.add_child(b)
 
 func _build_look(parent: Control) -> void:
@@ -104,7 +104,7 @@ func _build_look(parent: Control) -> void:
 			"primary" if curw == str(w.id) else "normal", 66)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.custom_minimum_size.x = 0
-		b.add_theme_font_size_override("font_size", 22)
+		b.add_theme_font_size_override("font_size", 23)
 		wg.add_child(b)
 	_look_row(v, "Ícones", "icons", L.icons)
 	_look_row(v, "Dock", "dock", L.docks)
@@ -193,7 +193,7 @@ func _build_os(parent: Control) -> void:
 			fb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			fb.clip_text = true
 			fb.disabled = why != "" and not on
-			fb.add_theme_font_size_override("font_size", 21)
+			fb.add_theme_font_size_override("font_size", 23)
 			fb.tooltip_text = str(ft.desc)
 			fg.add_child(fb)
 		v.add_child(UI.wrap("Cada recurso ativo soma pontos ao foco do sistema (bônus de qualidade por categoria). Ative até %d por vez; os já comprados podem ser trocados de graça." % c.os_feature_slots(), 20, Color("9fc0e8")))

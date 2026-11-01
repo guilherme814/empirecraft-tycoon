@@ -16,7 +16,7 @@ func _ready() -> void:
 	await _sheet("watch", "watch", specs, 0.5, [
 		{"face": "digital", "band": "silicone", "crown": "classic"}, {"face": "analog", "band": "link", "crown": "dial"},
 		{"face": "minimal", "band": "nylon", "crown": "dual"}, {"face": "analog", "band": "leather", "crown": "none", "shape": "round"}], c)
-	await _sheet("laptop", "laptop", specs, 0.4, [
+	await _sheet("laptop", "laptop", specs, PI + 0.4, [
 		{"kbd": "standard", "webcam": "dot", "lid": "logo"}, {"kbd": "round", "webcam": "notch", "lid": "stripe"},
 		{"kbd": "split", "webcam": "bar", "lid": "ring", "features": ["backlit"]}, {"kbd": "standard", "webcam": "none", "lid": "plain"}], c)
 	await _sheet("console", "console", specs, 0.4, [
@@ -32,6 +32,8 @@ func _sheet(name: String, cat: String, specs: Dictionary, yaw: float, variants: 
 	for v in variants:
 		var d: Dictionary = c.default_design(cat)
 		d["brand_name"] = "AURORA"
+		d["logo_symbol"] = "shield"
+		d["logo_color"] = "ff9a2e"
 		for k in v:
 			d[k] = v[k]
 		d["color"] = ["graphite", "blue", "silver", "red"][randi() % 4]

@@ -91,7 +91,7 @@ func rebuild() -> void:
 	for i in STEPS.size():
 		var b := UI.button("%d  %s" % [i + 1, STEPS[i]], func(): _go(i), "info" if i == _step else "normal", 60)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.add_theme_font_size_override("font_size", 22)
+		b.add_theme_font_size_override("font_size", 23)
 		st_row.add_child(b)
 
 	var tabs := GridContainer.new()
@@ -104,7 +104,7 @@ func rebuild() -> void:
 			0, str(k.id) if unlocked else "lock", "nav")
 		b.disabled = not unlocked
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.add_theme_font_size_override("font_size", 21)
+		b.add_theme_font_size_override("font_size", 23)
 		tabs.add_child(b)
 
 	match _step:
@@ -138,7 +138,7 @@ func _opt(text: String, selected: bool, locked: String, cb: Callable) -> Button:
 	b.clip_text = true
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.custom_minimum_size.x = 0
-	b.add_theme_font_size_override("font_size", 22)
+	b.add_theme_font_size_override("font_size", 23)
 	if locked != "":
 		_locked_hints[locked] = true
 	return b
@@ -450,6 +450,8 @@ func live() -> void:
 func _view_design(design: Dictionary, os_id: String) -> Dictionary:
 	var d := design.duplicate()
 	d["brand_name"] = company.company_name
+	d["logo_symbol"] = str(company.logo.get("symbol", ""))
+	d["logo_color"] = str(company.logo.get("c1", "ff9a2e"))
 	if os_id == "own":
 		d["accent"] = company.os_accent()
 		d["wall"] = str(company.os_look().wall)   # papel de parede escolhido no sistema próprio

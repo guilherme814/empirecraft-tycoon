@@ -203,6 +203,39 @@ func _feature_dots(parent: Node3D, pos: Vector3, rot: Vector3 = Vector3.ZERO) ->
 	for i in feats.size():
 		_add(parent, _cyl(0.022, 0.01, 10), _glow_mat(Color("4cd18a"), 1.4), pos + Vector3(float(i) * 0.06, 0, 0), rot)
 
+## Símbolo do logotipo da empresa como uma placa plana brilhante (frente em +Z do pai).
+func _logo_mark(parent: Node3D, size: float, color: Color, pos: Vector3, rot_deg: Vector3 = Vector3.ZERO) -> void:
+	var sym := str(_design.get("logo_symbol", ""))
+	if sym == "" or not bool(_design.get("brand", true)):
+		return
+	var pts := Identity.points(sym)
+	var tri := Geometry2D.triangulate_polygon(pts)
+	if tri.is_empty():
+		return
+	var verts := PackedVector3Array()
+	var norms := PackedVector3Array()
+	var idx := PackedInt32Array()
+	for p in pts:
+		verts.append(Vector3(p.x * size, -p.y * size, 0.0))
+		norms.append(Vector3(0, 0, 1))
+	for i in range(0, tri.size(), 3):
+		# os dois sentidos: a placa é visível dos dois lados
+		idx.append_array([tri[i], tri[i + 1], tri[i + 2]])
+		idx.append_array([tri[i], tri[i + 2], tri[i + 1]])
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_NORMAL] = norms
+	arr[Mesh.ARRAY_INDEX] = idx
+	var m := ArrayMesh.new()
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	var mat := _glow_mat(color, 0.9)
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_add(parent, m, mat, pos, rot_deg)
+
+func _logo_color() -> Color:
+	return Identity.color(str(_design.get("logo_color", "ff9a2e")))
+
 func _brand_text() -> String:
 	return str(_design.get("brand_name", "")).to_upper()
 
@@ -357,6 +390,7 @@ func _phone(s: Dictionary) -> void:
 		Vector3(0, -0.4, -t * 0.5 - 0.003))
 	if bool(_design.get("brand", true)) and _brand_text() != "":
 		_text(self, _brand_text(), 0.075, _trim_color(), Vector3(0, -0.12, -t * 0.5 - 0.004), Vector3(0, 180, 0))
+	_logo_mark(self, 0.055, _logo_color(), Vector3(0, -0.02, -t * 0.5 - 0.004), Vector3(0, 180, 0))
 	_feature_dots(self, Vector3(-0.15, -0.58, -t * 0.5 - 0.006), Vector3(90, 0, 0))
 
 ## Botões laterais conforme o estilo escolhido.
@@ -607,6 +641,8 @@ func _laptop(s: Dictionary) -> void:
 			pass
 		_:
 			_add(hinge, _cyl(0.11, 0.008, 24), lid_glow, Vector3(0, lid_h * 0.5, -0.03), Vector3(90, 0, 0))
+	if _opt("lid", "logo") != "plain":
+		_logo_mark(hinge, 0.07, Color("ffffff") if _opt("lid", "logo") == "logo" else _logo_color(), Vector3(0, lid_h * 0.5, -0.036), Vector3(0, 180, 0))
 	if bool(_design.get("brand", true)) and _brand_text() != "":
 		_text(hinge, _brand_text(), 0.08, _trim_color(), Vector3(0, lid_h * 0.5 - 0.22, -0.032), Vector3(0, 180, 0))
 	_feature_dots(hinge, Vector3(-0.3, lid_h * 0.5 - 0.35, -0.034), Vector3(90, 0, 0))
@@ -675,6 +711,7 @@ func _console(s: Dictionary) -> void:
 		_add(body, _box(Vector3(0.1, 0.03, 0.012)), _glow_mat(Color("4cd18a"), 0.9), Vector3(-0.72 + float(i) * 0.14, -ht * 0.12, d * 0.5 + 0.002))
 	if bool(_design.get("brand", true)) and _brand_text() != "":
 		_text(body, _brand_text(), 0.07, _trim_color(), Vector3(-0.45, top + 0.004, 0.3), Vector3(-90, 0, 0))
+	_logo_mark(body, 0.05, _logo_color(), Vector3(-0.8, top + 0.005, 0.3), Vector3(-90, 0, 0))
 	_feature_dots(body, Vector3(-0.6, top + 0.01, 0.35))
 	# controle ao lado
 	var pad := Node3D.new()

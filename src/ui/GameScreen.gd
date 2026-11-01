@@ -324,7 +324,7 @@ func _fill_notifs() -> void:
 		h.add_child(UI.icon("bell", 28, cs.border_color))
 		var t := UI.wrap(str(e.text), 24, Palette.TEXT if unread else Palette.MUTED)
 		h.add_child(t)
-		h.add_child(UI.label(Fmt.date(int(e.day)), 20, Palette.MUTED))
+		h.add_child(UI.label(Fmt.date(int(e.day)), 23, Palette.MUTED))
 		list.add_child(card)
 	if shown == 0:
 		list.add_child(UI.wrap("Nenhuma notificação por aqui.", 26, Palette.MUTED))

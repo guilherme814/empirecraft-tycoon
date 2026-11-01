@@ -76,16 +76,21 @@ func rebuild() -> void:
 	g.columns = 2
 	g.add_theme_constant_override("h_separation", 8)
 	g.add_theme_constant_override("v_separation", 8)
+	var locked_notes: Array = []
 	for ch in GameData.marketing().channels:
 		var why := Marketing.channel_blocker(c, str(ch.id))
-		var txt := "%s · %s/d" % [str(ch.name), Fmt.money(float(ch.cost))] if why == "" else "%s  (%s)" % [str(ch.name), why]
+		if why != "":
+			locked_notes.append("%s: %s" % [str(ch.name), why])
+		var txt := "%s · %s/d" % [str(ch.name), Fmt.money(float(ch.cost))] if why == "" else str(ch.name)
 		var b2 := UI.button(txt, func(): _channel = str(ch.id); _touch(), "primary" if str(ch.id) == _channel and why == "" else "normal", 64, 0, "lock" if why != "" else "")
 		b2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b2.disabled = why != ""
 		b2.clip_text = true
-		b2.add_theme_font_size_override("font_size", 21)
+		b2.add_theme_font_size_override("font_size", 23)
 		g.add_child(b2)
 	_form.add_child(g)
+	if not locked_notes.is_empty():
+		_form.add_child(UI.wrap("Bloqueados — " + " · ".join(locked_notes), 22, Color("9fc0e8")))
 	var chd := Marketing.channel(_channel)
 	if not chd.is_empty():
 		_form.add_child(UI.wrap(str(chd.desc), 21, Color("9fc0e8")))
