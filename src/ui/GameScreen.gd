@@ -226,11 +226,11 @@ func _refresh_all() -> void:
 	if _logo_v.logo != c.logo:
 		_logo_v.setup(c.logo, 56.0)
 	_name_l.add_theme_color_override("font_color", Color(str(c.logo.c1)))
-	_money_l.text = Fmt.money(c.money)
+	_money_l.text = "R$ ∞" if c.sandbox else Fmt.money(c.money)
 	_money_l.add_theme_color_override("font_color", Palette.GOOD if c.money >= 0.0 else Palette.BAD)
 	_date_l.text = Fmt.date(c.day)
 	_rep_l.text = "Rep. %d" % int(c.reputation)
-	_rp_l.text = "PP %d" % int(c.research_points)
+	_rp_l.text = "PP ∞" if c.sandbox else "PP %d" % int(c.research_points)
 	if _pages.has(_current):
 		_pages[_current].refresh()
 	if c.game_over and _overlay == null:
@@ -264,6 +264,9 @@ func _open_menu() -> void:
 	_overlay = _modal("Menu")
 	var v: VBoxContainer = _overlay.get_meta("box")
 	v.add_child(UI.button("Continuar jogando", _close_overlay, "primary", 90))
+	var sb_on: bool = Game.company.sandbox
+	v.add_child(UI.button("Modo sandbox: " + ("LIGADO (tocar para desligar)" if sb_on else "desligado (dinheiro e pesquisa infinitos)"),
+		func(): Game.company.set_sandbox(not sb_on); Game.changed.emit(); _close_overlay(), "info" if sb_on else "normal", 90))
 	v.add_child(UI.button("Salvar", func(): Game.save(); Game.notice.emit("Jogo salvo.", "good"); _close_overlay(), "normal", 90))
 	v.add_child(UI.button("Salvar e voltar ao menu", _to_menu, "normal", 90))
 

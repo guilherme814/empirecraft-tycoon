@@ -10,8 +10,10 @@ signal ui_request(kind: String, pid: int)   # "launch" | "reviews": a tela princ
 var company: Company = null
 var _last_autosave_day: int = 0
 
-func new_game(company_name: String) -> void:
+func new_game(company_name: String, sandbox: bool = false) -> void:
 	company = Company.new()
+	if sandbox:
+		company.set_sandbox(true)
 	company.company_name = company_name if company_name.strip_edges() != "" else "Minha Empresa"
 	company.add_log("Bem-vindo à %s! Contrate uma equipe e desenvolva seu primeiro produto." % company.company_name, "info")
 	_attach()
@@ -30,7 +32,14 @@ func _attach() -> void:
 		company.log_added.connect(_on_log)
 	if not company.review_ready.is_connected(_on_review):
 		company.review_ready.connect(_on_review)
+	if not changed.is_connected(_on_changed):
+		changed.connect(_on_changed)
 	company_changed.emit()
+
+## Após qualquer ação do jogador, o sandbox repõe caixa e pesquisa.
+func _on_changed() -> void:
+	if company != null:
+		company.sandbox_refill()
 
 func _on_review(pid: int) -> void:
 	ui_request.emit("reviews", pid)

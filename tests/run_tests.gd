@@ -31,6 +31,7 @@ func _initialize() -> void:
 	test_identity_and_rivals()
 	test_device_variants()
 	test_logo_symbols()
+	test_sandbox()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -569,3 +570,18 @@ func test_logo_symbols() -> void:
 	for sy in syms:
 		var pts := Identity.points(str(sy.id))
 		check(Geometry2D.triangulate_polygon(pts).size() >= 3, "símbolo %s é um polígono simples" % str(sy.id))
+
+func test_sandbox() -> void:
+	var c := Company.new()
+	check(not c.sandbox, "sandbox desligado por padrão")
+	c.money = 10.0
+	c.research_points = 0.0
+	c.set_sandbox(true)
+	check(c.money >= Company.SANDBOX_MONEY and c.research_points >= Company.SANDBOX_RP, "sandbox repõe caixa e pesquisa")
+	c.money = 5.0
+	c.advance_day()
+	check(c.money >= Company.SANDBOX_MONEY, "sandbox repõe o caixa a cada dia")
+	var c2 := Company.from_dict(c.to_dict())
+	check(c2.sandbox, "sandbox é salvo e carregado")
+	var c3 := Company.from_dict({"version": 6, "name": "Velha", "day": 1, "money": 1.0})
+	check(not c3.sandbox, "save antigo sem sandbox continua desligado")

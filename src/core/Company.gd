@@ -9,7 +9,9 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
+const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
+const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
 const LOAN_RATE := 0.012
 const MAX_DEALS := 4
@@ -30,6 +32,7 @@ var rng := RandomNumberGenerator.new()
 var seed_value: int = 0
 var next_id: int = 1
 var game_over: bool = false
+var sandbox: bool = false         # dinheiro e pontos de pesquisa infinitos
 var log_entries: Array = []       # {day, text, kind}
 var income_month: float = 0.0
 var expense_month: float = 0.0
@@ -90,6 +93,21 @@ func _income(v: float, cat: String = "other") -> void:
 func _cash_in(v: float, cat: String) -> void:
 	money += v
 	cash_items[cat] = float(cash_items.get(cat, 0.0)) + v
+
+## Liga/desliga o modo sandbox. Ligado, caixa e pesquisa nunca ficam abaixo do piso.
+func set_sandbox(on: bool) -> void:
+	sandbox = on
+	if on:
+		sandbox_refill()
+		add_log("Modo sandbox ativado: dinheiro e pontos de pesquisa infinitos.", "info")
+	else:
+		add_log("Modo sandbox desativado.", "info")
+
+func sandbox_refill() -> void:
+	if not sandbox:
+		return
+	money = maxf(money, SANDBOX_MONEY)
+	research_points = maxf(research_points, SANDBOX_RP)
 
 func _cash_out(v: float, cat: String) -> void:
 	money -= v
@@ -741,6 +759,7 @@ func _sell() -> void:
 func advance_day() -> void:
 	if game_over:
 		return
+	sandbox_refill()
 	day += 1
 	_develop()
 	_research_tick()
@@ -757,6 +776,7 @@ func advance_day() -> void:
 		e.morale = lerpf(e.morale, 75.0, 0.02)
 	if day % Rules.DAYS_IN_MONTH == 0:
 		_month_end()
+	sandbox_refill()
 	day_advanced.emit(day)
 
 ## Confirma identidade e decoração novas; cobra só o que mudou.
@@ -1369,6 +1389,7 @@ func to_dict() -> Dictionary:
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
 		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores, "logo": logo, "decor": decor,
+		"sandbox": sandbox,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1407,6 +1428,7 @@ static func from_dict(d: Dictionary) -> Company:
 		st["carry"] = st.get("carry", {})
 		c.stores.append(st)
 	c.game_over = bool(d.get("game_over", false))
+	c.sandbox = bool(d.get("sandbox", false))
 	c.log_entries = d.get("log", []).duplicate(true)
 	c.income_month = float(d.get("income_month", 0.0))
 	c.expense_month = float(d.get("expense_month", 0.0))

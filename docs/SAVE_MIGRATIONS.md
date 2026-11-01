@@ -22,6 +22,7 @@ Testes: `test_save_roundtrip` (ida e volta) e `test_old_save_compat` (save v2 m�
 ## Proteção dos saves
 - A cada gravação, o save anterior vira `save_0.bak.json`. Se o principal estiver corrompido, o jogo carrega o backup.
 - Antes de migrar um save de formato antigo, é criada uma cópia `save_0.v<N>.bak.json` (nunca sobrescrita).
+- v6 → 0.7.1: novo campo `sandbox` (padrão: falso). Ligado, caixa e pontos de pesquisa são repostos a um piso enorme a cada ação e a cada dia.
 - v4 → 0.4.1: novos campos `cash_start`, `cash_flow_last`, `cash_items`, `cash_items_last` (padrão: caixa atual / vazios).
 - Empréstimo, bolsa e obras passam a ser movimentos de caixa fora do lucro (antes contavam como receita/despesa).
 

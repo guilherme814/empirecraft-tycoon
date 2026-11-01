@@ -5,6 +5,9 @@ var _viewer: DeviceViewer
 var _ci: int = 0
 const SHOWCASE := ["phone", "watch", "laptop", "console"]
 
+var _sandbox: bool = false
+var _sandbox_btn: Button
+
 func _ready() -> void:
 	theme = Palette.make_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -54,7 +57,9 @@ func _ready() -> void:
 	_name_edit.max_length = 28
 	v.add_child(_name_edit)
 
+	_sandbox_btn = UI.button("Modo sandbox: desligado", _toggle_sandbox, "normal", 72)
 	v.add_child(UI.button("Novo jogo", _on_new, "primary", 100))
+	v.add_child(_sandbox_btn)
 	var cont := UI.button("Continuar", _on_continue, "normal", 100)
 	cont.disabled = not Saves.has_save()
 	v.add_child(cont)
@@ -71,8 +76,13 @@ func _next_device() -> void:
 	_ci = (_ci + 1) % SHOWCASE.size()
 	_show_device()
 
+func _toggle_sandbox() -> void:
+	_sandbox = not _sandbox
+	_sandbox_btn.text = "Modo sandbox: " + ("LIGADO (dinheiro e pesquisa infinitos)" if _sandbox else "desligado")
+	Palette.style_button(_sandbox_btn, "info" if _sandbox else "normal")
+
 func _on_new() -> void:
-	Game.new_game(_name_edit.text)
+	Game.new_game(_name_edit.text, _sandbox)
 	get_tree().change_scene_to_file("res://src/scenes/GameScreen.tscn")
 
 func _on_continue() -> void:
