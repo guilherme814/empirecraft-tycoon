@@ -15,33 +15,39 @@ var _preview_pid: int = 0
 var _form: VBoxContainer
 var _list: VBoxContainer
 var _viewer: DeviceViewer
+var _stat_holder: VBoxContainer
 var _list_sig: String = "\u0001"
 var _live: Dictionary = {}   # product id -> {"bar": ProgressBar, "label": Label}
 
 func build() -> void:
-	var sc := UI.scroll()
-	add_child(sc)
+	# duas colunas com rolagem independente: o formulário à esquerda e a prévia 3D à direita
 	var cols := UI.hbox(16)
-	cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sc.add_child(cols)
+	cols.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(cols)
+	var lsc := UI.scroll()
+	lsc.size_flags_stretch_ratio = 1.15
+	cols.add_child(lsc)
 	var panel := UI.blueprint(16)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.size_flags_stretch_ratio = 1.15
-	panel.custom_minimum_size.x = 0
 	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	cols.add_child(panel)
+	lsc.add_child(panel)
 	_form = UI.vbox(12)
 	panel.add_child(_form)
+	var rsc := UI.scroll()
+	cols.add_child(rsc)
 	var right := UI.vbox(12)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cols.add_child(right)
+	rsc.add_child(right)
 	var vcard := UI.card(Palette.PANEL_DEEP, 10)
 	right.add_child(vcard)
 	var vbox := UI.vbox(4)
 	vcard.add_child(vbox)
 	vbox.add_child(UI.label("Pré-visualização 3D (arraste para girar)", 22, Palette.MUTED))
 	_viewer = DeviceViewer.new()
+	_viewer.custom_minimum_size.y = 430.0
 	vbox.add_child(_viewer)
+	_stat_holder = UI.vbox(10)
+	right.add_child(_stat_holder)
 	_list = UI.vbox(12)
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.add_child(_list)
@@ -80,10 +86,13 @@ func rebuild() -> void:
 	_form.add_child(head)
 	head.add_child(UI.label("Estúdio de design", 34, Color("bfe0ff")))
 	head.add_child(UI.spacer())
+	var st_row := UI.hbox(8)
+	_form.add_child(st_row)
 	for i in STEPS.size():
-		var b := UI.button(str(i + 1), func(): _go(i), "info" if i == _step else "normal", 60, 66)
-		head.add_child(b)
-	_form.add_child(UI.label(STEPS[_step], 28, Color("ffd9a0")))
+		var b := UI.button("%d  %s" % [i + 1, STEPS[i]], func(): _go(i), "info" if i == _step else "normal", 60)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.add_theme_font_size_override("font_size", 22)
+		st_row.add_child(b)
 
 	var tabs := GridContainer.new()
 	tabs.columns = 4
@@ -104,7 +113,9 @@ func rebuild() -> void:
 		2: _step_hardware()
 		3: _step_system()
 		_: _step_production()
-	_form.add_child(_stat_bar())
+	UI.clear(_stat_holder)
+	_stat_holder.add_child(_stat_bar())
+	_stat_holder.add_child(_axis_bars())
 
 	var nav := UI.hbox(10)
 	_form.add_child(nav)
@@ -413,6 +424,24 @@ func _stat_bar() -> Control:
 		v.add_child(UI.label(str(it[1]), 27, it[2]))
 		h.add_child(v)
 	return bar
+
+## Barras das especificações escolhidas (resumo ao vivo ao lado da prévia).
+func _axis_bars() -> Control:
+	var card := UI.card(Color("0f1c38"), 14)
+	var v := UI.vbox(6)
+	card.add_child(v)
+	var cat: Dictionary = GameData.category(_cat_id)
+	var used := company.specs_used(_specs)
+	v.add_child(UI.kv("Especificações", "%d / %d" % [used, company.spec_budget()], Color("8fb4e8"), 22))
+	for a in cat.axes:
+		var val := float(_specs.get(a, 0)) / float(maxi(Rules.SPEC_AXIS_MAX, 1))
+		var row := UI.hbox(10)
+		var l := UI.label(str(GameData.AXIS_LABELS.get(a, a)), 22, Palette.TEXT)
+		l.custom_minimum_size = Vector2(210, 0)
+		row.add_child(l)
+		row.add_child(UI.bar(val, Palette.ACCENT, 14))
+		v.add_child(row)
+	return card
 
 func live() -> void:
 	_update_viewer()

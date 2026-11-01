@@ -152,11 +152,31 @@ static func stepper(name: String, value_text: String, on_minus: Callable, on_plu
 	return row
 
 ## Painel azul de planta técnica (referência visual do estúdio).
+static var _bp_tex: ImageTexture = null
+
+## Painel "estúdio": degradê azul -> violeta com cantos arredondados e borda clara (9-slice).
 static func blueprint(pad: int = 18) -> PanelContainer:
 	var p := PanelContainer.new()
-	var sb := Palette.box(Color("17315c"), 20, pad)
-	sb.border_color = Color("3b6fc4")
-	sb.set_border_width_all(2)
+	if _bp_tex == null:
+		var n := 96
+		var rad := 22.0
+		var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+		var top := Color("17315c")
+		var bot := Color("2b2a6e")
+		for y in n:
+			for x in n:
+				var dx := maxf(rad - float(x), float(x) - (float(n) - 1.0 - rad))
+				var dy := maxf(rad - float(y), float(y) - (float(n) - 1.0 - rad))
+				var dist := Vector2(maxf(dx, 0.0), maxf(dy, 0.0)).length()
+				var col := top.lerp(bot, float(y) / float(n - 1))
+				col = col.lerp(Color("5a7fd8"), clampf(1.0 - absf(dist - rad + 1.0) / 1.5, 0.0, 1.0) * 0.8 if dist > rad - 2.0 else 0.0)
+				col.a = clampf(rad - dist + 0.5, 0.0, 1.0)
+				img.set_pixel(x, y, col)
+		_bp_tex = ImageTexture.create_from_image(img)
+	var sb := StyleBoxTexture.new()
+	sb.texture = _bp_tex
+	sb.set_texture_margin_all(24.0)
+	sb.set_content_margin_all(float(pad))
 	p.add_theme_stylebox_override("panel", sb)
 	return p
 

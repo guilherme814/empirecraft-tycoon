@@ -4,7 +4,7 @@ extends RefCounted
 ## Tudo vem de data/identity.json; combinações controladas, sem editor livre.
 
 static func default_logo() -> Dictionary:
-	return {"symbol": "shield", "c1": "ff9a2e", "c2": "1b2036", "style": "caps"}
+	return {"symbol": "shield", "c1": "ff9a2e", "c2": "1b2036", "style": "caps", "shape": "round", "pattern": "none", "grad": "flat"}
 
 static func default_decor() -> Dictionary:
 	return {"desk": "white", "chair": "common", "pc": "single", "light": "warm", "deco": "plants"}
@@ -25,6 +25,9 @@ static func clean_logo(d: Dictionary) -> Dictionary:
 			out[k] = str(d[k])
 	if _ids(cat.styles).has(str(d.get("style", ""))):
 		out.style = str(d.style)
+	for pair in [["shape", "shapes"], ["pattern", "patterns"], ["grad", "grads"]]:
+		if _ids(cat.get(pair[1], [])).has(str(d.get(pair[0], ""))):
+			out[pair[0]] = str(d[pair[0]])
 	return out
 
 static func clean_decor(d: Dictionary) -> Dictionary:
@@ -78,6 +81,18 @@ static func points(symbol: String) -> PackedVector2Array:
 			return PackedVector2Array([Vector2(0.2, -1), Vector2(-0.6, 0.15), Vector2(-0.05, 0.15), Vector2(-0.25, 1), Vector2(0.6, -0.2), Vector2(0.05, -0.2)])
 		"triangle":
 			return PackedVector2Array([Vector2(0, -0.95), Vector2(0.95, 0.8), Vector2(-0.95, 0.8)])
+		"pentagon":
+			return _ngon(5, 0.97, -PI / 2.0)
+		"octagon":
+			return _ngon(8, 0.95, PI / 8.0)
+		"arrow":
+			return PackedVector2Array([Vector2(0, -1), Vector2(0.85, 0.0), Vector2(0.38, 0.0), Vector2(0.38, 0.95), Vector2(-0.38, 0.95), Vector2(-0.38, 0.0), Vector2(-0.85, 0.0)])
+		"cross":
+			return PackedVector2Array([Vector2(-0.3, -0.95), Vector2(0.3, -0.95), Vector2(0.3, -0.3), Vector2(0.95, -0.3), Vector2(0.95, 0.3), Vector2(0.3, 0.3), Vector2(0.3, 0.95), Vector2(-0.3, 0.95), Vector2(-0.3, 0.3), Vector2(-0.95, 0.3), Vector2(-0.95, -0.3), Vector2(-0.3, -0.3)])
+		"chevron":
+			return PackedVector2Array([Vector2(-0.9, -0.9), Vector2(-0.1, -0.9), Vector2(0.9, 0.0), Vector2(-0.1, 0.9), Vector2(-0.9, 0.9), Vector2(0.1, 0.0)])
+		"play":
+			return PackedVector2Array([Vector2(-0.7, -0.95), Vector2(0.95, 0.0), Vector2(-0.7, 0.95)])
 		"crown":
 			return PackedVector2Array([Vector2(-0.9, 0.7), Vector2(-0.9, -0.5), Vector2(-0.45, 0.0), Vector2(0, -0.8), Vector2(0.45, 0.0), Vector2(0.9, -0.5), Vector2(0.9, 0.7)])
 	return _ngon(6, 0.95, -PI / 2.0)
@@ -100,3 +115,11 @@ static func format_name(name: String, style: String) -> String:
 				out += str(ch) + "\u2009"
 			return out.strip_edges()
 		_: return name
+
+## Cor de marca para exibir empresas reais na interface (distintivo com inicial).
+static func brand_color(name: String) -> Color:
+	var m := {"Apple": "d7dbe4", "Samsung": "3f6fc4", "Google": "4cd18a", "Microsoft": "5aa9ff", "Xiaomi": "ff7a3d",
+		"Huawei": "ff5d6c", "Sony": "c9ced8", "Intel": "5aa9ff", "NVIDIA": "76c442", "Nintendo": "ff4d57"}
+	if m.has(name):
+		return Color(str(m[name]))
+	return Color.from_hsv(float(abs(name.hash()) % 360) / 360.0, 0.55, 0.85)

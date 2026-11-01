@@ -66,7 +66,13 @@ func rebuild() -> void:
 	list.sort_custom(func(a, b): return float(a.value) > float(b.value))
 	for i in list.size():
 		var it: Dictionary = list[i]
-		rv.add_child(UI.kv("%d.  %s" % [i + 1, it.name], Fmt.money(float(it.value)), Palette.ACCENT if it.me else Palette.TEXT, 26))
+		var rrow := UI.hbox(12)
+		rrow.add_child(_badge(it, i + 1))
+		var rn := UI.label(str(it.name), 26, Palette.ACCENT if it.me else Palette.TEXT)
+		rrow.add_child(rn)
+		rrow.add_child(UI.spacer())
+		rrow.add_child(UI.label(Fmt.money(float(it.value)), 26, Palette.ACCENT if it.me else Palette.TEXT))
+		rv.add_child(rrow)
 
 	_build_own(c)
 	_body.add_child(UI.heading("Ações dos concorrentes"))
@@ -79,6 +85,27 @@ func rebuild() -> void:
 	for r in m.rivals:
 		grid.add_child(_rival_card(r))
 	_body.add_child(UI.wrap("Preços seguem o valor da empresa (vendas e lucro), com ruído e o humor geral do mercado. Cada compra/venda paga 1% de corretagem.", 21))
+
+## Distintivo: logotipo da sua empresa ou inicial colorida da marca rival.
+func _badge(it: Dictionary, pos: int) -> Control:
+	var box := UI.hbox(8)
+	var pl := UI.label("%d" % pos, 22, Palette.MUTED)
+	pl.custom_minimum_size = Vector2(34, 0)
+	box.add_child(pl)
+	if bool(it.me):
+		box.add_child(LogoView.new().setup(company.logo, 40.0))
+	else:
+		var nm := str(it.name)
+		var col := Identity.brand_color(nm)
+		var pc := PanelContainer.new()
+		pc.custom_minimum_size = Vector2(40, 40)
+		pc.add_theme_stylebox_override("panel", Palette.box(col.darkened(0.55), 10, 0))
+		var lt := UI.label(nm.substr(0, 1), 24, col)
+		lt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		pc.add_child(lt)
+		box.add_child(pc)
+	return box
 
 func _rival_card(r: Dictionary) -> Control:
 	var c := company

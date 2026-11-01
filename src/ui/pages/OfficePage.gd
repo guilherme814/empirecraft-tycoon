@@ -277,6 +277,16 @@ func _fill_edit() -> void:
 		b.add_child(lv)
 		b.pressed.connect(func(): _dl["symbol"] = sid; _draft_changed())
 		sf.add_child(b)
+	for row in [["Forma da placa", "shape", "shapes"], ["Fundo", "grad", "grads"], ["Padrão", "pattern", "patterns"]]:
+		var rk: String = row[1]
+		_pbody.add_child(UI.label(str(row[0]), 24, Palette.MUTED))
+		var rf := HFlowContainer.new()
+		rf.add_theme_constant_override("h_separation", 8)
+		rf.add_theme_constant_override("v_separation", 8)
+		_pbody.add_child(rf)
+		for it in cat.get(str(row[2]), []):
+			var iid: String = it.id
+			rf.add_child(UI.button(str(it.name), func(): _dl[rk] = iid; _draft_changed(), "primary" if iid == str(_dl.get(rk, "")) else "normal", 60))
 	for pair in [["c1", "Cor primária"], ["c2", "Cor secundária"]]:
 		var key: String = pair[0]
 		_pbody.add_child(UI.label(str(pair[1]), 24, Palette.MUTED))

@@ -31,6 +31,30 @@
   {
    "id": "crown",
    "name": "Coroa"
+  },
+  {
+   "id": "pentagon",
+   "name": "Pentágono"
+  },
+  {
+   "id": "octagon",
+   "name": "Octógono"
+  },
+  {
+   "id": "arrow",
+   "name": "Seta"
+  },
+  {
+   "id": "cross",
+   "name": "Cruz"
+  },
+  {
+   "id": "chevron",
+   "name": "Chevron"
+  },
+  {
+   "id": "play",
+   "name": "Play"
   }
  ],
  "colors": [
@@ -176,6 +200,52 @@
      "cost": 12000
     }
    ]
+  }
+ ],
+ "shapes": [
+  {
+   "id": "round",
+   "name": "Arredondado"
+  },
+  {
+   "id": "square",
+   "name": "Quadrado"
+  },
+  {
+   "id": "circle",
+   "name": "Círculo"
+  }
+ ],
+ "patterns": [
+  {
+   "id": "none",
+   "name": "Liso"
+  },
+  {
+   "id": "dots",
+   "name": "Pontos"
+  },
+  {
+   "id": "grid",
+   "name": "Grade"
+  },
+  {
+   "id": "stripes",
+   "name": "Listras"
+  },
+  {
+   "id": "diag",
+   "name": "Diagonal"
+  }
+ ],
+ "grads": [
+  {
+   "id": "flat",
+   "name": "Cor sólida"
+  },
+  {
+   "id": "grad",
+   "name": "Degradê"
   }
  ]
 }
