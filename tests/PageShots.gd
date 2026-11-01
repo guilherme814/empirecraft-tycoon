@@ -46,6 +46,14 @@ func _ready() -> void:
 	await _shot("system_b")
 	screen._open_notifs()
 	await _shot("notifs")
+	screen._close_overlay()
+	await get_tree().process_frame
+	for i in 6:
+		c.market.react_to_launch("phone", 500.0, 600.0, c.day + i)
+	screen._show_page("market")
+	screen._pages["market"]._sel = "Apple"
+	screen._pages["market"].rebuild()
+	await _shot("market")
 	get_tree().quit()
 
 func _shot(n: String) -> void:

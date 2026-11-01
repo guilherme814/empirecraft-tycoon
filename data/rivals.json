@@ -140,6 +140,61 @@
    "tech": 1.0,
    "value": 12000000.0,
    "desc": "Consoles acessíveis e criativos, ciclos longos."
+  },
+  {
+   "name": "Nothing",
+   "strategy": "innovator",
+   "aggr": 0.9,
+   "focus": [
+    "phone",
+    "watch"
+   ],
+   "price_mult": 1.05,
+   "q_mult": 1.07,
+   "tech": 1.05,
+   "value": 9000000.0,
+   "desc": "Design transparente e ousado; lança pouco, mas chama atenção."
+  },
+  {
+   "name": "OnePlus",
+   "strategy": "value",
+   "aggr": 1.1,
+   "focus": [
+    "phone",
+    "watch"
+   ],
+   "price_mult": 0.85,
+   "q_mult": 0.98,
+   "tech": 1.02,
+   "value": 11000000.0,
+   "desc": "Desempenho rápido por um preço menor que os grandes."
+  },
+  {
+   "name": "Lenovo",
+   "strategy": "volume",
+   "aggr": 1.2,
+   "focus": [
+    "laptop"
+   ],
+   "price_mult": 0.88,
+   "q_mult": 0.97,
+   "tech": 1.0,
+   "value": 22000000.0,
+   "desc": "Notebooks para todos os bolsos, de escritório a gamer."
+  },
+  {
+   "name": "Valve",
+   "strategy": "innovator",
+   "aggr": 0.7,
+   "focus": [
+    "console",
+    "laptop"
+   ],
+   "price_mult": 1.15,
+   "q_mult": 1.08,
+   "tech": 1.1,
+   "value": 15000000.0,
+   "desc": "Portáteis de jogos e plataforma própria; poucos lançamentos, muito fiéis."
   }
  ]
 }

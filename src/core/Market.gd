@@ -12,7 +12,9 @@ var sentiment: float = 1.0      # confiança do consumidor
 var inflation: float = 0.025    # inflação anual esperada
 var supply_chain: float = 1.0   # saúde da cadeia de suprimentos (menor = escassez)
 var fashion: Dictionary = {}    # cor da moda: {color, until}
+var news: Array = []            # notícias dos rivais a publicar: {text, kind}
 var _next_id: int = 1
+var _today: int = 0
 
 func _init(p_rng: RandomNumberGenerator) -> void:
 	rng = p_rng
@@ -101,7 +103,20 @@ func launch_competitor(cat_id: String, day: int) -> Dictionary:
 	var c := {"id": _next_id, "company": r.name, "rival": ri, "cat": cat_id, "quality": q, "price": price, "born": day}
 	_next_id += 1
 	comp_products.append(c)
+	_record_launch(ri, c)
 	return c
+
+## Guarda o lançamento no histórico do rival e atualiza o produto-estrela (melhor qualidade).
+func _record_launch(ri: int, c: Dictionary) -> void:
+	var r: Dictionary = rivals[ri]
+	_ensure_rival(r)
+	var rec := {"day": int(c.born), "cat": str(c.cat), "quality": float(c.quality), "price": float(c.price)}
+	var h: Array = r.launches
+	h.append(rec)
+	if h.size() > 8:
+		h.pop_front()
+	if r.star.is_empty() or float(c.quality) >= float(r.star.quality) or int(c.born) - int(r.star.day) > 720:
+		r.star = rec.duplicate()
 
 # ───────── empresas rivais e bolsa ─────────
 
@@ -111,12 +126,35 @@ const HIST_LEN := 120
 func seed_rivals() -> void:
 	rivals.clear()
 	for d in GameData.rivals():
-		var value: float = float(d.get("value", rng.randf_range(4.0e6, 11.0e6))) * rng.randf_range(0.9, 1.1)
-		rivals.append({"name": d.name, "aggr": float(d.aggr), "focus": d.focus, "strategy": d.get("strategy", ""),
-			"price_mult": float(d.get("price_mult", 1.0)), "q_mult": float(d.get("q_mult", 1.0)), "desc": d.get("desc", ""),
-			"tech": float(d.get("tech", 1.0)), "cash": value * 0.25,
-			"value": value, "rev_year": value / 6.0, "rev_month": 0.0, "shock": 0.0,
-			"price": value / SHARES, "hist": [value / SHARES]})
+		rivals.append(_make_rival(d))
+
+func _make_rival(d: Dictionary) -> Dictionary:
+	var value: float = float(d.get("value", rng.randf_range(4.0e6, 11.0e6))) * rng.randf_range(0.9, 1.1)
+	return {"name": d.name, "aggr": float(d.aggr), "focus": d.focus, "strategy": d.get("strategy", ""),
+		"price_mult": float(d.get("price_mult", 1.0)), "q_mult": float(d.get("q_mult", 1.0)), "desc": d.get("desc", ""),
+		"tech": float(d.get("tech", 1.0)), "cash": value * 0.25,
+		"value": value, "rev_year": value / 6.0, "rev_month": 0.0, "shock": 0.0,
+		"price": value / SHARES, "hist": [value / SHARES],
+		"launches": [], "star": {}, "rivalry": 0.0, "war_until": 0}
+
+## Garante os campos novos em rivais de saves antigos.
+func _ensure_rival(r: Dictionary) -> void:
+	if not r.has("launches"):
+		r["launches"] = []
+	if not r.has("star"):
+		r["star"] = {}
+	if not r.has("rivalry"):
+		r["rivalry"] = 0.0
+	if not r.has("war_until"):
+		r["war_until"] = 0
+
+## Rivais novos do catálogo entram em saves antigos (sempre no fim: os índices não mudam).
+func sync_rivals() -> void:
+	for d in GameData.rivals():
+		if rival_index(str(d.name)) < 0:
+			rivals.append(_make_rival(d))
+	for r in rivals:
+		_ensure_rival(r)
 
 ## Aceita foco antigo (texto) e novo (lista de categorias).
 static func focus_has(r: Dictionary, cat_id: String) -> bool:
@@ -170,8 +208,97 @@ func month_end() -> void:
 		r.value = lerpf(float(r.value), target, 0.2)
 		r.tech = float(r.tech) + 0.004 * float(r.aggr) + (0.002 if profit > 0.0 else 0.0)
 		r.rev_month = 0.0
+		_ensure_rival(r)
+		r.rivalry = float(r.rivalry) * 0.9
 		if rng.randf() < 0.08:
 			r.shock = rng.randf_range(-0.2, 0.18)
+	for i in rivals.size():
+		if rng.randf() < 0.05:
+			_rival_event(i, _today)
+
+## Reação dos rivais a um lançamento do jogador. Cada um age conforme a estratégia:
+## premium contra-ataca com um produto melhor, value baixa preços, volume lança rápido,
+## innovator acelera P&D. Devolve as notícias geradas.
+func react_to_launch(cat_id: String, quality: float, price: float, day: int) -> Array:
+	var out: Array = []
+	var best := maxf(best_quality(cat_id), 1.0)
+	var threat := clampf(quality / best, 0.0, 2.0)
+	if threat < 0.85:
+		return out
+	var cat_name := str(GameData.category(cat_id).get("name", cat_id))
+	for i in rivals.size():
+		var r: Dictionary = rivals[i]
+		_ensure_rival(r)
+		if not focus_has(r, cat_id):
+			continue
+		r.rivalry = minf(100.0, float(r.rivalry) + 12.0 * threat)
+		var chance := clampf(0.22 * float(r.aggr) * threat + float(r.rivalry) / 400.0, 0.0, 0.85)
+		if rng.randf() > chance:
+			continue
+		match str(r.strategy):
+			"value":
+				var cut := rng.randf_range(0.08, 0.15)
+				_cut_prices(i, cat_id, 1.0 - cut)
+				r.war_until = day + 60
+				out.append({"text": "%s baixou os preços de %s em %d%% para segurar o mercado" % [r.name, cat_name, int(cut * 100.0)], "kind": "bad"})
+			"innovator":
+				r.tech = float(r.tech) + 0.03
+				out.append({"text": "%s acelerou a pesquisa e desenvolvimento após o seu lançamento" % r.name, "kind": "bad"})
+			"volume":
+				var c := launch_competitor(cat_id, day)
+				c.rival = i
+				c.company = r.name
+				c.price = minf(float(c.price), price * 0.95)
+				out.append({"text": "%s respondeu rápido com um novo aparelho de %s mais barato" % [r.name, cat_name], "kind": "bad"})
+			_:
+				var c2 := launch_competitor(cat_id, day)
+				c2.rival = i
+				c2.company = r.name
+				c2.quality = maxf(float(c2.quality), quality * 1.04)
+				out.append({"text": "%s contra-atacou com um novo %s de qualidade superior" % [r.name, cat_name], "kind": "bad"})
+	return out
+
+func _cut_prices(ri: int, cat_id: String, mult: float) -> void:
+	var cat: Dictionary = GameData.category(cat_id)
+	for c in comp_products:
+		if int(c.rival) == ri and c.cat == cat_id:
+			c.price = maxf(float(c.price) * mult, float(cat.fair_price) * 0.3)
+
+## Evento aleatório de um rival no fim do mês (avanço tecnológico, recall ou campanha).
+func _rival_event(i: int, day: int) -> void:
+	var r: Dictionary = rivals[i]
+	var roll := rng.randf()
+	if roll < 0.4:
+		r.tech = float(r.tech) + 0.05
+		news.append({"text": "%s anunciou um avanço tecnológico e promete aparelhos melhores" % r.name, "kind": "info"})
+	elif roll < 0.7:
+		r.shock = -rng.randf_range(0.12, 0.22)
+		for c in comp_products:
+			if int(c.rival) == i and day - int(c.born) < 200:
+				c.quality = float(c.quality) * 0.92
+		news.append({"text": "%s sofreu um recall e perdeu a confiança de parte dos clientes" % r.name, "kind": "good"})
+	else:
+		r.shock = rng.randf_range(0.08, 0.16)
+		r.rev_month = float(r.rev_month) * 1.1
+		news.append({"text": "%s fez uma grande campanha de marketing e as ações subiram" % r.name, "kind": "info"})
+
+## Participação de mercado simulada na categoria: [{name, share, mine}] em ordem decrescente.
+func rival_shares(cat_id: String, day: int, my_attr: float = 0.0) -> Array:
+	var per := {}
+	var total := maxf(my_attr, 0.0)
+	for c in comp_products:
+		if c.cat != cat_id:
+			continue
+		var a := comp_attr(c, day)
+		per[str(c.company)] = float(per.get(str(c.company), 0.0)) + a
+		total += a
+	var res: Array = []
+	for k in per:
+		res.append({"name": k, "share": float(per[k]) / maxf(total, 0.0001), "mine": false})
+	if my_attr > 0.0:
+		res.append({"name": "Você", "share": my_attr / maxf(total, 0.0001), "mine": true})
+	res.sort_custom(func(a, b): return float(a.share) > float(b.share))
+	return res
 
 ## Preço das ações: tende ao valor da empresa, com ruído, humor geral e choques.
 func price_tick() -> void:
@@ -187,6 +314,7 @@ func price_tick() -> void:
 			h.pop_front()
 
 func tick(day: int) -> void:
+	_today = day
 	price_tick()
 	if fashion.is_empty() or day >= int(fashion.until):
 		var cols: Array = GameData.designs().colors
@@ -220,6 +348,7 @@ func load_dict(d: Dictionary) -> void:
 	rivals = d.get("rivals", []).duplicate(true)
 	if rivals.is_empty():
 		seed_rivals()
+	sync_rivals()
 	for c in comp_products:
 		if not c.has("rival"):
 			c["rival"] = maxi(0, rival_index(str(c.get("company", ""))))

@@ -2,8 +2,8 @@ class_name Rules
 extends RefCounted
 ## Constantes de balanceamento. Mexa aqui para ajustar a economia do jogo.
 
-const VERSION := "0.7.2"
-const VERSION_CODE := 14
+const VERSION := "0.8.0"
+const VERSION_CODE := 15
 const START_YEAR := 2010
 const DAYS_IN_MONTH := 30
 const DAYS_IN_YEAR := 360

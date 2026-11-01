@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 8
+const SAVE_VERSION := 9
 const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
 const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
@@ -647,6 +647,8 @@ func release(prod_id: int, price: float = -1.0, promise: float = 0.0) -> Diction
 		add_log("%d %s compraram %s no lançamento (lealdade %d%%)" % [fans, "fã" if fans == 1 else "fãs", p.pname, int(loyalty)], "good", "success")
 	add_log("%s foi lançado por %s!" % [p.pname, Fmt.money(p.price)], "good", "release")
 	Reviews.launch(self, p)
+	for n in market.react_to_launch(p.category, effective_quality(p), p.price, day):
+		add_log(str(n.text), str(n.kind))
 	return _ok()
 
 func set_price(prod_id: int, price: float) -> Dictionary:
@@ -774,6 +776,9 @@ func advance_day() -> void:
 	_sell()
 	Stores.daily(self)
 	market.tick(day)
+	for n in market.news:
+		add_log(str(n.text), str(n.kind))
+	market.news.clear()
 	stocks.daily(self)
 	for e in staff:
 		e.morale = lerpf(e.morale, 75.0, 0.02)
@@ -1396,6 +1401,14 @@ func company_value() -> float:
 
 func get_product(prod_id: int) -> Product:
 	return _find_in(products, prod_id)
+
+## Participação de mercado simulada na categoria, incluindo seus produtos à venda.
+func category_shares(cat_id: String) -> Array:
+	var mine := 0.0
+	for p in released_products():
+		if p.category == cat_id:
+			mine += attractiveness(p)
+	return market.rival_shares(cat_id, day, mine)
 
 func released_products() -> Array:
 	return products.filter(func(p): return p.state == Product.STATE_RELEASED)

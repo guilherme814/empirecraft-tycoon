@@ -29,6 +29,7 @@ func _initialize() -> void:
 	test_updater_and_backups()
 	test_office_layout()
 	test_identity_and_rivals()
+	test_rival_reactions()
 	test_device_variants()
 	test_logo_symbols()
 	test_sandbox()
@@ -233,7 +234,7 @@ func test_v3_systems() -> void:
 	# bolsa e rivais
 	for i in 200:
 		c.advance_day()
-	check(c.market.rivals.size() == 10, "10 rivais")
+	check(c.market.rivals.size() == 14, "14 rivais")
 	for rv in c.market.rivals:
 		check(float(rv.price) > 0.0 and float(rv.value) > 0.0, "rival com preço/valor positivos")
 	check(c.stocks.value > 0.0, "valor da empresa calculado")
@@ -252,7 +253,7 @@ func test_v3_systems() -> void:
 	# save/load completo
 	var c2 := Company.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	check(c2 != null and c2.factory_level == 1 and int(c2.own_os.get("version", 0)) >= 1, "save mantém fábrica e SO")
-	check(c2.market.rivals.size() == 10 and c2.deal_active("retail"), "save mantém rivais e acordos")
+	check(c2.market.rivals.size() == 14 and c2.deal_active("retail"), "save mantém rivais e acordos")
 	check(c2.products[0].os_id == "lumen" and c2.products[0].design.get("shape", "") == "fold", "save mantém design do produto")
 	for i in 60:
 		c2.advance_day()
@@ -606,3 +607,37 @@ func test_os_look_and_notifs() -> void:
 	check(c.unread_count() == 0, "marcar como lidas")
 	c.clear_notifs()
 	check(c.log_entries.is_empty(), "limpar notificações")
+
+func test_rival_reactions() -> void:
+	var r := RandomNumberGenerator.new()
+	r.seed = 11
+	var m := Market.new(r)
+	m.seed_competitors(200)
+	var c0 := 0
+	for rv in m.rivals:
+		c0 += rv.launches.size()
+	check(c0 >= 8, "lançamentos entram no histórico dos rivais")
+	var news := []
+	for i in 30:
+		news.append_array(m.react_to_launch("phone", 400.0, 500.0, 200 + i))
+	check(not news.is_empty(), "rivais reagem a um lançamento muito forte")
+	check(m.react_to_launch("phone", 1.0, 100.0, 300).is_empty(), "produto fraco não provoca reação")
+	var mx := 0.0
+	for rv in m.rivals:
+		mx = maxf(mx, float(rv.rivalry))
+	check(mx > 0.0 and mx <= 100.0, "rivalidade sobe e fica limitada")
+	var sh := m.rival_shares("phone", 210, 5.0)
+	var tot := 0.0
+	for e in sh:
+		tot += float(e.share)
+	check(absf(tot - 1.0) < 0.001, "participações somam 100%")
+	# save antigo: campos novos e rivais do catálogo entram sozinhos
+	var d := m.to_dict()
+	var old: Dictionary = JSON.parse_string(JSON.stringify(d))
+	old.rivals = old.rivals.slice(0, 10)
+	for rv in old.rivals:
+		rv.erase("launches")
+		rv.erase("rivalry")
+	var m2 := Market.new(r)
+	m2.load_dict(old)
+	check(m2.rivals.size() == 14 and m2.rivals[0].has("launches") and m2.rivals[0].has("war_until"), "save antigo ganha rivais novos e campos")
