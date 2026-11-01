@@ -452,6 +452,7 @@ func _view_design(design: Dictionary, os_id: String) -> Dictionary:
 	d["brand_name"] = company.company_name
 	if os_id == "own":
 		d["accent"] = company.os_accent()
+		d["wall"] = str(company.os_look().wall)   # papel de parede escolhido no sistema próprio
 	return d
 
 func _update_viewer() -> void:

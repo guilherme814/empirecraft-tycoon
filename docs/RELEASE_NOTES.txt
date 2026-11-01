@@ -1,1 +1,1 @@
-Modo sandbox: dinheiro e pontos de pesquisa infinitos, ligável ao iniciar um novo jogo ou pelo menu durante a partida.
+Nova aba Sistema: prévia ao vivo e personalização do seu sistema (tema, papel de parede, ícones, dock, relógio, widget, notificações). Central de notificações no sino do topo com filtros, marcar como lidas e limpar. O bloco de SO saiu de Operações.

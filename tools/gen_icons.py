@@ -73,6 +73,8 @@ svg("nav_store", '<path d="M8 24l6-14h36l6 14"/><path d="M8 24q0 8 8 8t8-8q0 8 8
 svg("heart", '<path d="M32 54C10 38 8 24 14 17c5-6 14-5 18 3 4-8 13-9 18-3 6 7 4 21-18 37z"/>')
 svg("nav_feedback", '<path d="M8 12h48v32H30l-14 12V44H8z"/><path d="M20 24h24M20 33h14"/>')
 svg("nav_chip", '<rect x="16" y="16" width="32" height="32" rx="4"/><rect x="25" y="25" width="14" height="14" rx="2"/><path d="M24 6v10M32 6v10M40 6v10M24 48v10M32 48v10M40 48v10M6 24h10M6 32h10M6 40h10M48 24h10M48 32h10M48 40h10"/>')
+svg("bell", '<path d="M32 8c-9 0-15 7-15 16v10l-5 8h40l-5-8V24c0-9-6-16-15-16z"/><path d="M26 50a6 6 0 0 0 12 0"/>')
+svg("nav_system", '<rect x="8" y="10" width="48" height="34" rx="5"/><path d="M8 20h48"/><circle cx="15" cy="15" r="1.5"/><circle cx="21" cy="15" r="1.5"/><path d="M22 54h20M32 44v10"/>')
 svg("nav_package", '<path d="M32 6l22 11v30L32 58 10 47V17z"/><path d="M10 17l22 11 22-11M32 28v30"/>')
 
 # ── velocidade ──

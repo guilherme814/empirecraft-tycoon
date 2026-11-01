@@ -11,6 +11,7 @@ const PAGE_DEFS := [
 	{"id": "marketing", "title": "Marketing", "icon": "nav_marketing", "script": "res://src/ui/pages/MarketingPage.gd"},
 	{"id": "research", "title": "Pesquisa", "icon": "nav_research", "script": "res://src/ui/pages/ResearchPage.gd"},
 	{"id": "chips", "title": "Hardware", "icon": "nav_chip", "script": "res://src/ui/pages/ChipsPage.gd"},
+	{"id": "system", "title": "Sistema", "icon": "nav_system", "script": "res://src/ui/pages/SystemPage.gd"},
 	{"id": "ops", "title": "Operações", "icon": "nav_ops", "script": "res://src/ui/pages/OperationsPage.gd"},
 	{"id": "finance", "title": "Finanças", "icon": "nav_finance", "script": "res://src/ui/pages/FinancePage.gd"},
 	{"id": "stocks", "title": "Bolsa", "icon": "nav_stocks", "script": "res://src/ui/pages/StocksPage.gd"},
@@ -31,6 +32,9 @@ var _date_l: Label
 var _rep_l: Label
 var _rp_l: Label
 var _speed_btns: Array = []
+var _bell: Button
+var _bell_badge: Label
+var _nf: String = "all"
 var _toast: PanelContainer
 var _toast_l: Label
 var _toast_gen: int = 0
@@ -104,6 +108,19 @@ func _build_top_bar() -> Control:
 		var b := UI.button("", func(): Clock.set_speed(i), "normal", 68, 84, SPEED_ICONS[i], "nav")
 		_speed_btns.append(b)
 		h.add_child(b)
+	_bell = UI.button("", _open_notifs, "normal", 68, 84, "bell", "nav")
+	_bell_badge = Label.new()
+	_bell_badge.add_theme_font_size_override("font_size", 18)
+	_bell_badge.add_theme_color_override("font_color", Color.WHITE)
+	var bbs := Palette.box(Palette.BAD, 14, 2)
+	bbs.content_margin_left = 8
+	bbs.content_margin_right = 8
+	_bell_badge.add_theme_stylebox_override("normal", bbs)
+	_bell_badge.position = Vector2(46, 2)
+	_bell_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bell_badge.visible = false
+	_bell.add_child(_bell_badge)
+	h.add_child(_bell)
 	h.add_child(UI.button("", _open_menu, "normal", 68, 84, "menu", "nav"))
 	return bar
 
@@ -226,6 +243,9 @@ func _refresh_all() -> void:
 	if _logo_v.logo != c.logo:
 		_logo_v.setup(c.logo, 56.0)
 	_name_l.add_theme_color_override("font_color", Color(str(c.logo.c1)))
+	var unread := c.unread_count()
+	_bell_badge.visible = unread > 0
+	_bell_badge.text = str(mini(unread, 99))
 	_money_l.text = "R$ ∞" if c.sandbox else Fmt.money(c.money)
 	_money_l.add_theme_color_override("font_color", Palette.GOOD if c.money >= 0.0 else Palette.BAD)
 	_date_l.text = Fmt.date(c.day)
@@ -256,6 +276,67 @@ func _on_notice(text: String, kind: String) -> void:
 	await get_tree().create_timer(3.0).timeout
 	if gen == _toast_gen and is_instance_valid(_toast):
 		_toast.visible = false
+
+# ───────────── central de notificações ─────────────
+
+func _open_notifs() -> void:
+	if _overlay != null:
+		return
+	Clock.pause()
+	_overlay = _modal("Central de notificações")
+	_fill_notifs()
+
+func _fill_notifs() -> void:
+	var c: Company = Game.company
+	var v: VBoxContainer = _overlay.get_meta("box")
+	UI.clear(v)
+	v.add_child(UI.heading("Central de notificações"))
+	var chips := UI.hbox(8)
+	v.add_child(chips)
+	for f in [["all", "Todas"], ["good", "Boas"], ["bad", "Alertas"], ["info", "Informações"]]:
+		var b := UI.button(str(f[1]), func(): _nf = str(f[0]); _fill_notifs(), "primary" if _nf == str(f[0]) else "normal", 60)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.add_theme_font_size_override("font_size", 22)
+		chips.add_child(b)
+	var sc := UI.scroll()
+	sc.custom_minimum_size = Vector2(0, 420)
+	v.add_child(sc)
+	var list := UI.vbox(8)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(list)
+	var entries: Array = c.log_entries.duplicate()
+	entries.reverse()
+	var shown := 0
+	for e in entries:
+		var k := str(e.kind)
+		var cat := "good" if k == "good" else ("bad" if (k == "bad" or k == "warn") else "info")
+		if _nf != "all" and cat != _nf:
+			continue
+		shown += 1
+		var unread := int(e.get("n", 0)) > c.notif_seen
+		var card := PanelContainer.new()
+		var cs := Palette.card_box(Palette.PANEL_ALT if unread else Palette.PANEL_DEEP, 14, 12)
+		cs.border_color = UI.kind_color(k) if k != "info" else Palette.INFO
+		cs.border_width_left = 6
+		card.add_theme_stylebox_override("panel", cs)
+		var h := UI.hbox(10)
+		card.add_child(h)
+		h.add_child(UI.icon("bell", 28, cs.border_color))
+		var t := UI.wrap(str(e.text), 24, Palette.TEXT if unread else Palette.MUTED)
+		h.add_child(t)
+		h.add_child(UI.label(Fmt.date(int(e.day)), 20, Palette.MUTED))
+		list.add_child(card)
+	if shown == 0:
+		list.add_child(UI.wrap("Nenhuma notificação por aqui.", 26, Palette.MUTED))
+	var row := UI.hbox(10)
+	v.add_child(row)
+	var mr := UI.button("Marcar como lidas", func(): c.mark_notifs_read(); _refresh_all(); _fill_notifs(), "normal", 76)
+	mr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(mr)
+	var cl := UI.button("Limpar", func(): c.clear_notifs(); _refresh_all(); _fill_notifs(), "danger", 76)
+	cl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(cl)
+	v.add_child(UI.button("Fechar", func(): c.mark_notifs_read(); _close_overlay(); _refresh_all(), "primary", 84))
 
 func _open_menu() -> void:
 	if _overlay != null:

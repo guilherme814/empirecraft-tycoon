@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8
 const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
 const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
@@ -32,6 +32,8 @@ var rng := RandomNumberGenerator.new()
 var seed_value: int = 0
 var next_id: int = 1
 var game_over: bool = false
+var log_serial: int = 0           # contador de notificações (central de notificações)
+var notif_seen: int = 0           # última notificação vista
 var sandbox: bool = false         # dinheiro e pontos de pesquisa infinitos
 var log_entries: Array = []       # {day, text, kind}
 var income_month: float = 0.0
@@ -120,8 +122,9 @@ func _expense(v: float, cat: String = "other") -> void:
 
 ## `sfx` é o nome do efeito sonoro associado (a UI decide se toca).
 func add_log(text: String, kind: String = "info", sfx: String = "") -> void:
-	log_entries.append({"day": day, "text": text, "kind": kind})
-	if log_entries.size() > 60:
+	log_serial += 1
+	log_entries.append({"day": day, "text": text, "kind": kind, "n": log_serial})
+	if log_entries.size() > 120:
 		log_entries.pop_front()
 	log_added.emit(text, kind, sfx)
 
@@ -1203,6 +1206,42 @@ func set_os_focus(axis: String, delta: int) -> Dictionary:
 	own_os["focus"] = f
 	return _ok()
 
+## Aparência do sistema próprio (cosmética): tema, papel de parede, ícones, dock, relógio, widget, notificações.
+const OS_LOOK_KEYS := {"theme": "themes", "icons": "icons", "dock": "docks", "clock": "clocks", "widget": "widgets", "notif": "notifs"}
+
+func os_look() -> Dictionary:
+	var cat: Dictionary = GameData.os_data().look
+	var cur: Dictionary = own_os.get("look", {})
+	var out := {"theme": "dark", "icons": "squircle", "dock": "float", "clock": "big", "widget": "stats", "notif": "cards", "wall": "aurora"}
+	for k in OS_LOOK_KEYS:
+		for it in cat[OS_LOOK_KEYS[k]]:
+			if str(it.id) == str(cur.get(k, "")):
+				out[k] = str(it.id)
+	for w in GameData.designs().wallpapers:
+		if str(w.id) == str(cur.get("wall", "")):
+			out["wall"] = str(w.id)
+	return out
+
+func set_os_look(key: String, id: String) -> void:
+	var cur: Dictionary = own_os.get("look", {})
+	cur[key] = id
+	own_os["look"] = cur
+
+## Notificações não lidas e marcação como lidas (central de notificações).
+func unread_count() -> int:
+	var n := 0
+	for e in log_entries:
+		if int(e.get("n", 0)) > notif_seen:
+			n += 1
+	return n
+
+func mark_notifs_read() -> void:
+	notif_seen = log_serial
+
+func clear_notifs() -> void:
+	log_entries.clear()
+	notif_seen = log_serial
+
 func set_os_accent(hex: String) -> void:
 	own_os["accent"] = hex
 
@@ -1389,7 +1428,7 @@ func to_dict() -> Dictionary:
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
 		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores, "logo": logo, "decor": decor,
-		"sandbox": sandbox,
+		"sandbox": sandbox, "log_serial": log_serial, "notif_seen": notif_seen,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1429,6 +1468,8 @@ static func from_dict(d: Dictionary) -> Company:
 		c.stores.append(st)
 	c.game_over = bool(d.get("game_over", false))
 	c.sandbox = bool(d.get("sandbox", false))
+	c.log_serial = int(d.get("log_serial", 0))
+	c.notif_seen = int(d.get("notif_seen", c.log_serial))
 	c.log_entries = d.get("log", []).duplicate(true)
 	c.income_month = float(d.get("income_month", 0.0))
 	c.expense_month = float(d.get("expense_month", 0.0))

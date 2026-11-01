@@ -28,6 +28,24 @@ func _ready() -> void:
 		screen._show_page(d.id)
 		Game.changed.emit()
 		await _shot(str(d.id))
+	# sistema próprio com outra aparência + central de notificações
+	c.research_levels["res_os"] = 1
+	c.set_os_look("theme", "light")
+	c.set_os_look("icons", "round")
+	c.set_os_look("notif", "banner")
+	c.set_os_look("wall", "sunset")
+	c.set_os_look("clock", "side")
+	c.set_os_look("widget", "music")
+	c.add_log("Seu produto Vega P6 passou de 1.000 unidades vendidas.", "good")
+	c.add_log("Defeito de fábrica detectado no lote 3.", "bad")
+	while screen._overlay != null:
+		screen._close_overlay()
+		await get_tree().process_frame
+	screen._show_page("system")
+	Game.changed.emit()
+	await _shot("system_b")
+	screen._open_notifs()
+	await _shot("notifs")
 	get_tree().quit()
 
 func _shot(n: String) -> void:

@@ -128,5 +128,111 @@
    "res": 3,
    "desc": "Assistente inteligente integrado."
   }
- ]
+ ],
+ "look": {
+  "themes": [
+   {
+    "id": "dark",
+    "name": "Escuro",
+    "bg": "161821",
+    "panel": "242836",
+    "text": "f2f4fa",
+    "sub": "a3abc0"
+   },
+   {
+    "id": "light",
+    "name": "Claro",
+    "bg": "eef0f6",
+    "panel": "ffffff",
+    "text": "1b1e29",
+    "sub": "6b7285"
+   },
+   {
+    "id": "amoled",
+    "name": "AMOLED",
+    "bg": "000000",
+    "panel": "15151a",
+    "text": "ffffff",
+    "sub": "8a8f9e"
+   }
+  ],
+  "icons": [
+   {
+    "id": "squircle",
+    "name": "Arredondado"
+   },
+   {
+    "id": "round",
+    "name": "Circular"
+   },
+   {
+    "id": "square",
+    "name": "Quadrado"
+   },
+   {
+    "id": "drop",
+    "name": "Folha"
+   }
+  ],
+  "docks": [
+   {
+    "id": "float",
+    "name": "Flutuante"
+   },
+   {
+    "id": "bar",
+    "name": "Barra"
+   },
+   {
+    "id": "none",
+    "name": "Sem dock"
+   }
+  ],
+  "clocks": [
+   {
+    "id": "big",
+    "name": "Grande"
+   },
+   {
+    "id": "small",
+    "name": "Discreto"
+   },
+   {
+    "id": "side",
+    "name": "Lateral"
+   }
+  ],
+  "widgets": [
+   {
+    "id": "stats",
+    "name": "Resumo"
+   },
+   {
+    "id": "weather",
+    "name": "Clima"
+   },
+   {
+    "id": "music",
+    "name": "Música"
+   },
+   {
+    "id": "none",
+    "name": "Nenhum"
+   }
+  ],
+  "notifs": [
+   {
+    "id": "cards",
+    "name": "Cartões"
+   },
+   {
+    "id": "compact",
+    "name": "Compacto"
+   },
+   {
+    "id": "banner",
+    "name": "Faixa"
+   }
+  ]
+ }
 }
