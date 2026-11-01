@@ -42,6 +42,7 @@ var e_pending: Array = []
 var _screens_mi: MeshInstance3D
 var _ring: MeshInstance3D
 var _sel_label: Label3D
+var _sign_nodes: Array = []
 var _lights: Array = []
 var _now: float = 0.0
 var _first: bool = true
@@ -528,6 +529,8 @@ func _build_static() -> void:
 	_common_areas(f, e, g)
 	_decor(f, e)
 	_sign_board(f, e)
+	_rails(f, g)
+	_dept_signs(f, e)
 	for pair in [[f, "lit"], [e, "emissive"], [g, "glass"]]:
 		var b: MeshBuilder = pair[0]
 		if b.is_empty():
@@ -564,7 +567,62 @@ func _sign_board(f: MeshBuilder, e: MeshBuilder) -> void:
 		e.box(e2[0], e2[1], Color("4cd18a"), 0.0, 0.0)
 	e_pending.clear()
 
+const PROF_NAMES := {"engineer": "ENGENHARIA", "programmer": "PROGRAMAÇÃO", "designer": "DESIGN", "researcher": "PESQUISA"}
+
+## Guarda-corpo de vidro nas bordas abertas (frente e lado direito), com vão na porta.
+func _rails(f: MeshBuilder, g: MeshBuilder) -> void:
+	var W := layout.width + 0.2
+	var D := layout.depth + 0.2
+	var glass := Color(0.62, 0.8, 1.0, 0.28)
+	var post := Color("aab4c8")
+	var h := 0.55
+	var door_x: float = float(layout.door.pos.x)
+	# frente (z = D): do canto esquerdo ao direito, deixando um vão de 1.4 m na porta
+	var x0 := -0.1
+	for seg in [[x0, door_x - 0.7], [door_x + 0.7, W]]:
+		var a: float = seg[0]
+		var b: float = seg[1]
+		if b - a > 0.2:
+			g.box(Vector3((a + b) * 0.5, h * 0.5, D), Vector3(b - a, h, 0.03), glass, 0.0, 0.0)
+			f.box(Vector3((a + b) * 0.5, h + 0.015, D), Vector3(b - a, 0.03, 0.06), post, 0.0, 0.0)
+			var n := maxi(1, int((b - a) / 1.3))
+			for i in n + 1:
+				f.box(Vector3(a + (b - a) * float(i) / float(n), h * 0.5, D), Vector3(0.05, h, 0.05), post, 0.0, 0.0)
+	# lado direito (x = W)
+	g.box(Vector3(W, h * 0.5, D * 0.5), Vector3(0.03, h, D), glass, 0.0, 0.0)
+	f.box(Vector3(W, h + 0.015, D * 0.5), Vector3(0.06, 0.03, D), post, 0.0, 0.0)
+	var m := maxi(1, int(D / 1.3))
+	for i in m + 1:
+		f.box(Vector3(W, h * 0.5, D * float(i) / float(m)), Vector3(0.05, h, 0.05), post, 0.0, 0.0)
+
+## Placas coloridas flutuando sobre o primeiro grupo de baias de cada setor.
+func _dept_signs(f: MeshBuilder, e: MeshBuilder) -> void:
+	_sign_nodes.clear()
+	var seen := {}
+	for pod in layout.pods:
+		var p := str(pod.prof)
+		if p == "" or seen.has(p):
+			continue
+		seen[p] = true
+		var col: Color = PROF_COLORS.get(p, Color("7a859f"))
+		var pos := Vector3(float(pod.cx) - 0.55, 1.78, float(pod.cz) - 1.5)
+		f.box(pos, Vector3(1.9, 0.4, 0.05), col.darkened(0.25), PI * 0.25, 0.0)
+		e.box(pos + Vector3(0.0, -0.21, 0.0), Vector3(1.9, 0.03, 0.055), col, PI * 0.25, 0.0)
+		_sign_nodes.append({"prof": p, "pos": pos})
+
 func _add_labels() -> void:
+	for sn in _sign_nodes:
+		var sl := Label3D.new()
+		sl.text = str(PROF_NAMES.get(sn.prof, ""))
+		sl.font_size = 48
+		sl.pixel_size = 0.0075
+		sl.modulate = Color("ffffff")
+		sl.outline_size = 0
+		sl.shaded = false
+		sl.double_sided = false
+		sl.rotation.y = PI * 0.25
+		sl.position = sn.pos + Vector3(0.03, 0.0, 0.03)
+		_static_root.add_child(sl)
 	var L := Label3D.new()
 	L.text = Identity.format_name(company_name, str(logo.style))
 	L.font_size = 96

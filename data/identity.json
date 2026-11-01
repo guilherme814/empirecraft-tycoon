@@ -55,6 +55,38 @@
   {
    "id": "play",
    "name": "Play"
+  },
+  {
+   "id": "mono_m",
+   "name": "Monograma M"
+  },
+  {
+   "id": "mono_e",
+   "name": "Monograma E"
+  },
+  {
+   "id": "mono_t",
+   "name": "Monograma T"
+  },
+  {
+   "id": "snake",
+   "name": "Serpente S"
+  },
+  {
+   "id": "gem",
+   "name": "Gema"
+  },
+  {
+   "id": "drop",
+   "name": "Gota"
+  },
+  {
+   "id": "wave",
+   "name": "Onda"
+  },
+  {
+   "id": "peak",
+   "name": "Montanha"
   }
  ],
  "colors": [

@@ -93,9 +93,35 @@ static func points(symbol: String) -> PackedVector2Array:
 			return PackedVector2Array([Vector2(-0.9, -0.9), Vector2(-0.1, -0.9), Vector2(0.9, 0.0), Vector2(-0.1, 0.9), Vector2(-0.9, 0.9), Vector2(0.1, 0.0)])
 		"play":
 			return PackedVector2Array([Vector2(-0.7, -0.95), Vector2(0.95, 0.0), Vector2(-0.7, 0.95)])
+		"mono_m":
+			return _pts([-0.95, 0.9, -0.95, -0.9, -0.5, -0.9, 0, 0, 0.5, -0.9, 0.95, -0.9, 0.95, 0.9, 0.55, 0.9, 0.55, -0.2, 0.15, 0.55, -0.15, 0.55, -0.55, -0.2, -0.55, 0.9])
+		"mono_e":
+			return _pts([-0.9, -0.9, 0.9, -0.9, 0.9, -0.5, -0.5, -0.5, -0.5, -0.2, 0.6, -0.2, 0.6, 0.2, -0.5, 0.2, -0.5, 0.5, 0.9, 0.5, 0.9, 0.9, -0.9, 0.9])
+		"mono_t":
+			return _pts([-0.95, -0.9, 0.95, -0.9, 0.95, -0.5, 0.3, -0.5, 0.3, 0.95, -0.3, 0.95, -0.3, -0.5, -0.95, -0.5])
+		"snake":
+			return _pts([0.9, -0.9, -0.5, -0.9, -0.9, -0.5, -0.9, -0.1, -0.5, 0.2, 0.4, 0.2, 0.4, 0.5, -0.9, 0.5, -0.9, 0.9, 0.5, 0.9, 0.9, 0.5, 0.9, 0.1, 0.5, -0.2, -0.4, -0.2, -0.4, -0.5, 0.9, -0.5])
+		"gem":
+			return _pts([-0.5, -0.9, 0.5, -0.9, 0.95, -0.2, 0, 0.95, -0.95, -0.2])
+		"drop":
+			var dp := PackedVector2Array([Vector2(0, -1.0)])
+			for i in 19:
+				var a := deg_to_rad(-40.0 + 260.0 * float(i) / 18.0)
+				dp.append(Vector2(cos(a) * 0.7, 0.28 + sin(a) * 0.7))
+			return dp
+		"wave":
+			return _pts([-0.95, -0.2, -0.5, -0.7, 0, -0.2, 0.5, -0.7, 0.95, -0.2, 0.95, 0.4, 0.5, -0.1, 0, 0.4, -0.5, -0.1, -0.95, 0.4])
+		"peak":
+			return _pts([-0.95, 0.8, -0.35, -0.5, 0, 0.05, 0.35, -0.95, 0.95, 0.8])
 		"crown":
 			return PackedVector2Array([Vector2(-0.9, 0.7), Vector2(-0.9, -0.5), Vector2(-0.45, 0.0), Vector2(0, -0.8), Vector2(0.45, 0.0), Vector2(0.9, -0.5), Vector2(0.9, 0.7)])
 	return _ngon(6, 0.95, -PI / 2.0)
+
+static func _pts(flat: Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in range(0, flat.size(), 2):
+		out.append(Vector2(float(flat[i]), float(flat[i + 1])))
+	return out
 
 static func _ngon(n: int, r: float, rot: float) -> PackedVector2Array:
 	var pts := PackedVector2Array()

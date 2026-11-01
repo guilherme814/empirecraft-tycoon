@@ -30,6 +30,7 @@ func _initialize() -> void:
 	test_office_layout()
 	test_identity_and_rivals()
 	test_device_variants()
+	test_logo_symbols()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -561,3 +562,10 @@ func test_device_variants() -> void:
 			ids.append(str(it.id))
 		check(ids.has(str(d[k])), "padrão de %s existe na lista" % k)
 	check((D.camera_layouts as Array).size() >= 9 and (D.notches as Array).size() >= 7 and (D.bands as Array).size() >= 5, "novas câmeras, recortes e pulseiras")
+
+func test_logo_symbols() -> void:
+	var syms: Array = GameData.identity().symbols
+	check(syms.size() >= 22, "catálogo de símbolos ampliado")
+	for sy in syms:
+		var pts := Identity.points(str(sy.id))
+		check(Geometry2D.triangulate_polygon(pts).size() >= 3, "símbolo %s é um polígono simples" % str(sy.id))

@@ -12,9 +12,9 @@ const HIP_SIT := 0.31
 
 # aparência por profissão
 const LOOK := {
-	"engineer": {"shirt": Color("6f7f55"), "extra": Color("ff9a2e"), "pants": Color("39435c"), "shoe": Color("2a2a30")},
-	"programmer": {"shirt": Color("2c3f78"), "extra": Color("5aa9ff"), "pants": Color("2f323c"), "shoe": Color("e9ecf2")},
-	"designer": {"shirt": Color("2fa59a"), "extra": Color("c792ea"), "pants": Color("4a3f63"), "shoe": Color("ff7aa8")},
+	"engineer": {"shirt": Color("2b3f6b"), "extra": Color("ff8a1f"), "pants": Color("2c3a5c"), "shoe": Color("6b4a2f")},
+	"programmer": {"shirt": Color("26324f"), "extra": Color("5aa9ff"), "pants": Color("2f323c"), "shoe": Color("e9ecf2")},
+	"designer": {"shirt": Color("7a4fb8"), "extra": Color("9b59d6"), "pants": Color("1f1f27"), "shoe": Color("9b6bd6")},
 	"researcher": {"shirt": Color("eef1f6"), "extra": Color("d6dbe6"), "pants": Color("404859"), "shoe": Color("2a2a30")},
 }
 
@@ -167,7 +167,9 @@ static func _torso_mesh(key: String, skin_i: int, hair_i: int, look: Dictionary)
 			b.box(Vector3(0, 0.17, -0.005), Vector3(0.275, 0.26, 0.18), look.extra)  # colete
 			b.box(Vector3(0, 0.15, -0.092), Vector3(0.27, 0.035, 0.012), Color("e9ecf2"))  # faixa refletiva
 		"programmer":
-			b.box(Vector3(0, 0.30, 0.07), Vector3(0.2, 0.08, 0.08), shirt.darkened(0.2))  # capuz
+			b.box(Vector3(0, 0.30, 0.075), Vector3(0.22, 0.09, 0.09), Color("7a7f8c"))    # capuz cinza
+			b.box(Vector3(-0.045, 0.2, -0.092), Vector3(0.012, 0.1, 0.01), Color("c9ced8"))  # cordões
+			b.box(Vector3(0.045, 0.2, -0.092), Vector3(0.012, 0.1, 0.01), Color("c9ced8"))
 			b.box(Vector3(0, 0.12, -0.092), Vector3(0.1, 0.04, 0.012), look.extra)         # logo
 		"designer":
 			b.box(Vector3(0, 0.25, -0.088), Vector3(0.26, 0.06, 0.02), look.extra)         # lenço
@@ -200,6 +202,9 @@ static func _head_mesh(key: String, skin_i: int, hair_i: int, look: Dictionary) 
 			b.box(Vector3(0, 0.235, 0.0), Vector3(0.23, 0.07, 0.22), look.extra)       # cabelo roxo
 			b.box(Vector3(0, 0.14, 0.11), Vector3(0.23, 0.2, 0.05), look.extra)        # franja/trás
 			b.box(Vector3(0.085, 0.16, 0.0), Vector3(0.05, 0.16, 0.2), look.extra)
+			b.box(Vector3(0.0, 0.27, 0.15), Vector3(0.1, 0.1, 0.1), look.extra)        # rabo de cavalo
+			b.box(Vector3(0.0, 0.17, 0.17), Vector3(0.08, 0.16, 0.07), look.extra.darkened(0.1))
+			b.box(Vector3(-0.108, 0.1, -0.02), Vector3(0.012, 0.03, 0.03), Color("ffd23f"))  # brinco
 		"researcher":
 			b.box(Vector3(0, 0.235, 0.0), Vector3(0.22, 0.06, 0.21), hair)
 			b.box(Vector3(0, 0.138, -0.106), Vector3(0.17, 0.01, 0.004), Color("2a2a30"))
