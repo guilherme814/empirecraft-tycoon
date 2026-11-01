@@ -594,6 +594,23 @@ func dev_work_per_day() -> float:
 			work += (0.5 + float(e.pace) / 100.0) * (0.7 + 0.3 * e.morale / 100.0)
 	return work * (1.0 + effect("dev_speed"))
 
+## Erros de programação de um projeto em desenvolvimento (indicador, não afeta o save):
+## sobem até o meio do projeto e são corrigidos até o fim; programadores mais ágeis geram menos.
+func dev_bugs(p: Product) -> int:
+	if p.state != Product.STATE_DEV:
+		return 0
+	var progs := staff_of("programmer")
+	var pace := 50.0
+	if not progs.is_empty():
+		pace = 0.0
+		for e in progs:
+			pace += float(e.pace)
+		pace /= float(progs.size())
+	var skill := lerpf(1.4, 0.6, clampf(pace / 100.0, 0.0, 1.0))
+	var wobble := 0.9 + 0.2 * fposmod(float(p.id) * 0.37, 1.0)
+	var curve := pow(sin(p.progress() * PI), 0.8)
+	return int(round(p.work_required / 12.0 * curve * skill * wobble))
+
 func _develop() -> void:
 	var devs := dev_products()
 	if devs.is_empty():

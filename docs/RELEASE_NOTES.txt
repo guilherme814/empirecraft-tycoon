@@ -1,1 +1,1 @@
-Pesquisa em cartões por área: menu lateral (Tecnologia, Design, Produção, Negócios, Novas linhas), estrelas de nível, MAX, cartões bloqueados com o requisito e destaque no que você já pode evoluir.
+Lojas por país: grid de países com cor e status, aba Minhas lojas com resultado mensal estimado por país. Painel mostra o progresso de programação e o contador de erros de cada projeto em desenvolvimento.

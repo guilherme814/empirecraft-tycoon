@@ -60,6 +60,21 @@ func _ready() -> void:
 	screen._show_page("research")
 	screen._pages["research"].rebuild()
 	await _shot("research")
+	c.money = 5000000.0
+	c.reputation = 60.0
+	Stores.open(c, Stores.default_spec("br"))
+	Stores.open(c, Stores.default_spec("ar"))
+	screen._show_page("stores")
+	await _shot("stores_open")
+	screen._pages["stores"]._tab = "mine"
+	screen._pages["stores"].rebuild()
+	await _shot("stores_mine")
+	var dp: Product = c.products[0]
+	dp.state = Product.STATE_DEV
+	dp.work_done = dp.work_required * 0.5
+	screen._show_page("dash")
+	screen._pages["dash"].rebuild()
+	await _shot("dash")
 	get_tree().quit()
 
 func _shot(n: String) -> void:

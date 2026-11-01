@@ -150,3 +150,34 @@ static func total_monthly(c: Company) -> float:
 	for s in c.stores:
 		t += monthly_cost(s)
 	return t
+
+## Receita mensal estimada (30 dias) de uma loja com os produtos atuais.
+static func est_revenue(c: Company, s: Dictionary) -> float:
+	var total := 0.0
+	for cat_id in c.market_stats:
+		var st: Dictionary = c.market_stats[cat_id]
+		var attr: Dictionary = st.get("attr", {})
+		var denom := maxf(float(st.get("denom", 1.0)), 0.001)
+		var local := _local(c, str(cat_id), s)
+		for pid in attr:
+			var p: Product = c.get_product(int(pid))
+			if p != null and p.state == Product.STATE_RELEASED:
+				total += local * float(attr[pid]) / denom * p.price
+	return total * float(Rules.DAYS_IN_MONTH)
+
+## Resumo por país: [{id, name, color, count, units, revenue, net}] só dos países com loja.
+static func country_summary(c: Company) -> Array:
+	var by := {}
+	for s in c.stores:
+		var k := str(s.country)
+		if not by.has(k):
+			var ct := GameData.country(k)
+			by[k] = {"id": k, "name": str(ct.name), "color": str(ct.color), "count": 0, "units": 0, "revenue": 0.0, "net": 0.0}
+		var e: Dictionary = by[k]
+		e.count = int(e.count) + 1
+		e.units = int(e.units) + int(s.units)
+		e.revenue = float(e.revenue) + float(s.revenue)
+		e.net = float(e.net) + est_revenue(c, s) - monthly_cost(s)
+	var res: Array = by.values()
+	res.sort_custom(func(a, b): return float(a.net) > float(b.net))
+	return res

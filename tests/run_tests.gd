@@ -30,6 +30,7 @@ func _initialize() -> void:
 	test_office_layout()
 	test_identity_and_rivals()
 	test_rival_reactions()
+	test_store_country_summary()
 	test_device_variants()
 	test_logo_symbols()
 	test_sandbox()
@@ -123,9 +124,12 @@ func test_product_flow() -> void:
 	check(cr.ok, "criar produto")
 	var p: Product = cr.product
 	var days := 0
+	var peak := 0
 	while p.state == Product.STATE_DEV and days < 400:
 		c.advance_day()
+		peak = maxi(peak, c.dev_bugs(p))
 		days += 1
+	check(peak > 0 and c.dev_bugs(p) == 0, "erros de programação sobem no meio e zeram ao terminar (pico %d)" % peak)
 	check(p.state == Product.STATE_READY, "produto fica pronto (%d dias)" % days)
 	check(p.quality > 20.0, "qualidade razoável (%f)" % p.quality)
 	check(p.price > 0.0, "preço sugerido definido")
@@ -643,3 +647,16 @@ func test_rival_reactions() -> void:
 	var m2 := Market.new(r)
 	m2.load_dict(old)
 	check(m2.rivals.size() == 14 and m2.rivals[0].has("launches") and m2.rivals[0].has("war_until"), "save antigo ganha rivais novos e campos")
+
+func test_store_country_summary() -> void:
+	var c := staffed(21)
+	c.reputation = 60.0
+	c.money = 5000000.0
+	check(Stores.country_summary(c).is_empty(), "sem lojas, resumo vazio")
+	check(Stores.open(c, Stores.default_spec("br")).ok and Stores.open(c, Stores.default_spec("br")).ok, "abre 2 lojas no Brasil")
+	check(Stores.open(c, Stores.default_spec("ar")).ok, "abre 1 loja na Argentina")
+	var sm := Stores.country_summary(c)
+	var n := 0
+	for e in sm:
+		n += int(e.count)
+	check(sm.size() == 2 and n == 3, "resumo agrupa por país (3 lojas em 2 países)")

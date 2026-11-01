@@ -43,6 +43,12 @@ func rebuild() -> void:
 			line.add_child(UI.label("%d%%" % int(p.progress() * 100.0), 26, Palette.ACCENT))
 			pv.add_child(line)
 			pv.add_child(UI.bar(p.progress()))
+			var bugs := c.dev_bugs(p)
+			var bl := UI.hbox(10)
+			bl.add_child(UI.label("Programação %d%%" % int(p.progress() * 100.0), 22, Palette.MUTED))
+			bl.add_child(UI.spacer())
+			bl.add_child(UI.label("Erros: %d" % bugs, 24, Palette.BAD if bugs >= int(p.work_required / 24.0) else Palette.MUTED))
+			pv.add_child(bl)
 		elif p.state == Product.STATE_READY:
 			any = true
 			pv.add_child(UI.label("%s está pronto: vá em Produtos para lançar!" % p.pname, 26, Palette.GOOD))

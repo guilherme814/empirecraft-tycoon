@@ -6,6 +6,7 @@ var _draft: Dictionary = {}
 var _sel: int = -1          # loja existente selecionada (-1 = nova)
 var _scene: StoreScene
 var _body: VBoxContainer
+var _tab: String = "open"     # "open" = abrir (países) | "mine" = minhas lojas
 
 func build() -> void:
 	_spec = Stores.default_spec("br")
@@ -33,7 +34,7 @@ func build() -> void:
 
 func signature() -> String:
 	var c := company
-	var parts: Array = [str(_spec), str(_draft), _sel, int(c.reputation / 5.0), c.money >= 100000.0, c.money >= 500000.0]
+	var parts: Array = [_tab, str(_spec), str(_draft), _sel, int(c.reputation / 5.0), c.money >= 100000.0, c.money >= 500000.0]
 	for s in c.stores:
 		parts.append("%d%s%d%s" % [s.id, s.facade, s.staff, int(s.units) / 200])
 	return str(parts)
@@ -66,6 +67,8 @@ func rebuild() -> void:
 	var ct := GameData.country(str(cur.country))
 	_body.add_child(UI.label("Lojas (%d)  ·  %s/mês" % [c.stores.size(), Fmt.money(Stores.total_monthly(c))], 30, Palette.TEXT))
 
+	_tabs_and_countries(cur, editing)
+
 	# lista de lojas abertas
 	if not c.stores.is_empty():
 		var chips := HFlowContainer.new()
@@ -87,19 +90,6 @@ func rebuild() -> void:
 		v.add_child(UI.label("%s · %s · %s" % [ct.name, cur.city, GameData.store_opt("sizes", str(cur.size)).name], 24, Palette.MUTED))
 	else:
 		v.add_child(UI.label("Nova loja", 28, Palette.ACCENT))
-		v.add_child(UI.label("País", 24, Palette.MUTED))
-		var cf := HFlowContainer.new()
-		cf.add_theme_constant_override("h_separation", 8)
-		cf.add_theme_constant_override("v_separation", 8)
-		v.add_child(cf)
-		for k in GameData.countries():
-			var cid: String = k.id
-			var locked := c.reputation < float(k.rep)
-			var b := UI.button(str(k.name), func(): _pick("country", cid), "primary" if cid == str(cur.country) else "normal", 60)
-			b.disabled = locked
-			if locked:
-				b.tooltip_text = "Reputação %d" % int(k.rep)
-			cf.add_child(b)
 		v.add_child(UI.label("Cidade", 24, Palette.MUTED))
 		var cy := HBoxContainer.new()
 		cy.add_theme_constant_override("separation", 8)
@@ -169,3 +159,61 @@ func _staff(d: int) -> void:
 		refresh()
 	else:
 		_pick("staff", int(_spec.staff) + d)
+
+func _tabs_and_countries(cur: Dictionary, editing: bool) -> void:
+	var c := company
+	var tabs := UI.hbox(8)
+	_body.add_child(tabs)
+	tabs.add_child(UI.button("Abrir loja", func(): _tab = "open"; _last_sig = "\u0001"; refresh(), "primary" if _tab == "open" else "normal", 64, 220))
+	tabs.add_child(UI.button("Minhas lojas (%d)" % c.stores.size(), func(): _tab = "mine"; _last_sig = "\u0001"; refresh(), "primary" if _tab == "mine" else "normal", 64, 280))
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	_body.add_child(grid)
+	if _tab == "mine":
+		var sm := Stores.country_summary(c)
+		if sm.is_empty():
+			_body.add_child(UI.wrap("Nenhuma loja aberta ainda. Escolha um país na aba Abrir loja.", 24, Palette.MUTED))
+		for e in sm:
+			var eid := str(e.id)
+			var t := _tile(str(e.name), "x%d" % int(e.count), "%s/mês" % Fmt.money(float(e.net)), Color(str(e.color)),
+				Palette.GOOD if float(e.net) >= 0.0 else Palette.BAD, false)
+			t.pressed.connect(func():
+				for s in c.stores:
+					if str(s.country) == eid:
+						_sel = int(s.id)
+						break
+				_draft = {}
+				_last_sig = "\u0001"
+				refresh())
+			grid.add_child(t)
+		return
+	for k in GameData.countries():
+		var cid: String = k.id
+		var locked := c.reputation < float(k.rep)
+		var n := Stores.count_in(c, cid)
+		var sub := "reputação %d" % int(k.rep) if locked else ("%d aberta%s" % [n, "" if n == 1 else "s"] if n > 0 else "livre")
+		var t := _tile(str(k.name), "x%d" % n if n > 0 else "", sub, Color(str(k.color)), Palette.MUTED if locked else Palette.TEXT, cid == str(cur.country) and not editing)
+		t.disabled = locked
+		t.pressed.connect(func():
+			_sel = -1
+			_draft = {}
+			_pick("country", cid))
+		grid.add_child(t)
+
+func _tile(title: String, badge: String, sub: String, col: Color, sub_col: Color, selected: bool) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(0, 78)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Palette.style_button(b, "primary" if selected else "normal")
+	b.text = "%s %s\n%s" % [title, badge, sub]
+	b.add_theme_font_size_override("font_size", 23)
+	b.add_theme_color_override("font_color", Palette.TEXT)
+	b.add_theme_color_override("font_disabled_color", Palette.MUTED)
+	var st := Palette.box(col.darkened(0.6), 12)
+	st.border_color = col
+	st.border_width_left = 8
+	b.add_theme_stylebox_override("normal", st if not selected else Palette.box(col, 12))
+	return b
