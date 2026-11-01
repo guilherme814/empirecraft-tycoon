@@ -31,6 +31,7 @@ func _initialize() -> void:
 	test_identity_and_rivals()
 	test_rival_reactions()
 	test_store_country_summary()
+	test_logistics()
 	test_device_variants()
 	test_logo_symbols()
 	test_sandbox()
@@ -660,3 +661,62 @@ func test_store_country_summary() -> void:
 	for e in sm:
 		n += int(e.count)
 	check(sm.size() == 2 and n == 3, "resumo agrupa por país (3 lojas em 2 países)")
+
+func _released_company(seed_v: int) -> Array:
+	var c := staffed(seed_v)
+	c.money = 800000.0
+	var p: Product = c.create_product("L", "phone", c.default_specs("phone")).product
+	var d := 0
+	while p.state == Product.STATE_DEV and d < 500:
+		c.advance_day()
+		d += 1
+	c.release(p.id)
+	return [c, p]
+
+func test_logistics() -> void:
+	var rp := _released_company(31)
+	var c: Company = rp[0]
+	var p: Product = rp[1]
+	check(p.stock > 0 and p.avg_cost > 0.0, "lote inicial entra em estoque no lançamento (%d un.)" % p.stock)
+	# vendas só saem do estoque
+	p.auto_stock = false
+	var before := p.units_total
+	var stock0 := p.stock
+	for i in 400:
+		c.advance_day()
+	check(p.stock == 0 and p.units_total - before <= stock0 + Logistics.pipeline(p) + 5, "sem reposição o estoque acaba e as vendas param")
+	check(p.lost_ema > 0.0, "demanda sem estoque vira venda perdida")
+	# pedido manual: custa caixa na hora, chega depois com possíveis defeitos
+	var m0 := c.money
+	var q := Logistics.quote(c, p, 100)
+	var r := Logistics.order(c, p.id, 100)
+	check(r.ok and absf((m0 - c.money) - float(q.cost)) < 0.01, "pedido cobra o lote inteiro na hora")
+	check(Logistics.pipeline(p) == 100, "pedido fica em produção")
+	for i in int(q.wait) + 1:
+		c.advance_day()
+	check(Logistics.pipeline(p) == 0 and p.stock + p.units_total - before > 0, "lote chega no prazo")
+	check(not Logistics.order(c, p.id, 0).ok, "quantidade zero é recusada")
+	# reposição automática mantém o produto vendendo e o caixa não some
+	p.auto_stock = true
+	var u1 := p.units_total
+	for i in 200:
+		c.advance_day()
+	check(p.units_total - u1 > 50, "estoque automático mantém as vendas (%d un.)" % (p.units_total - u1))
+	check(c.money > 0.0, "caixa continua positivo com reposição automática")
+	# save/load preserva estoque, pedidos e fila
+	var c2 := Company.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	var p2: Product = c2.get_product(p.id)
+	check(p2.stock == p.stock and p2.orders.size() == p.orders.size() and int(c2.mfr_busy.get("fabrix", -1)) == int(c.mfr_busy.get("fabrix", -1)), "save preserva estoque e pedidos")
+	# save antigo sem estoque ganha 30 dias de estoque
+	var old: Dictionary = JSON.parse_string(JSON.stringify(c.to_dict()))
+	for pd in old.products:
+		for k in ["stock", "avg_cost", "orders", "auto", "cover"]:
+			pd.erase(k)
+	var c3 := Company.from_dict(old)
+	var p3: Product = c3.get_product(p.id)
+	check(p3.stock >= 20 and p3.avg_cost > 0.0, "save antigo recebe estoque inicial")
+	# tirar de linha liquida o estoque
+	var cash := c.money
+	var left := p.stock
+	c.retire(p.id)
+	check(p.stock == 0 and (left == 0 or c.money > cash), "tirar de linha liquida o estoque")

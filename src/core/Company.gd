@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 9
+const SAVE_VERSION := 10
 const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
 const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
@@ -43,6 +43,7 @@ var last_expense: float = 0.0
 var stocks := Stocks.new()
 var own_os: Dictionary = {}       # {"version": int, "dev": {"work": f, "req": f, "money": f} | null}
 var factory_level: int = 0
+var mfr_busy: Dictionary = {}     # fabricante -> dia em que a fila de produção esvazia
 var ledger: Dictionary = {}       # mês atual: categoria -> valor (receita +, despesa -)
 var ledger_last: Dictionary = {}  # mês anterior
 var loan: float = 0.0
@@ -114,6 +115,11 @@ func sandbox_refill() -> void:
 func _cash_out(v: float, cat: String) -> void:
 	money -= v
 	cash_items[cat] = float(cash_items.get(cat, 0.0)) - v
+
+## Despesa só no resultado (o caixa já saiu antes, ao encomendar o lote): custo das vendas, descartes.
+func _pl_expense(v: float, cat: String) -> void:
+	expense_month += v
+	ledger[cat] = float(ledger.get(cat, 0.0)) - v
 
 func _expense(v: float, cat: String = "other") -> void:
 	money -= v
@@ -656,12 +662,20 @@ func release(prod_id: int, price: float = -1.0, promise: float = 0.0) -> Diction
 	var best := market.best_quality(p.category)
 	var adv: float = effective_quality(p) / maxf(best, 1.0) - 1.0
 	p.promise_gap = maxf(0.0, promise - adv) if promise > 0.0 else 0.0
+	# lote inicial: produzido durante o desenvolvimento, já em estoque no primeiro dia
+	var u0 := current_unit_cost(p)
+	var q0 := mini(Logistics.initial_qty(self, p.category, 20), int(floor(maxf(money, 0.0) * 0.5 / maxf(u0, 0.01))))
+	if q0 > 0:
+		_cash_out(float(q0) * u0, "inventory")
+		Logistics.add_stock(p, q0, u0)
+		add_log("Lote inicial de %s: %d un. em estoque" % [p.pname, q0], "info")
 	# fãs compram no primeiro dia e já chegam sabendo do produto (antes das avaliações)
 	var fans := Loyalty.preorders(self, p.category)
 	p.awareness = maxf(p.awareness, Loyalty.initial_awareness(self))
 	if fans > 0:
-		_book_sale(p, fans, p.category)
-		add_log("%d %s compraram %s no lançamento (lealdade %d%%)" % [fans, "fã" if fans == 1 else "fãs", p.pname, int(loyalty)], "good", "success")
+		fans = _book_sale(p, fans, p.category)
+		if fans > 0:
+			add_log("%d %s compraram %s no lançamento (lealdade %d%%)" % [fans, "fã" if fans == 1 else "fãs", p.pname, int(loyalty)], "good", "success")
 	add_log("%s foi lançado por %s!" % [p.pname, Fmt.money(p.price)], "good", "release")
 	Reviews.launch(self, p)
 	for n in market.react_to_launch(p.category, effective_quality(p), p.price, day):
@@ -680,7 +694,14 @@ func retire(prod_id: int) -> Dictionary:
 	if p == null:
 		return _fail("Produto não encontrado")
 	p.state = Product.STATE_RETIRED
-	add_log("%s saiu de linha" % p.pname, "info")
+	var left: float = float(p.stock) * float(p.avg_cost)
+	if p.stock > 0:
+		_cash_in(left * 0.4, "inventory")      # liquidação: recupera 40% do custo
+		_pl_expense(left, "writeoff")
+		add_log("%s saiu de linha; %d un. liquidadas por %s" % [p.pname, p.stock, Fmt.money(left * 0.4)], "info")
+		p.stock = 0
+	else:
+		add_log("%s saiu de linha" % p.pname, "info")
 	return _ok()
 
 # ───────────────────────── vendas ─────────────────────────
@@ -717,17 +738,24 @@ func demand_floor(p: Product, exp_q: float) -> float:
 	var cat: Dictionary = GameData.category(p.category)
 	return Rules.MIN_DAILY_DEMAND * Market.decay(day - p.release_day, float(cat.lifetime)) * minf(1.0, eq / exp_q)
 
-func _book_sale(p: Product, units: int, cat_id: String) -> void:
+## Registra a venda. Só sai do estoque: devolve quantas unidades foram realmente vendidas.
+func _book_sale(p: Product, units: int, cat_id: String) -> int:
+	units = mini(units, p.stock)
+	if units <= 0:
+		return 0
 	var revenue: float = float(units) * p.price
-	var cost: float = float(units) * current_unit_cost(p)
+	var unit_cost: float = p.avg_cost if p.avg_cost > 0.0 else current_unit_cost(p)
+	var cost: float = float(units) * unit_cost
 	_income(revenue, "sales")
 	var comm := revenue * deal_commission(cat_id)
 	if comm > 0.0:
 		_expense(comm, "commission")
-	_expense(cost, "cogs")
+	_pl_expense(cost, "cogs")
+	p.stock -= units
 	p.units_total += units
 	p.revenue_total += revenue
 	p.cost_total += cost
+	return units
 
 func _sell() -> void:
 	var exp_q := market.expectation(day)
@@ -758,8 +786,10 @@ func _sell() -> void:
 			var raw_f: float = size * share * rng.randf_range(0.85, 1.15) * (1.0 + deal_sales_bonus(cat_id))
 			raw_f = maxf(raw_f, demand_floor(p, exp_q))
 			var units_f: float = raw_f + p.units_carry
-			var units := int(floor(units_f))
-			p.units_carry = units_f - float(units)
+			var wanted := int(floor(units_f))
+			p.units_carry = units_f - float(wanted)
+			var units := mini(wanted, p.stock)          # sem estoque, a venda se perde
+			p.lost_ema = p.lost_ema * 0.9 + float(wanted - units) * 0.1
 			mine_units += units
 			if units > 0:
 				_book_sale(p, units, cat_id)
@@ -790,6 +820,7 @@ func advance_day() -> void:
 	Marketing.tick(self)
 	Lab.tick(self)
 	Lab.beta_tick(self)
+	Logistics.tick(self)
 	_sell()
 	Stores.daily(self)
 	market.tick(day)
@@ -1453,7 +1484,7 @@ func to_dict() -> Dictionary:
 		"seed": seed_value, "rng_state": str(rng.state), "next_id": next_id, "game_over": game_over,
 		"log": log_entries, "income_month": income_month, "expense_month": expense_month,
 		"last_income": last_income, "last_expense": last_expense,
-		"stocks": stocks.to_dict(), "own_os": own_os, "factory": factory_level,
+		"stocks": stocks.to_dict(), "own_os": own_os, "factory": factory_level, "mfr_busy": mfr_busy,
 		"ledger": ledger, "ledger_last": ledger_last, "history": history, "loan": loan, "deals": deals,
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
@@ -1508,6 +1539,7 @@ static func from_dict(d: Dictionary) -> Company:
 	c.stocks.load_dict(d.get("stocks", {}))
 	c.own_os = d.get("own_os", {}).duplicate(true)
 	c.factory_level = int(d.get("factory", 0))
+	c.mfr_busy = (d.get("mfr_busy", {}) as Dictionary).duplicate()
 	c.ledger = d.get("ledger", {}).duplicate()
 	c.ledger_last = d.get("ledger_last", {}).duplicate()
 	c.loan = float(d.get("loan", 0.0))
@@ -1525,4 +1557,11 @@ static func from_dict(d: Dictionary) -> Company:
 	c.cash_items = d.get("cash_items", {}).duplicate()
 	c.cash_items_last = d.get("cash_items_last", {}).duplicate()
 	c.rng.state = str(d.get("rng_state", "0")).to_int()
+	# save antigo (antes do estoque): produtos à venda ganham 30 dias de estoque inicial
+	for p in c.products:
+		if p.stock < 0:
+			p.stock = 0
+			if p.state == Product.STATE_RELEASED:
+				p.avg_cost = c.current_unit_cost(p)
+				p.stock = maxi(20, int(ceil(maxf(p.ema_units, 2.0) * 30.0)))
 	return c

@@ -1,1 +1,1 @@
-Logotipo da empresa gravado nos aparelhos 3D (traseira do celular, tampa do notebook e topo do console). Textos menores corrigidos no estúdio, marketing e sistema; motivos de canais bloqueados no Marketing agora ficam legíveis.
+Estoque e produção de verdade: as vendas saem do estoque (sem estoque a venda se perde), lote inicial no lançamento, pedidos de produção que custam caixa, entram na fila do fabricante e chegam com prazo e defeitos, reposição automática, liquidação ao tirar de linha. Nova seção Estoque e produção em Operações; fabricantes com capacidade e prazo.

@@ -37,6 +37,14 @@ var flaws: Array = []           # falhas ocultas: {id, found, fixed}
 var tests: Dictionary = {}      # ensaios concluídos: id -> {day, m, found}
 var beta: Dictionary = {}       # resultado do teste beta
 var beta_job: Dictionary = {}   # beta em andamento
+var stock: int = 0              # unidades prontas para vender
+var avg_cost: float = 0.0       # custo médio por unidade em estoque
+var orders: Array = []          # pedidos de produção: {qty, unit, ready}
+var auto_stock: bool = true     # repõe o estoque sozinho
+var cover_days: int = 30        # quantos dias de venda manter em estoque
+var store_ema: float = 0.0      # média diária de vendas nas lojas próprias
+var lost_ema: float = 0.0       # média diária de vendas perdidas por falta de estoque
+var defects_total: int = 0      # unidades descartadas por defeito de fábrica
 var chip_id: int:
 	get: return int(design.get("chip", 0))
 
@@ -53,7 +61,8 @@ func to_dict() -> Dictionary:
 		"dev_cost": dev_cost, "carry": units_carry, "ema": ema_units,
 		"design": design, "os": os_id, "mfr": mfr,
 		"rating": rating, "rating_n": rating_n, "critic": critic, "reviews": reviews, "promise": promise, "gap": promise_gap,
-		"aw": awareness, "flaws": flaws, "tests": tests, "beta": beta, "beta_job": beta_job}
+		"stock": stock, "avg_cost": avg_cost, "orders": orders, "auto": auto_stock, "cover": cover_days,
+		"store_ema": store_ema, "lost_ema": lost_ema, "defects": defects_total, "aw": awareness, "flaws": flaws, "tests": tests, "beta": beta, "beta_job": beta_job}
 
 static func from_dict(d: Dictionary) -> Product:
 	var p := Product.new()
@@ -85,6 +94,14 @@ static func from_dict(d: Dictionary) -> Product:
 	p.reviews = d.get("reviews", []).duplicate(true)
 	p.promise = float(d.get("promise", 0.0))
 	p.promise_gap = float(d.get("gap", 0.0))
+	p.stock = int(d.get("stock", -1))          # -1 = save antigo (a Company dá o estoque inicial)
+	p.avg_cost = float(d.get("avg_cost", 0.0))
+	p.orders = d.get("orders", []).duplicate(true)
+	p.auto_stock = bool(d.get("auto", true))
+	p.cover_days = int(d.get("cover", 30))
+	p.store_ema = float(d.get("store_ema", 0.0))
+	p.lost_ema = float(d.get("lost_ema", 0.0))
+	p.defects_total = int(d.get("defects", 0))
 	p.awareness = float(d.get("aw", 0.0))
 	p.flaws = d.get("flaws", []).duplicate(true)
 	p.tests = d.get("tests", {}).duplicate(true)

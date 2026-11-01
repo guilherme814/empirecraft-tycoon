@@ -6,7 +6,7 @@ const LABELS := {
 	"dev": "Desenvolvimento", "research": "Pesquisa", "hiring": "Contratações", "training": "Treinamento",
 	"capex": "Investimentos (obras)", "fees": "Taxas de contratos", "commission": "Comissões e acordos",
 	"recall": "Recalls e defeitos", "interest": "Juros", "taxes": "Impostos (15% do lucro)",
-	"events": "Eventos", "loan": "Empréstimos", "other": "Outros"}
+	"events": "Eventos", "writeoff": "Estoque descartado", "inventory": "Estoque (lotes produzidos)", "loan": "Empréstimos", "other": "Outros"}
 
 var _body: VBoxContainer
 var _cur_box: VBoxContainer

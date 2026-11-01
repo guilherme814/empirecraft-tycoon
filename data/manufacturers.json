@@ -25,7 +25,17 @@
    12000,
    30000
   ],
-  "req": "res_factory"
+  "req": "res_factory",
+  "capacity": [
+   40,
+   120,
+   400
+  ],
+  "lead": [
+   3,
+   3,
+   2
+  ]
  },
  "contractors": [
   {
@@ -36,7 +46,9 @@
    "risk": 0.04,
    "fee": 0,
    "rep": 0,
-   "desc": "Barata de começar, qualidade irregular."
+   "desc": "Barata de começar, qualidade irregular.",
+   "capacity": 20,
+   "lead": 8
   },
   {
    "id": "meridian",
@@ -46,7 +58,9 @@
    "risk": 0.015,
    "fee": 5000,
    "rep": 20,
-   "desc": "Equilibrada e confiável."
+   "desc": "Equilibrada e confiável.",
+   "capacity": 60,
+   "lead": 6
   },
   {
    "id": "titan",
@@ -56,7 +70,9 @@
    "risk": 0.01,
    "fee": 15000,
    "rep": 45,
-   "desc": "Escala enorme e custo baixo; exige reputação."
+   "desc": "Escala enorme e custo baixo; exige reputação.",
+   "capacity": 200,
+   "lead": 5
   }
  ]
 }

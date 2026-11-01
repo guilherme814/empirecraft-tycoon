@@ -72,6 +72,14 @@ func _ready() -> void:
 	var dp: Product = c.products[0]
 	dp.state = Product.STATE_DEV
 	dp.work_done = dp.work_required * 0.5
+	var rp: Product = c.products[0]
+	rp.state = Product.STATE_RELEASED
+	rp.stock = 120
+	rp.avg_cost = 95.0
+	rp.orders = [{"qty": 200, "unit": 95.0, "ready": c.day + 5}]
+	screen._show_page("ops")
+	screen._pages["ops"].rebuild()
+	await _shot("ops_stock")
 	screen._show_page("dash")
 	screen._pages["dash"].rebuild()
 	await _shot("dash")

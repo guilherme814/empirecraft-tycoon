@@ -33,7 +33,7 @@ static func dre(led: Dictionary, cash_items: Dictionary) -> Dictionary:
 		invest += float(cash_items[k])
 	return {"revenue": revenue, "cogs": cogs, "gross": gross, "marketing": marketing, "payroll": payroll,
 		"structure": structure, "other": other, "operating": operating, "interest": interest, "taxes": taxes,
-		"net": net, "non_result": invest, "cash_flow": net + invest,
+		"net": net, "non_result": invest, "cash_flow": net + invest + cogs + (-_g(led, "writeoff")),
 		"margin": operating / revenue if revenue > 0.0 else 0.0}
 
 static func current(c: Company) -> Dictionary:

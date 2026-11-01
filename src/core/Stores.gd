@@ -134,9 +134,11 @@ static func daily(c: Company) -> void:
 				var n := int(floor(f))
 				carry[str(pid)] = f - float(n)
 				if n > 0:
-					c._book_sale(p, n, str(cat_id))
-					s.units = int(s.units) + n
-					s.revenue = float(s.revenue) + float(n) * p.price
+					var sold: int = c._book_sale(p, n, str(cat_id))
+					p.lost_ema = p.lost_ema * 0.9 + float(n - sold) * 0.1 / 3.0
+					s.units = int(s.units) + sold
+					s.revenue = float(s.revenue) + float(sold) * p.price
+					p.store_ema = p.store_ema * 0.95 + float(sold) * 0.05
 
 static func monthly(c: Company) -> void:
 	for s in c.stores:
