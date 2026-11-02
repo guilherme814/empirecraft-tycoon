@@ -2,21 +2,21 @@ extends Control
 ## Tela principal: barra superior (caixa, data, velocidade), navegação lateral e páginas.
 
 const PAGE_DEFS := [
-	{"id": "dash", "title": "Painel", "icon": "nav_dash", "script": "res://src/ui/pages/DashboardPage.gd"},
-	{"id": "team", "title": "Equipe", "icon": "nav_team", "script": "res://src/ui/pages/TeamPage.gd"},
-	{"id": "office", "title": "Escritório", "icon": "nav_office", "script": "res://src/ui/pages/OfficePage.gd"},
-	{"id": "stores", "title": "Lojas", "icon": "nav_store", "script": "res://src/ui/pages/StoresPage.gd"},
-	{"id": "products", "title": "Produtos", "icon": "nav_products", "script": "res://src/ui/pages/ProductsPage.gd"},
-	{"id": "lab", "title": "Testes", "icon": "nav_test", "script": "res://src/ui/pages/LabPage.gd"},
-	{"id": "marketing", "title": "Marketing", "icon": "nav_marketing", "script": "res://src/ui/pages/MarketingPage.gd"},
-	{"id": "research", "title": "Pesquisa", "icon": "nav_research", "script": "res://src/ui/pages/ResearchPage.gd"},
-	{"id": "chips", "title": "Hardware", "icon": "nav_chip", "script": "res://src/ui/pages/ChipsPage.gd"},
-	{"id": "system", "title": "Sistema", "icon": "nav_system", "script": "res://src/ui/pages/SystemPage.gd"},
-	{"id": "ops", "title": "Operações", "icon": "nav_ops", "script": "res://src/ui/pages/OperationsPage.gd"},
-	{"id": "finance", "title": "Finanças", "icon": "nav_finance", "script": "res://src/ui/pages/FinancePage.gd"},
-	{"id": "stocks", "title": "Bolsa", "icon": "nav_stocks", "script": "res://src/ui/pages/StocksPage.gd"},
-	{"id": "market", "title": "Mercado", "icon": "nav_market", "script": "res://src/ui/pages/MarketPage.gd"},
-	{"id": "feedback", "title": "Feedback", "icon": "nav_feedback", "script": "res://src/ui/pages/FeedbackPage.gd"},
+	{"id": "dash", "group": "Empresa", "title": "Painel", "icon": "nav_dash", "script": "res://src/ui/pages/DashboardPage.gd"},
+	{"id": "team", "group": "Empresa", "title": "Equipe", "icon": "nav_team", "script": "res://src/ui/pages/TeamPage.gd"},
+	{"id": "office", "group": "Empresa", "title": "Escritório", "icon": "nav_office", "script": "res://src/ui/pages/OfficePage.gd"},
+	{"id": "stores", "group": "Empresa", "title": "Lojas", "icon": "nav_store", "script": "res://src/ui/pages/StoresPage.gd"},
+	{"id": "products", "group": "Produtos", "title": "Produtos", "icon": "nav_products", "script": "res://src/ui/pages/ProductsPage.gd"},
+	{"id": "lab", "group": "Produtos", "title": "Testes", "icon": "nav_test", "script": "res://src/ui/pages/LabPage.gd"},
+	{"id": "marketing", "group": "Produtos", "title": "Marketing", "icon": "nav_marketing", "script": "res://src/ui/pages/MarketingPage.gd"},
+	{"id": "research", "group": "Produtos", "title": "Pesquisa", "icon": "nav_research", "script": "res://src/ui/pages/ResearchPage.gd"},
+	{"id": "chips", "group": "Produtos", "title": "Hardware", "icon": "nav_chip", "script": "res://src/ui/pages/ChipsPage.gd"},
+	{"id": "system", "group": "Produtos", "title": "Sistema", "icon": "nav_system", "script": "res://src/ui/pages/SystemPage.gd"},
+	{"id": "ops", "group": "Negócios", "title": "Operações", "icon": "nav_ops", "script": "res://src/ui/pages/OperationsPage.gd"},
+	{"id": "finance", "group": "Negócios", "title": "Finanças", "icon": "nav_finance", "script": "res://src/ui/pages/FinancePage.gd"},
+	{"id": "stocks", "group": "Negócios", "title": "Bolsa", "icon": "nav_stocks", "script": "res://src/ui/pages/StocksPage.gd"},
+	{"id": "market", "group": "Negócios", "title": "Mercado", "icon": "nav_market", "script": "res://src/ui/pages/MarketPage.gd"},
+	{"id": "feedback", "group": "Negócios", "title": "Feedback", "icon": "nav_feedback", "script": "res://src/ui/pages/FeedbackPage.gd"},
 ]
 const SPEED_ICONS := ["pause", "speed1", "speed2", "speed3", "speed4"]
 
@@ -46,6 +46,10 @@ var _coach_l: Label
 var _coach_go: Button
 var _coach_skip: Button
 var _coach_key: String = ""
+var _coach_host: VBoxContainer
+var _coach_wrap: MarginContainer
+var _title_l: Label
+var _title_i: TextureRect
 
 func _ready() -> void:
 	theme = Palette.make_theme()
@@ -59,12 +63,19 @@ func _ready() -> void:
 	add_child(root)
 	root.add_child(_build_top_bar())
 
+	var body := UI.hbox(0)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(body)
+	body.add_child(_build_nav())
+	var right := UI.vbox(0)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(right)
 	_content = Control.new()
 	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_content.clip_contents = true
-	root.add_child(_content)
-	root.add_child(_build_nav())
+	right.add_child(_content)
+	_coach_host = right
 
 	_build_toast()
 	_build_coach()
@@ -102,6 +113,11 @@ func _build_top_bar() -> Control:
 	var h := UI.hbox(26)
 	bar.add_child(h)
 	_logo_v = LogoView.new().setup(Game.company.logo, 56.0)
+	_logo_v.mouse_filter = Control.MOUSE_FILTER_STOP
+	_logo_v.gui_input.connect(func(e: InputEvent):
+		if (e is InputEventScreenTouch or e is InputEventMouseButton) and e.pressed:
+			Sfx.play("nav")
+			_show_page("dash"))
 	h.add_child(_logo_v)
 	_name_l = UI.label(Game.company.company_name, 30, Palette.ACCENT)
 	h.add_child(_name_l)
@@ -113,6 +129,11 @@ func _build_top_bar() -> Control:
 	h.add_child(_chip("star", Palette.INFO, _rep_l))
 	_rp_l = UI.label("", 26, Palette.MUTED)
 	h.add_child(_chip("flask", Palette.MUTED, _rp_l))
+	h.add_child(UI.spacer())
+	_title_i = UI.icon("nav_dash", 36, Palette.ACCENT)
+	h.add_child(_title_i)
+	_title_l = UI.label("", 32, Palette.TEXT)
+	h.add_child(_title_l)
 	h.add_child(UI.spacer())
 	for i in SPEED_ICONS.size():
 		var b := UI.button("", func(): Clock.set_speed(i), "normal", 68, 84, SPEED_ICONS[i], "nav")
@@ -140,33 +161,64 @@ func _chip(icon_name: String, color: Color, value: Label) -> Control:
 	c.add_child(value)
 	return c
 
-## Dock inferior (como no hub do jogo de referência): ícone + rótulo + selo de pendências.
+## Menu lateral agrupado (Empresa / Produtos / Negócios). Pode recolher para só ícones.
+const RAIL_W := 252
+const RAIL_W_SMALL := 100
+var _rail: PanelContainer
+var _rail_heads: Array = []
+var _rail_toggle: Button
+
+func _rail_width() -> int:
+	return RAIL_W_SMALL if Saves.nav_collapsed else RAIL_W
+
 func _build_nav() -> Control:
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(0, 124)
-	panel.add_theme_stylebox_override("panel", Palette.box(Palette.PANEL_DEEP, 0, 8))
-	var h := UI.hbox(6)
-	panel.add_child(h)
+	_rail = PanelContainer.new()
+	_rail.custom_minimum_size = Vector2(_rail_width(), 0)
+	_rail.add_theme_stylebox_override("panel", Palette.box(Palette.PANEL_DEEP, 0, 8))
+	var outer := UI.vbox(0)
+	_rail.add_child(outer)
+	var sc := ScrollContainer.new()
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	outer.add_child(sc)
+	var v := UI.vbox(2)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(v)
+	var last_group := ""
 	for d in PAGE_DEFS:
+		if str(d.group) != last_group:
+			last_group = str(d.group)
+			var head := Label.new()
+			head.text = last_group.to_upper()
+			head.add_theme_font_size_override("font_size", 20)
+			head.add_theme_color_override("font_color", Palette.MUTED)
+			head.custom_minimum_size = Vector2(0, 28)
+			head.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+			head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_rail_heads.append(head)
+			v.add_child(head)
 		var b := Button.new()
 		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(0, 100)
+		b.custom_minimum_size = Vector2(0, 52)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		Palette.style_button(b, "normal")
+		b.tooltip_text = str(d.title)
 		b.pressed.connect(func(): Sfx.play("nav"); _show_page(d.id))
-		var v := UI.vbox(2)
-		v.alignment = BoxContainer.ALIGNMENT_CENTER
-		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		var ic := UI.icon(str(d.icon), 44, Palette.TEXT)
-		ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		v.add_child(ic)
-		var l := UI.label(str(d.title), 23, Palette.TEXT)
+		var row := UI.hbox(14)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		row.offset_left = 14
+		row.alignment = BoxContainer.ALIGNMENT_BEGIN
+		var ic := UI.icon(str(d.icon), 38, Palette.TEXT)
+		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(ic)
+		var l := UI.label(str(d.title), 24, Palette.TEXT)
 		l.clip_text = true
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(l)
-		b.add_child(v)
+		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(l)
+		b.add_child(row)
 		var badge := Label.new()
 		badge.add_theme_font_size_override("font_size", 18)
 		badge.add_theme_color_override("font_color", Color.WHITE)
@@ -174,14 +226,51 @@ func _build_nav() -> Control:
 		bs.content_margin_left = 9
 		bs.content_margin_right = 9
 		badge.add_theme_stylebox_override("normal", bs)
-		badge.position = Vector2(8, 4)
 		badge.visible = false
 		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.add_child(badge)
 		_nav[d.id] = b
 		_badges[d.id] = badge
-		h.add_child(b)
-	return panel
+		_style_nav(str(d.id), false)
+		v.add_child(b)
+	_rail_toggle = UI.button("", _toggle_rail, "normal", 48, 0, "", "nav")
+	outer.add_child(_rail_toggle)
+	_apply_rail()
+	return _rail
+
+func _toggle_rail() -> void:
+	Saves.nav_collapsed = not Saves.nav_collapsed
+	Saves.save_settings()
+	_apply_rail()
+	_update_coach()
+
+func _apply_rail() -> void:
+	var small := Saves.nav_collapsed
+	_rail.custom_minimum_size = Vector2(_rail_width(), 0)
+	_rail.size = Vector2(_rail_width(), _rail.size.y)
+	for d in PAGE_DEFS:
+		var b: Button = _nav[d.id]
+		((b.get_child(0) as HBoxContainer).get_child(1) as Label).visible = not small
+		var badge: Label = _badges[d.id]
+		badge.position = Vector2(62, 0) if small else Vector2(float(_rail_width()) - 58.0, 12.0)
+	var groups: Array = []
+	for d in PAGE_DEFS:
+		if not groups.has(str(d.group)):
+			groups.append(str(d.group))
+	for i in _rail_heads.size():
+		(_rail_heads[i] as Label).text = "" if small else str(groups[i]).to_upper()
+	_rail_toggle.text = "»" if small else "«  Recolher menu"
+
+func _style_nav(pid: String, selected: bool) -> void:
+	var b: Button = _nav[pid]
+	var flat := Palette.box(Color(0, 0, 0, 0), 14, 0)
+	b.add_theme_stylebox_override("normal", Palette.box(Palette.ACCENT, 14, 0) if selected else flat)
+	b.add_theme_stylebox_override("hover", Palette.box(Palette.ACCENT.lightened(0.1), 14, 0) if selected else Palette.box(Palette.PANEL_ALT, 14, 0))
+	b.add_theme_stylebox_override("pressed", Palette.box(Palette.ACCENT.darkened(0.2), 14, 0))
+	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	var row := b.get_child(0) as HBoxContainer
+	(row.get_child(0) as TextureRect).modulate = Palette.ON_COLOR if selected else Palette.TEXT
+	(row.get_child(1) as Label).add_theme_color_override("font_color", Palette.ON_COLOR if selected else Palette.TEXT)
 
 func _badge_count(id: String) -> int:
 	var c: Company = Game.company
@@ -209,31 +298,31 @@ func _update_badges() -> void:
 		l.visible = n > 0
 		l.text = str(n)
 
-## Cartão do tutorial/dicas: fica no canto inferior esquerdo, acima da barra de abas.
+## Faixa do tutorial/dicas: fica embaixo do conteúdo (ocupa espaço, não cobre nada).
 func _build_coach() -> void:
 	_coach = PanelContainer.new()
-	var st := Palette.card_box(Color("1c2a4a"), 16, 18)
+	var st := Palette.card_box(Color("1c2a4a"), 16, 14)
 	st.border_color = Palette.INFO
 	st.set_border_width_all(2)
 	_coach.add_theme_stylebox_override("panel", st)
 	_coach.visible = false
-	_coach.anchor_top = 1.0
-	_coach.anchor_bottom = 1.0
-	_coach.offset_left = 24.0
-	_coach.offset_bottom = -140.0
-	_coach.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	var v := UI.vbox(10)
-	_coach.add_child(v)
+	var m := MarginContainer.new()
+	m.add_theme_constant_override("margin_left", 10)
+	m.add_theme_constant_override("margin_right", 10)
+	m.add_theme_constant_override("margin_bottom", 8)
+	var h := UI.hbox(14)
+	_coach.add_child(h)
 	_coach_l = UI.wrap("", 25, Palette.TEXT)
-	_coach_l.custom_minimum_size = Vector2(980, 0)
-	v.add_child(_coach_l)
-	var row := UI.hbox(10)
-	v.add_child(row)
+	_coach_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_coach_l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(_coach_l)
 	_coach_go = UI.button("", func(): _coach_action(), "primary", 64, 0)
-	row.add_child(_coach_go)
+	h.add_child(_coach_go)
 	_coach_skip = UI.button("", func(): _coach_dismiss(), "normal", 64, 0)
-	row.add_child(_coach_skip)
-	add_child(_coach)
+	h.add_child(_coach_skip)
+	m.add_child(_coach)
+	_coach_host.add_child(m)
+	_coach_wrap = m
 
 func _coach_action() -> void:
 	var c: Company = Game.company
@@ -271,6 +360,7 @@ func _update_coach() -> void:
 	if _overlay != null or c.game_over:
 		text = ""
 	_coach.visible = text != ""
+	_coach_wrap.visible = text != ""
 	if text != "" and _coach_l.text != text:
 		_coach_l.text = text
 
@@ -299,10 +389,12 @@ func _show_page(id: String) -> void:
 	for pid in _pages:
 		_pages[pid].visible = (pid == id)
 	for pid in _nav:
-		Palette.style_button(_nav[pid], "primary" if pid == id else "normal")
-		var lab := _nav[pid].get_child(0).get_child(1) as Label
-		lab.add_theme_color_override("font_color", Palette.ON_COLOR if pid == id else Palette.TEXT)
-		(_nav[pid].get_child(0).get_child(0) as TextureRect).modulate = Palette.ON_COLOR if pid == id else Palette.TEXT
+		_style_nav(pid, pid == id)
+	if _title_l != null:
+		for d in PAGE_DEFS:
+			if d.id == id:
+				_title_l.text = str(d.title)
+				_title_i.texture = Icons.tex(str(d.icon))
 	if _pages.has(id):
 		var pg: Control = _pages[id]
 		pg.modulate.a = 0.0

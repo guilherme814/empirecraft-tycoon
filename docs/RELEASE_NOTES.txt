@@ -1,1 +1,1 @@
-Tutorial guiado de 7 passos e dicas na primeira visita a cada aba; abertura animada; botões com retorno ao toque; seção Sobre e privacidade nas Configurações; pacote de publicação (política de privacidade, ficha da loja, guia de assinatura) e CI pronto para assinar o APK com a sua chave.
+Interface renovada: menu lateral agrupado (Empresa, Produtos, Negócios) que pode recolher para só ícones, mais altura para o conteúdo, título da aba no topo, toque no logo volta ao Painel e faixa de tutorial que não cobre mais as telas.

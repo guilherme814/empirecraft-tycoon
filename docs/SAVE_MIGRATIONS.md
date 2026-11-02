@@ -30,6 +30,7 @@ Testes: `test_save_roundtrip` (ida e volta) e `test_old_save_compat` (save v2 m�
 - 0.8.3: sem mudança no save (logo nos aparelhos usa o logotipo já salvo).
 - v9 → v10 (0.9.0): produtos ganham `stock`, `avg_cost`, `orders`, `auto`, `cover`, `store_ema`, `lost_ema`, `defects`; empresa ganha `mfr_busy`. Save antigo: produtos à venda recebem 30 dias de estoque (sem custo) ao carregar; os demais começam com 0.
 - v10 → v11 (0.10.0): novos campos `tutorial` ({on, step, visited}) e `tips_seen`. Save antigo: tutorial desligado e nenhuma dica marcada como vista (as dicas de primeira visita aparecem uma vez).
+- 0.11.0: sem mudança no save (a preferência do menu recolhido fica em user://settings.cfg).
 - v4 → 0.4.1: novos campos `cash_start`, `cash_flow_last`, `cash_items`, `cash_items_last` (padrão: caixa atual / vazios).
 - Empréstimo, bolsa e obras passam a ser movimentos de caixa fora do lucro (antes contavam como receita/despesa).
 

@@ -8,6 +8,7 @@ const SETTINGS_PATH := "user://settings.cfg"
 var autosave_days: int = 30
 var sfx_volume: int = 7       # 0-10
 var music_volume: int = 4     # 0-10
+var nav_collapsed: bool = false   # menu lateral só com ícones
 
 func _ready() -> void:
 	var cfg := ConfigFile.new()
@@ -15,12 +16,14 @@ func _ready() -> void:
 		autosave_days = int(cfg.get_value("game", "autosave_days", 30))
 		sfx_volume = int(cfg.get_value("audio", "sfx", 7))
 		music_volume = int(cfg.get_value("audio", "music", 4))
+		nav_collapsed = bool(cfg.get_value("ui", "nav_collapsed", false))
 
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("game", "autosave_days", autosave_days)
 	cfg.set_value("audio", "sfx", sfx_volume)
 	cfg.set_value("audio", "music", music_volume)
+	cfg.set_value("ui", "nav_collapsed", nav_collapsed)
 	cfg.save(SETTINGS_PATH)
 
 func has_save() -> bool:

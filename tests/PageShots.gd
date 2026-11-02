@@ -88,6 +88,10 @@ func _ready() -> void:
 	screen._show_page("team")
 	screen._refresh_all()
 	await _shot("coach")
+	screen._toggle_rail()
+	screen._show_page("stores")
+	await _shot("rail_small")
+	screen._toggle_rail()
 	get_tree().quit()
 
 func _shot(n: String) -> void:
