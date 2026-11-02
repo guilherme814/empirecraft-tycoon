@@ -47,6 +47,7 @@ for i in range(10):
     r = 26 if i % 2 == 0 else 11
     star.append((32 + r * math.cos(a), 33 + r * math.sin(a)))
 svg("star", poly(star))
+svg("star_fill", '<g fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polygon points="%s"/></g>' % " ".join("%.1f,%.1f" % p for p in star))
 svg("flask", '<path d="M25 6h14"/><path d="M28 6v18L11 52q-3 7 4 7h34q7 0 4-7L36 24V6"/><path d="M19 42h26"/>')
 svg("menu", '<path d="M10 17h44M10 32h44M10 47h44"/>')
 svg("lock", '<rect x="14" y="28" width="36" height="28" rx="6"/><path d="M22 28v-8a10 10 0 0 1 20 0v8"/>')

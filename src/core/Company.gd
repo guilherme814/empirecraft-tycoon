@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 10
+const SAVE_VERSION := 11
 const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
 const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
@@ -34,6 +34,8 @@ var next_id: int = 1
 var game_over: bool = false
 var log_serial: int = 0           # contador de notificações (central de notificações)
 var notif_seen: int = 0           # última notificação vista
+var tutorial: Dictionary = {"on": false, "step": 0, "visited": []}   # tutorial guiado (ver Tutorial)
+var tips_seen: Array = []         # abas cuja dica de primeira visita já apareceu
 var sandbox: bool = false         # dinheiro e pontos de pesquisa infinitos
 var log_entries: Array = []       # {day, text, kind}
 var income_month: float = 0.0
@@ -1489,7 +1491,7 @@ func to_dict() -> Dictionary:
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
 		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores, "logo": logo, "decor": decor,
-		"sandbox": sandbox, "log_serial": log_serial, "notif_seen": notif_seen,
+		"sandbox": sandbox, "tutorial": tutorial, "tips_seen": tips_seen, "log_serial": log_serial, "notif_seen": notif_seen,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1531,6 +1533,8 @@ static func from_dict(d: Dictionary) -> Company:
 	c.sandbox = bool(d.get("sandbox", false))
 	c.log_serial = int(d.get("log_serial", 0))
 	c.notif_seen = int(d.get("notif_seen", c.log_serial))
+	c.tutorial = (d.get("tutorial", {"on": false, "step": 0, "visited": []}) as Dictionary).duplicate(true)
+	c.tips_seen = (d.get("tips_seen", []) as Array).duplicate()
 	c.log_entries = d.get("log", []).duplicate(true)
 	c.income_month = float(d.get("income_month", 0.0))
 	c.expense_month = float(d.get("expense_month", 0.0))

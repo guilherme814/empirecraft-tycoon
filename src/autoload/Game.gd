@@ -15,6 +15,7 @@ func new_game(company_name: String, sandbox: bool = false) -> void:
 	if sandbox:
 		company.set_sandbox(true)
 	company.company_name = company_name if company_name.strip_edges() != "" else "Minha Empresa"
+	Tutorial.start(company)
 	company.add_log("Bem-vindo à %s! Contrate uma equipe e desenvolva seu primeiro produto." % company.company_name, "info")
 	_attach()
 

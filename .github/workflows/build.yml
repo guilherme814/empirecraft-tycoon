@@ -52,6 +52,10 @@ jobs:
     name: APK Android
     needs: test
     runs-on: ubuntu-latest
+    env:
+      KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      KS_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+      KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -99,6 +103,16 @@ jobs:
             echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android"
           } >> "$GITHUB_ENV"
 
+      - name: Keystore de lançamento (opcional, só se os Secrets existirem)
+        if: env.KS_B64 != ''
+        run: |
+          echo "$KS_B64" | base64 -d > "$HOME/release.keystore"
+          {
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$HOME/release.keystore"
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_USER=$KS_ALIAS"
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$KS_PASS"
+          } >> "$GITHUB_ENV"
+
       - name: Importar projeto
         run: |
           "$GODOT_BIN" --headless --editor --quit-after 300 || true
@@ -107,7 +121,8 @@ jobs:
       - name: Exportar APK
         run: |
           mkdir -p build
-          "$GODOT_BIN" --headless --export-debug "Android" build/EmpireCraft.apk 2>&1 | tee export.log
+          if [ -n "$KS_B64" ]; then MODE=--export-release; else MODE=--export-debug; fi
+          "$GODOT_BIN" --headless $MODE "Android" build/EmpireCraft.apk 2>&1 | tee export.log
           test -s build/EmpireCraft.apk || { echo "::error::APK não foi gerado"; exit 1; }
           ls -la build
 

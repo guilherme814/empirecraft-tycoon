@@ -98,7 +98,7 @@ func _card(grid: GridContainer, r: Dictionary) -> void:
 	if mx > 1:
 		var stars := UI.hbox(4)
 		for i in mx:
-			var star := UI.icon("star", 28, Color("ffc247") if i < lvl else Color("2c3348"))
+			var star := UI.icon("star_fill" if i < lvl else "star", 28, Color("ffc247") if i < lvl else Color("3a4156"))
 			stars.add_child(star)
 		stars.add_child(UI.spacer())
 		stars.add_child(UI.label("%d/%d" % [lvl, mx], 24, Palette.ACCENT))

@@ -28,6 +28,8 @@ var _content: Control
 var _logo_v: LogoView
 var _name_l: Label
 var _money_l: Label
+var _money_shown: float = 0.0
+var _money_tween: Tween
 var _date_l: Label
 var _rep_l: Label
 var _rp_l: Label
@@ -39,11 +41,18 @@ var _toast: PanelContainer
 var _toast_l: Label
 var _toast_gen: int = 0
 var _overlay: Control = null
+var _coach: PanelContainer
+var _coach_l: Label
+var _coach_go: Button
+var _coach_skip: Button
+var _coach_key: String = ""
 
 func _ready() -> void:
 	theme = Palette.make_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(UI.background())
+	modulate.a = 0.0
+	create_tween().tween_property(self, "modulate:a", 1.0, 0.3)
 
 	var root := UI.vbox(0)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -58,6 +67,7 @@ func _ready() -> void:
 	root.add_child(_build_nav())
 
 	_build_toast()
+	_build_coach()
 	Clock.active = true
 	Clock.set_speed(0)
 	Game.ticked.connect(_on_ticked)
@@ -199,6 +209,71 @@ func _update_badges() -> void:
 		l.visible = n > 0
 		l.text = str(n)
 
+## Cartão do tutorial/dicas: fica no canto inferior esquerdo, acima da barra de abas.
+func _build_coach() -> void:
+	_coach = PanelContainer.new()
+	var st := Palette.card_box(Color("1c2a4a"), 16, 18)
+	st.border_color = Palette.INFO
+	st.set_border_width_all(2)
+	_coach.add_theme_stylebox_override("panel", st)
+	_coach.visible = false
+	_coach.anchor_top = 1.0
+	_coach.anchor_bottom = 1.0
+	_coach.offset_left = 24.0
+	_coach.offset_bottom = -140.0
+	_coach.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	var v := UI.vbox(10)
+	_coach.add_child(v)
+	_coach_l = UI.wrap("", 25, Palette.TEXT)
+	_coach_l.custom_minimum_size = Vector2(980, 0)
+	v.add_child(_coach_l)
+	var row := UI.hbox(10)
+	v.add_child(row)
+	_coach_go = UI.button("", func(): _coach_action(), "primary", 64, 0)
+	row.add_child(_coach_go)
+	_coach_skip = UI.button("", func(): _coach_dismiss(), "normal", 64, 0)
+	row.add_child(_coach_skip)
+	add_child(_coach)
+
+func _coach_action() -> void:
+	var c: Company = Game.company
+	var step := Tutorial.current(c)
+	if not step.is_empty():
+		_show_page(str(step.page))
+	else:
+		_coach_dismiss()
+
+func _coach_dismiss() -> void:
+	var c: Company = Game.company
+	if Tutorial.active(c):
+		Tutorial.skip(c)
+	else:
+		Tutorial.tip_seen(c, _current)
+	_update_coach()
+
+func _update_coach() -> void:
+	var c: Company = Game.company
+	if c == null or _coach == null:
+		return
+	Tutorial.mark_visit(c, _current)
+	Tutorial.update(c)
+	var step := Tutorial.current(c)
+	var text := ""
+	if not step.is_empty():
+		text = str(step.text)
+		_coach_go.text = "Ir para a aba" if str(step.page) != _current else "Entendi"
+		_coach_go.visible = str(step.page) != _current
+		_coach_skip.text = "Pular tutorial"
+	else:
+		text = Tutorial.tip_for(c, _current)
+		_coach_go.visible = false
+		_coach_skip.text = "Entendi"
+	if _overlay != null or c.game_over:
+		text = ""
+	_coach.visible = text != ""
+	if text != "" and _coach_l.text != text:
+		_coach_l.text = text
+
 func _build_toast() -> void:
 	_toast = PanelContainer.new()
 	var ts := Palette.card_box(Palette.PANEL_ALT, 16, 18)
@@ -234,11 +309,26 @@ func _show_page(id: String) -> void:
 		create_tween().tween_property(pg, "modulate:a", 1.0, 0.18)
 	if _pages.has(id):
 		_pages[id].refresh()
+	_update_coach()
+
+## Dinheiro do topo "rola" até o valor novo (curto, para não atrasar a leitura).
+func _count_money(target: float) -> void:
+	if _money_tween != null and _money_tween.is_valid():
+		_money_tween.kill()
+	if absf(target - _money_shown) < 1.0 or absf(target - _money_shown) > absf(target) * 0.5 + 5000.0:
+		_money_shown = target
+		_money_l.text = Fmt.money(target)
+		return
+	_money_tween = create_tween()
+	_money_tween.tween_method(func(v: float):
+		_money_shown = v
+		_money_l.text = Fmt.money(v), _money_shown, target, 0.3)
 
 func _refresh_all() -> void:
 	var c: Company = Game.company
 	if c == null:
 		return
+	_update_coach()
 	_update_badges()
 	if _logo_v.logo != c.logo:
 		_logo_v.setup(c.logo, 56.0)
@@ -246,7 +336,10 @@ func _refresh_all() -> void:
 	var unread := c.unread_count()
 	_bell_badge.visible = unread > 0
 	_bell_badge.text = str(mini(unread, 99))
-	_money_l.text = "R$ ∞" if c.sandbox else Fmt.money(c.money)
+	if c.sandbox:
+		_money_l.text = "R$ ∞"
+	else:
+		_count_money(c.money)
 	_money_l.add_theme_color_override("font_color", Palette.GOOD if c.money >= 0.0 else Palette.BAD)
 	_date_l.text = Fmt.date(c.day)
 	_rep_l.text = "Rep. %d" % int(c.reputation)

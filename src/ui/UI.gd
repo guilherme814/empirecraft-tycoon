@@ -29,6 +29,14 @@ static func button(text: String, cb: Callable, kind: String = "normal", min_h: i
 	Palette.style_button(b, kind)
 	if icon_name != "":
 		b.icon = Icons.tex(icon_name)   # tamanho limitado por icon_max_width (Palette.style_button)
+	# feedback ao tocar: o botão afunda um pouco e volta
+	b.resized.connect(func(): b.pivot_offset = b.size * 0.5)
+	b.button_down.connect(func(): b.create_tween().tween_property(b, "scale", Vector2(0.96, 0.96), 0.06))
+	b.button_up.connect(func(): b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT))
+	# retorno ao toque: o botão "afunda" um pouco enquanto pressionado
+	b.resized.connect(func(): b.pivot_offset = b.size * 0.5)
+	b.button_down.connect(func(): b.scale = Vector2(0.97, 0.97))
+	b.button_up.connect(func(): b.scale = Vector2.ONE)
 	if sound != "":
 		b.pressed.connect(func(): Sfx.play(sound))
 	if cb.is_valid():

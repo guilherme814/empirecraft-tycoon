@@ -7,6 +7,7 @@ var _upd_label: Label
 var _http: HTTPRequest
 var _manifest: Dictionary = {}
 var _upd_btn: Button
+const PRIVACY_URL := "https://github.com/guilherme814/empirecraft-tycoon/blob/main/docs/PRIVACY.md"
 
 func _ready() -> void:
 	theme = Palette.make_theme()
@@ -58,6 +59,15 @@ func _ready() -> void:
 	_http.timeout = 12.0
 	add_child(_http)
 	_http.request_completed.connect(_on_manifest)
+
+	var about := UI.card()
+	v.add_child(about)
+	var abv := UI.vbox(10)
+	about.add_child(abv)
+	abv.add_child(UI.label("Sobre e privacidade", 28))
+	abv.add_child(UI.wrap("Device Empire funciona offline. Seus saves ficam só neste aparelho; o jogo não coleta nem envia dados pessoais. A única conexão é a verificação opcional de atualização.", 22))
+	abv.add_child(UI.wrap("Feito com Godot Engine (licença MIT) e fonte Poppins (SIL Open Font License).", 21))
+	abv.add_child(UI.button("Política de privacidade", func(): OS.shell_open(PRIVACY_URL), "normal", 72))
 
 	var danger := UI.button("Apagar save", func(): _delete(), "danger", 84)
 	danger.disabled = not Saves.has_save()

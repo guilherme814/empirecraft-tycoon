@@ -32,6 +32,7 @@ func _initialize() -> void:
 	test_rival_reactions()
 	test_store_country_summary()
 	test_logistics()
+	test_tutorial()
 	test_device_variants()
 	test_logo_symbols()
 	test_sandbox()
@@ -720,3 +721,53 @@ func test_logistics() -> void:
 	var left := p.stock
 	c.retire(p.id)
 	check(p.stock == 0 and (left == 0 or c.money > cash), "tirar de linha liquida o estoque")
+
+func test_tutorial() -> void:
+	var c := Company.new(41)
+	c.money = 800000.0
+	check(not Tutorial.active(c), "empresa nova só tem tutorial se o jogo ligar")
+	Tutorial.start(c)
+	check(str(Tutorial.current(c).id) == "team", "tutorial começa pela equipe")
+	Tutorial.update(c)
+	check(str(Tutorial.current(c).id) == "team", "sem equipe o passo não avança")
+	check(Tutorial.tip_for(c, "market") == "", "com tutorial ativo não há dicas soltas")
+	for prof in ["engineer", "programmer", "researcher"]:
+		c.auto_fill(prof, 0, 0.0)
+	Tutorial.update(c)
+	check(str(Tutorial.current(c).id) == "product", "contratar equipe avança o tutorial")
+	var p: Product = c.create_product("T", "phone", c.default_specs("phone")).product
+	Tutorial.update(c)
+	check(str(Tutorial.current(c).id) == "ready", "criar produto avança")
+	var d := 0
+	while p.state == Product.STATE_DEV and d < 500:
+		c.advance_day()
+		d += 1
+	Tutorial.update(c)
+	check(str(Tutorial.current(c).id) == "release", "produto pronto avança")
+	c.release(p.id)
+	Tutorial.update(c)
+	check(str(Tutorial.current(c).id) == "stock", "lançar avança até o estoque")
+	Tutorial.mark_visit(c, "ops")
+	c.research_points = 500.0
+	c.do_research("res_specs")
+	Tutorial.update(c)
+	check(str(Tutorial.current(c).id) == "market", "visitar Operações e pesquisar avançam")
+	Tutorial.mark_visit(c, "market")
+	Tutorial.update(c)
+	check(not Tutorial.active(c) and Tutorial.current(c).is_empty(), "tutorial termina sozinho")
+	check(Tutorial.tip_for(c, "market") != "", "depois do tutorial, dica de primeira visita aparece")
+	Tutorial.tip_seen(c, "market")
+	check(Tutorial.tip_for(c, "market") == "", "dica vista não repete")
+	# skip e save
+	var c2 := Company.new(42)
+	Tutorial.start(c2)
+	Tutorial.skip(c2)
+	check(not Tutorial.active(c2), "pular desliga o tutorial")
+	var c3 := Company.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	check(c3.tips_seen.has("market") and not Tutorial.active(c3), "save preserva dicas vistas")
+	var old: Dictionary = JSON.parse_string(JSON.stringify(c.to_dict()))
+	old.erase("tutorial")
+	old.erase("tips_seen")
+	check(not Tutorial.active(Company.from_dict(old)), "save antigo não reinicia o tutorial")
+	for st in GameData.tutorial().steps:
+		check(GameData.tutorial().tips.has(str(st.page)) or str(st.page) == "dash", "página do passo existe: " + str(st.page))

@@ -83,6 +83,11 @@ func _ready() -> void:
 	screen._show_page("dash")
 	screen._pages["dash"].rebuild()
 	await _shot("dash")
+	Tutorial.start(c)
+	c.tutorial["step"] = 1
+	screen._show_page("team")
+	screen._refresh_all()
+	await _shot("coach")
 	get_tree().quit()
 
 func _shot(n: String) -> void:

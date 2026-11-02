@@ -35,6 +35,9 @@ static func agencies() -> Array:
 static func categories() -> Array:
 	return _load("categories")
 
+static func tutorial() -> Dictionary:
+	return _load("tutorial")
+
 static func research() -> Array:
 	return _load("research")
 

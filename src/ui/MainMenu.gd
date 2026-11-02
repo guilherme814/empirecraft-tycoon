@@ -12,6 +12,8 @@ func _ready() -> void:
 	theme = Palette.make_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(UI.background())
+	modulate.a = 0.0
+	create_tween().tween_property(self, "modulate:a", 1.0, 0.35)
 
 	# vitrine 3D à direita; menu à esquerda
 	_viewer = DeviceViewer.new()
@@ -64,6 +66,38 @@ func _ready() -> void:
 	cont.disabled = not Saves.has_save()
 	v.add_child(cont)
 	v.add_child(UI.button("Configurações", _on_settings, "normal", 100))
+	if not Engine.has_meta("splash_done"):
+		Engine.set_meta("splash_done", true)
+		_splash()
+
+## Abertura curta (uma vez por execução): toque para pular.
+func _splash() -> void:
+	var bg := ColorRect.new()
+	bg.color = Color(0.07, 0.08, 0.10, 1.0)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(bg)
+	var cc := CenterContainer.new()
+	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.add_child(cc)
+	var box := UI.vbox(10)
+	cc.add_child(box)
+	var t1 := UI.label("DEVICE", 120, Palette.ACCENT)
+	t1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(t1)
+	var t2 := UI.label("E M P I R E", 48, Palette.TEXT)
+	t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(t2)
+	box.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(box, "modulate:a", 1.0, 0.5)
+	tw.tween_interval(0.9)
+	tw.tween_property(bg, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(bg.queue_free)
+	bg.gui_input.connect(func(e: InputEvent):
+		if (e is InputEventScreenTouch or e is InputEventMouseButton) and e.pressed:
+			tw.kill()
+			bg.queue_free())
 
 func _show_device() -> void:
 	var cat: String = SHOWCASE[_ci]

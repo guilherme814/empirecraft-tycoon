@@ -1,0 +1,27 @@
+{
+ "steps": [
+  {"id": "team", "page": "team", "text": "1/7 · Contrate pelo menos um engenheiro e um programador na aba Equipe."},
+  {"id": "product", "page": "products", "text": "2/7 · Abra Produtos e crie seu primeiro smartphone no estúdio de design."},
+  {"id": "ready", "page": "dash", "text": "3/7 · Acelere o tempo (botões no topo) até o aparelho ficar pronto."},
+  {"id": "release", "page": "products", "text": "4/7 · Em Produtos, lance o aparelho e defina o preço."},
+  {"id": "stock", "page": "ops", "text": "5/7 · Abra Operações: as vendas saem do estoque, então reponha antes de acabar."},
+  {"id": "research", "page": "research", "text": "6/7 · Em Pesquisa, evolua qualquer melhoria para seus próximos aparelhos."},
+  {"id": "market", "page": "market", "text": "7/7 · Veja os concorrentes na aba Mercado: eles reagem aos seus lançamentos."}
+ ],
+ "tips": {
+  "team": "Engenheiros e programadores desenvolvem; pesquisadores geram pontos de pesquisa. Morale e treinamento aumentam o rendimento.",
+  "products": "Cada projeto tem custo, qualidade e preço justo. Gaste os pontos de especificação onde o seu público mais valoriza.",
+  "office": "O escritório 3D mostra a equipe trabalhando. Decoração e níveis do escritório afetam a produtividade.",
+  "stores": "Lojas próprias vendem do estoque central e geram lealdade. Cada país tem custo e reputação mínima.",
+  "marketing": "Campanhas aumentam a consciência de marca. Canais mais caros alcançam mais gente.",
+  "research": "Pontos de pesquisa e dinheiro evoluem melhorias permanentes. Algumas liberam novas categorias.",
+  "chips": "Projetar chips próprios melhora o desempenho, mas custa e demora.",
+  "stocks": "Compre ações dos rivais para lucrar com a valorização. O preço segue o valor da empresa.",
+  "finance": "Aqui estão o resultado do mês, o caixa e os empréstimos. Cuide para o caixa nunca ficar negativo.",
+  "ops": "Operações controla estoque, fabricantes e acordos comerciais. Reposição automática usa caixa sozinha.",
+  "system": "Personalize o seu sistema operacional e veja a prévia ao vivo. Exige a pesquisa de Sistema Operacional Próprio para usar nos aparelhos.",
+  "market": "Veja a expectativa de qualidade, a participação por categoria e a ficha de cada concorrente.",
+  "lab": "Testes encontram defeitos escondidos antes do lançamento, evitando recalls.",
+  "feedback": "Avaliações de clientes e da crítica mostram o que melhorar no próximo aparelho."
+ }
+}

@@ -2,8 +2,8 @@ class_name Rules
 extends RefCounted
 ## Constantes de balanceamento. Mexa aqui para ajustar a economia do jogo.
 
-const VERSION := "0.9.0"
-const VERSION_CODE := 19
+const VERSION := "0.10.0"
+const VERSION_CODE := 20
 ## Áreas da árvore de pesquisa (menu lateral da aba Pesquisa).
 const RESEARCH_AREAS := [
 	{"id": "tech", "name": "Tecnologia", "icon": "nav_chip"},
