@@ -38,3 +38,4 @@ Testes: `test_save_roundtrip` (ida e volta) e `test_old_save_compat` (save v2 m�
 - CI publica `version.json` na release `latest-build` com versão, SHA-256 do APK e notas. Configurações → "Verificar atualização" compara com `Rules.VERSION`.
 - O Android pede confirmação para instalar; o APK precisa ter o mesmo pacote e a mesma assinatura do instalado.
 - Pendente: assinatura digital do manifesto e download/instalação dentro do app (exige plugin Android).
+- 0.12.0: SAVE_VERSION 12. Novos campos opcionais: origin, difficulty, founder, focus, mods, pending_decision, decision_log, last_decision_day (saves antigos: origem vazia = sem bônus). Sandbox passa a ter slot próprio (user://save_sandbox.json); um save antigo com a flag sandbox é movido para esse slot na primeira abertura. Novo jogo guarda a campanha anterior em save_0.replaced.json.

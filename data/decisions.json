@@ -1,0 +1,70 @@
+[
+ {"id": "supplier_hike", "title": "Fornecedor aumenta os preços", "weight": 3, "min_day": 60, "need_products": 1,
+  "text": "Seu principal fornecedor de componentes anunciou um reajuste. Você precisa escolher como reagir.",
+  "options": [
+   {"label": "Aceitar o reajuste", "effect": {"mod": {"key": "cost", "mult": 1.08, "days": 90}}},
+   {"label": "Trocar de fornecedor", "effect": {"money": -8000, "mod": {"key": "cost", "mult": 1.02, "days": 180}},
+    "risk": {"chance": 0.3, "text": "O novo fornecedor entregou um lote com defeitos.", "effect": {"reputation": -3}}},
+   {"label": "Investir em componentes próprios", "effect": {"money": -30000, "mod": {"key": "cost", "mult": 0.94, "days": 240}}}
+  ]},
+ {"id": "influencer", "title": "Influenciador quer parceria", "weight": 3, "min_day": 45, "need_products": 1,
+  "text": "Um criador de conteúdo com milhões de seguidores propõe divulgar sua marca.",
+  "options": [
+   {"label": "Fechar parceria", "effect": {"money": -15000, "mod": {"key": "sales", "mult": 1.12, "days": 60}},
+    "risk": {"chance": 0.25, "text": "O influenciador se envolveu em polêmica e arrastou a marca.", "effect": {"reputation": -4}}},
+   {"label": "Enviar produtos de cortesia", "effect": {"money": -3000, "mod": {"key": "sales", "mult": 1.04, "days": 30}}},
+   {"label": "Recusar", "effect": {}}
+  ]},
+ {"id": "poaching", "title": "Rival tenta levar seu talento", "weight": 3, "min_day": 90, "need_staff": 3,
+  "text": "Um concorrente fez uma oferta tentadora a um dos seus funcionários mais experientes.",
+  "options": [
+   {"label": "Fazer contraproposta", "effect": {"money": -9000, "morale": 8}},
+   {"label": "Deixar sair", "effect": {"lose_staff": 1, "morale": -6}},
+   {"label": "Prometer promoção futura", "effect": {"morale": 3},
+    "risk": {"chance": 0.45, "text": "A promessa não convenceu e ele pediu demissão mesmo assim.", "effect": {"lose_staff": 1, "morale": -5}}}
+  ]},
+ {"id": "burnout", "title": "Equipe cansada", "weight": 2, "min_day": 120, "need_staff": 4,
+  "text": "Depois de meses de entregas, a equipe pede uma pausa. O ritmo está caindo.",
+  "options": [
+   {"label": "Semana de folga coletiva", "effect": {"money": -6000, "morale": 15}},
+   {"label": "Bônus de produtividade", "effect": {"money": -14000, "morale": 10, "reputation": 1}},
+   {"label": "Manter o ritmo", "effect": {"morale": -12}}
+  ]},
+ {"id": "prototype_leak", "title": "Protótipo vazou na internet", "weight": 2, "min_day": 100, "need_products": 1,
+  "text": "Fotos do seu próximo aparelho circulam em fóruns. A imprensa quer um posicionamento.",
+  "options": [
+   {"label": "Reforçar a segurança", "effect": {"money": -12000, "reputation": 1}},
+   {"label": "Aproveitar o hype", "effect": {"money": -5000, "mod": {"key": "sales", "mult": 1.06, "days": 45}},
+    "risk": {"chance": 0.3, "text": "O vazamento revelou falhas e a crítica pegou pesado.", "effect": {"reputation": -3}}},
+   {"label": "Ignorar", "effect": {}, "risk": {"chance": 0.5, "text": "Os rivais copiaram sua ideia antes do lançamento.", "effect": {"reputation": -2}}}
+  ]},
+ {"id": "tech_fair", "title": "Convite para feira internacional", "weight": 2, "min_day": 60,
+  "text": "Uma grande feira de tecnologia abriu um estande para a sua empresa.",
+  "options": [
+   {"label": "Estande completo", "effect": {"money": -20000, "reputation": 5, "rp": 25}},
+   {"label": "Estande simples", "effect": {"money": -7000, "reputation": 2, "rp": 8}},
+   {"label": "Não participar", "effect": {}}
+  ]},
+ {"id": "fx_crisis", "title": "Câmbio dispara", "weight": 2, "min_day": 150, "need_products": 1,
+  "text": "A moeda oscilou forte e importar componentes ficou mais caro.",
+  "options": [
+   {"label": "Contratar proteção cambial", "effect": {"money": -9000, "mod": {"key": "cost", "mult": 1.01, "days": 120}}},
+   {"label": "Absorver o custo", "effect": {"mod": {"key": "cost", "mult": 1.06, "days": 120}}},
+   {"label": "Repassar ao preço", "effect": {"mod": {"key": "sales", "mult": 0.95, "days": 90}}}
+  ]},
+ {"id": "gov_contract", "title": "Contrato com o governo", "weight": 2, "min_day": 180, "need_products": 2,
+  "text": "Um órgão público quer comprar aparelhos em volume, com prazos rígidos.",
+  "options": [
+   {"label": "Aceitar o contrato", "effect": {"money": 40000, "morale": -6},
+    "risk": {"chance": 0.3, "text": "O prazo apertado gerou multa contratual.", "effect": {"money": -22000, "reputation": -2}}},
+   {"label": "Negociar prazo maior", "effect": {"money": 18000}},
+   {"label": "Recusar", "effect": {}}
+  ]},
+ {"id": "open_source", "title": "Comunidade pede código aberto", "weight": 2, "min_day": 120,
+  "text": "Desenvolvedores independentes pedem que parte do seu software seja aberta.",
+  "options": [
+   {"label": "Abrir parte do código", "effect": {"reputation": 4, "rp": 15, "mod": {"key": "sales", "mult": 1.03, "days": 90}}},
+   {"label": "Manter fechado", "effect": {}},
+   {"label": "Lançar programa de bolsas", "effect": {"money": -10000, "reputation": 3, "rp": 10}}
+  ]}
+]

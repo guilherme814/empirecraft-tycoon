@@ -4,8 +4,8 @@ extends Node3D
 ## canelas) animado por código: digitar sentado, andar, levantar/sentar, conversar e beber café.
 ## As malhas são geradas uma vez por "estilo" e reaproveitadas por todos.
 
-const SKIN := [Color("f2c9a0"), Color("d9a574"), Color("b27c52"), Color("7d5236")]
-const HAIR := [Color("2b2118"), Color("5a3b22"), Color("c79a54"), Color("1c1c24"), Color("8a3b2a")]
+const SKIN := Look.SKIN
+const HAIR := Look.HAIR
 const WALK_SPEED := 1.15
 const HIP_STAND := 0.48
 const HIP_SIT := 0.31
@@ -65,10 +65,12 @@ func setup(id: int, profession: String, nm: String) -> void:
 	prof = profession
 	emp_name = nm
 	_ph = float(id % 97) * 0.37
-	var skin_i := id % SKIN.size()
-	var hair_i := (id / 3) % HAIR.size()
-	var key := "%s|%d|%d" % [prof, skin_i, hair_i]
-	var look: Dictionary = LOOK.get(prof, LOOK.engineer)
+	var lk: Dictionary = Look.of(id, nm, prof)
+	var skin_i: int = lk.skin_i
+	var hair_i: int = lk.hair_i
+	var key := "%s|%s" % [prof, Look.key(lk)]
+	var look: Dictionary = (LOOK.get(prof, LOOK.engineer) as Dictionary).duplicate()
+	look.merge(lk)
 
 	if _shadow_mesh == null:
 		_shadow_mesh = QuadMesh.new()
@@ -183,33 +185,82 @@ static func _head_mesh(key: String, skin_i: int, hair_i: int, look: Dictionary) 
 	var b := MeshBuilder.new()
 	var skin: Color = SKIN[skin_i]
 	var hair: Color = HAIR[hair_i]
+	if bool(look.get("dye", false)):
+		hair = look.extra
 	var prof_id := key.get_slice("|", 0)
+	var style: int = int(look.get("style", 0))
 	b.box(Vector3(0, 0.0, 0), Vector3(0.07, 0.04, 0.07), skin.darkened(0.08))          # pescoço
 	b.box(Vector3(0, 0.12, 0), Vector3(0.21, 0.21, 0.20), skin, 0.0, 0.0)
-	b.box(Vector3(-0.05, 0.135, -0.101), Vector3(0.028, 0.034, 0.008), Color("1c1c24"), 0.0, 0.0)  # olhos
-	b.box(Vector3(0.05, 0.135, -0.101), Vector3(0.028, 0.034, 0.008), Color("1c1c24"), 0.0, 0.0)
-	b.box(Vector3(0, 0.085, -0.101), Vector3(0.05, 0.012, 0.008), skin.darkened(0.3), 0.0, 0.0)   # boca
+	b.box(Vector3(-0.108, 0.115, 0.0), Vector3(0.012, 0.04, 0.04), skin.darkened(0.05), 0.0, 0.0)  # orelhas
+	b.box(Vector3(0.108, 0.115, 0.0), Vector3(0.012, 0.04, 0.04), skin.darkened(0.05), 0.0, 0.0)
+	b.box(Vector3(0, 0.103, -0.104), Vector3(0.018, 0.03, 0.01), skin.darkened(0.12), 0.0, 0.0)     # nariz
+	b.box(Vector3(-0.05, 0.135, -0.101), Vector3(0.03, 0.034, 0.008), Color("f4f6fa"), 0.0, 0.0)    # olhos (branco)
+	b.box(Vector3(0.05, 0.135, -0.101), Vector3(0.03, 0.034, 0.008), Color("f4f6fa"), 0.0, 0.0)
+	var eye: Color = Look.EYES[int(look.get("eye_i", 0))]
+	b.box(Vector3(-0.05, 0.135, -0.1055), Vector3(0.016, 0.026, 0.006), eye, 0.0, 0.0)
+	b.box(Vector3(0.05, 0.135, -0.1055), Vector3(0.016, 0.026, 0.006), eye, 0.0, 0.0)
+	b.box(Vector3(-0.05, 0.17, -0.101), Vector3(0.038, 0.01, 0.008), hair.darkened(0.15), 0.0, 0.0)  # sobrancelhas
+	b.box(Vector3(0.05, 0.17, -0.101), Vector3(0.038, 0.01, 0.008), hair.darkened(0.15), 0.0, 0.0)
+	b.box(Vector3(0, 0.075, -0.101), Vector3(0.05, 0.012, 0.008), Color("9a4a4a"), 0.0, 0.0)         # boca
+	b.box(Vector3(-0.026, 0.083, -0.101), Vector3(0.008, 0.01, 0.008), Color("9a4a4a"), 0.0, 0.0)    # sorriso
+	b.box(Vector3(0.026, 0.083, -0.101), Vector3(0.008, 0.01, 0.008), Color("9a4a4a"), 0.0, 0.0)
+	if bool(look.get("freckles", false)):
+		for fx in [-0.07, -0.05, 0.05, 0.07]:
+			b.box(Vector3(fx, 0.105, -0.102), Vector3(0.008, 0.008, 0.006), skin.darkened(0.25), 0.0, 0.0)
+	# cabelo (o engenheiro usa capacete: só cabelo comprido aparece por baixo)
+	var helmet := prof_id == "engineer"
+	if not helmet:
+		match style:
+			0:
+				b.box(Vector3(0, 0.235, 0.0), Vector3(0.22, 0.06, 0.21), hair)
+				b.box(Vector3(-0.108, 0.18, 0.0), Vector3(0.012, 0.06, 0.2), hair)
+				b.box(Vector3(0.108, 0.18, 0.0), Vector3(0.012, 0.06, 0.2), hair)
+			1:
+				b.box(Vector3(0, 0.228, 0.0), Vector3(0.214, 0.035, 0.204), hair)
+			2:
+				b.box(Vector3(0, 0.235, 0.0), Vector3(0.23, 0.07, 0.22), hair)
+				b.box(Vector3(0, 0.12, 0.11), Vector3(0.23, 0.24, 0.05), hair)
+				b.box(Vector3(-0.112, 0.1, 0.0), Vector3(0.025, 0.22, 0.2), hair)
+				b.box(Vector3(0.112, 0.1, 0.0), Vector3(0.025, 0.22, 0.2), hair)
+			3:
+				b.box(Vector3(0, 0.235, 0.0), Vector3(0.22, 0.06, 0.21), hair)
+				b.box(Vector3(0, 0.30, 0.07), Vector3(0.09, 0.09, 0.09), hair)
+			4:
+				b.box(Vector3(0, 0.245, 0.0), Vector3(0.26, 0.1, 0.25), hair)
+				b.box(Vector3(-0.125, 0.17, 0.02), Vector3(0.04, 0.12, 0.2), hair)
+				b.box(Vector3(0.125, 0.17, 0.02), Vector3(0.04, 0.12, 0.2), hair)
+			5:
+				b.box(Vector3(0, 0.235, 0.0), Vector3(0.22, 0.06, 0.21), hair)
+				b.box(Vector3(0, 0.275, -0.07), Vector3(0.18, 0.05, 0.09), hair)
+			_:
+				pass
+	elif style == 2 or style == 4:
+		b.box(Vector3(0, 0.13, 0.11), Vector3(0.23, 0.2, 0.05), hair)
+	match int(look.get("beard", 0)):
+		1:
+			b.box(Vector3(0, 0.05, -0.095), Vector3(0.2, 0.07, 0.03), hair.darkened(0.2).lerp(skin, 0.55), 0.0, 0.0)
+		2:
+			b.box(Vector3(0, 0.045, -0.098), Vector3(0.2, 0.09, 0.04), hair, 0.0, 0.0)
+			b.box(Vector3(0, 0.095, -0.103), Vector3(0.1, 0.018, 0.012), hair, 0.0, 0.0)
+		3:
+			b.box(Vector3(0, 0.095, -0.103), Vector3(0.1, 0.02, 0.012), hair, 0.0, 0.0)
 	match prof_id:
 		"engineer":
 			b.prism(Vector3(0, 0.235, 0), 0.125, 0.07, 8, Color("ffd23f"))             # capacete
 			b.box(Vector3(0, 0.215, -0.1), Vector3(0.21, 0.02, 0.07), Color("e6b800"))
 		"programmer":
-			b.box(Vector3(0, 0.235, 0.0), Vector3(0.22, 0.06, 0.21), hair)
-			b.box(Vector3(0, 0.138, -0.106), Vector3(0.19, 0.012, 0.004), Color("5aa9ff"))  # óculos
-			b.box(Vector3(-0.075, 0.138, -0.106), Vector3(0.07, 0.05, 0.004), Color(0.35, 0.66, 1.0, 1.0))
-			b.box(Vector3(0.075, 0.138, -0.106), Vector3(0.07, 0.05, 0.004), Color(0.35, 0.66, 1.0, 1.0))
+			b.box(Vector3(-0.112, 0.13, 0.0), Vector3(0.035, 0.07, 0.06), Color("5aa9ff"))   # fone
+			b.box(Vector3(0.112, 0.13, 0.0), Vector3(0.035, 0.07, 0.06), Color("5aa9ff"))
+			b.box(Vector3(0, 0.275, 0.0), Vector3(0.23, 0.012, 0.03), Color("3c7fcf"))
 		"designer":
-			b.box(Vector3(0, 0.235, 0.0), Vector3(0.23, 0.07, 0.22), look.extra)       # cabelo roxo
-			b.box(Vector3(0, 0.14, 0.11), Vector3(0.23, 0.2, 0.05), look.extra)        # franja/trás
-			b.box(Vector3(0.085, 0.16, 0.0), Vector3(0.05, 0.16, 0.2), look.extra)
-			b.box(Vector3(0.0, 0.27, 0.15), Vector3(0.1, 0.1, 0.1), look.extra)        # rabo de cavalo
-			b.box(Vector3(0.0, 0.17, 0.17), Vector3(0.08, 0.16, 0.07), look.extra.darkened(0.1))
 			b.box(Vector3(-0.108, 0.1, -0.02), Vector3(0.012, 0.03, 0.03), Color("ffd23f"))  # brinco
 		"researcher":
-			b.box(Vector3(0, 0.235, 0.0), Vector3(0.22, 0.06, 0.21), hair)
-			b.box(Vector3(0, 0.138, -0.106), Vector3(0.17, 0.01, 0.004), Color("2a2a30"))
-			b.box(Vector3(-0.065, 0.138, -0.106), Vector3(0.06, 0.045, 0.004), Color(0.9, 0.95, 1.0, 1.0))
-			b.box(Vector3(0.065, 0.138, -0.106), Vector3(0.06, 0.045, 0.004), Color(0.9, 0.95, 1.0, 1.0))
+			pass
+	if bool(look.get("glasses", false)):
+		var fc: Color = Color("5aa9ff") if prof_id == "programmer" else (Color("d94f8a") if prof_id == "designer" else Color("2a2a30"))
+		b.box(Vector3(0, 0.138, -0.106), Vector3(0.19, 0.01, 0.004), fc)
+		b.box(Vector3(-0.065, 0.138, -0.106), Vector3(0.07, 0.05, 0.004), Color(0.8, 0.9, 1.0, 1.0).lerp(fc, 0.25))
+		b.box(Vector3(0.065, 0.138, -0.106), Vector3(0.07, 0.05, 0.004), Color(0.8, 0.9, 1.0, 1.0).lerp(fc, 0.25))
 	_meshes[k] = b.build()
 	return _meshes[k]
 

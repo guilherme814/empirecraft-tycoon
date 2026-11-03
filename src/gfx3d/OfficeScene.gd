@@ -74,7 +74,7 @@ func _ready() -> void:
 	rng.seed = 20260101
 	_vp = SubViewport.new()
 	_vp.own_world_3d = true
-	_vp.msaa_3d = Viewport.MSAA_2X
+	_vp.msaa_3d = {"eco": Viewport.MSAA_DISABLED, "bal": Viewport.MSAA_2X, "high": Viewport.MSAA_4X}.get(Saves.gfx, Viewport.MSAA_2X)
 	_vp.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(_vp)
 	_world = Node3D.new()

@@ -112,10 +112,19 @@ func _person_card(e: Employee, is_staff: bool) -> Control:
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var v := UI.vbox(6)
 	card.add_child(v)
-	var head := UI.hbox(8)
-	head.add_child(UI.label(e.emp_name, 28))
-	head.add_child(UI.spacer())
-	head.add_child(UI.label(Fmt.money(e.salary()) + "/mês", 22, Palette.MUTED))
+	var head := UI.hbox(14)
+	head.add_child(Portrait.make(e, 112))
+	var hv := UI.vbox(2)
+	hv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	hv.add_child(UI.label(e.emp_name, 28))
+	var tier := Look.tier(e.total())
+	hv.add_child(UI.label("%s · %s" % [Look.TIER_NAMES[tier], GameData.profession(e.profession).get("singular", "")], 22, Palette.ACCENT if tier >= 2 else Palette.MUTED))
+	hv.add_child(UI.label(Fmt.money(e.salary()) + "/mês", 22, Palette.MUTED))
+	if is_staff:
+		var mc := Palette.GOOD if e.morale >= 65.0 else (Palette.ACCENT if e.morale >= 35.0 else Palette.BAD)
+		hv.add_child(UI.label("Moral %d" % int(e.morale), 22, mc))
+	head.add_child(hv)
 	v.add_child(head)
 	for a in Employee.ATTRS:
 		var r := UI.hbox(10)

@@ -1,12 +1,8 @@
 extends Control
 
-var _name_edit: LineEdit
 var _viewer: DeviceViewer
 var _ci: int = 0
 const SHOWCASE := ["phone", "watch", "laptop", "console"]
-
-var _sandbox: bool = false
-var _sandbox_btn: Button
 
 func _ready() -> void:
 	theme = Palette.make_theme()
@@ -49,22 +45,14 @@ func _ready() -> void:
 	v.add_child(ver)
 	v.add_child(Control.new())
 
-	_name_edit = LineEdit.new()
-	_name_edit.placeholder_text = "Nome da sua empresa"
-	_name_edit.text = "Minha Empresa"
-	_name_edit.custom_minimum_size = Vector2(0, 84)
-	_name_edit.add_theme_font_size_override("font_size", 32)
-	_name_edit.add_theme_stylebox_override("normal", Palette.box(Palette.PANEL, 14, 18))
-	_name_edit.add_theme_stylebox_override("focus", Palette.box(Palette.PANEL_ALT, 14, 18))
-	_name_edit.max_length = 28
-	v.add_child(_name_edit)
-
-	_sandbox_btn = UI.button("Modo sandbox: desligado", _toggle_sandbox, "normal", 72)
 	v.add_child(UI.button("Novo jogo", _on_new, "primary", 100))
-	v.add_child(_sandbox_btn)
-	var cont := UI.button("Continuar", _on_continue, "normal", 100)
-	cont.disabled = not Saves.has_save()
+	var camp := Saves.peek(false)
+	var cont := UI.button("Continuar campanha" + ("" if camp.is_empty() else "  ·  %s, dia %d" % [camp.name, int(camp.day)]), _on_continue, "normal", 100)
+	cont.disabled = camp.is_empty()
 	v.add_child(cont)
+	var sbx := Saves.peek(true)
+	if not sbx.is_empty():
+		v.add_child(UI.button("Continuar sandbox  ·  %s, dia %d" % [sbx.name, int(sbx.day)], _on_continue_sandbox, "info", 84))
 	v.add_child(UI.button("Configurações", _on_settings, "normal", 100))
 	if not Engine.has_meta("splash_done"):
 		Engine.set_meta("splash_done", true)
@@ -110,17 +98,15 @@ func _next_device() -> void:
 	_ci = (_ci + 1) % SHOWCASE.size()
 	_show_device()
 
-func _toggle_sandbox() -> void:
-	_sandbox = not _sandbox
-	_sandbox_btn.text = "Modo sandbox: " + ("LIGADO (dinheiro e pesquisa infinitos)" if _sandbox else "desligado")
-	Palette.style_button(_sandbox_btn, "info" if _sandbox else "normal")
-
 func _on_new() -> void:
-	Game.new_game(_name_edit.text, _sandbox)
-	get_tree().change_scene_to_file("res://src/scenes/GameScreen.tscn")
+	get_tree().change_scene_to_file("res://src/scenes/FoundingScreen.tscn")
 
 func _on_continue() -> void:
-	if Game.load_game():
+	if Game.load_game(false):
+		get_tree().change_scene_to_file("res://src/scenes/GameScreen.tscn")
+
+func _on_continue_sandbox() -> void:
+	if Game.load_game(true):
 		get_tree().change_scene_to_file("res://src/scenes/GameScreen.tscn")
 
 func _on_settings() -> void:

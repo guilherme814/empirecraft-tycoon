@@ -49,6 +49,9 @@ var _coach_key: String = ""
 var _coach_host: VBoxContainer
 var _coach_wrap: MarginContainer
 var _title_l: Label
+var _stage_l: Label
+var _last_stage: int = -1
+var _last_money: float = -1.0
 var _title_i: TextureRect
 
 func _ready() -> void:
@@ -121,6 +124,8 @@ func _build_top_bar() -> Control:
 	h.add_child(_logo_v)
 	_name_l = UI.label(Game.company.company_name, 30, Palette.ACCENT)
 	h.add_child(_name_l)
+	_stage_l = UI.label("", 22, Palette.INFO)
+	h.add_child(_stage_l)
 	_money_l = UI.label("", 32, Palette.GOOD)
 	h.add_child(_chip("coin", Palette.GOOD, _money_l))
 	_date_l = UI.label("", 28)
@@ -438,8 +443,16 @@ func _refresh_all() -> void:
 	_rp_l.text = "PP ∞" if c.sandbox else "PP %d" % int(c.research_points)
 	if _pages.has(_current):
 		_pages[_current].refresh()
+	var st := Founding.stage(c)
+	_stage_l.text = str(st.name)
+	if _last_stage >= 0 and int(st.level) > _last_stage:
+		Game.notice.emit("Sua empresa agora é uma %s!" % st.name, "good")
+		UIFx.confetti(self, Vector2(size.x * 0.5, 160.0))
+	_last_stage = int(st.level)
 	if c.game_over and _overlay == null:
 		_show_game_over()
+	elif not c.pending_decision.is_empty() and _overlay == null:
+		_show_decision()
 
 func _on_ticked(_day: int) -> void:
 	_refresh_all()
@@ -451,6 +464,8 @@ func _on_speed(i: int) -> void:
 # ───────────── avisos e menus ─────────────
 
 func _on_notice(text: String, kind: String) -> void:
+	if kind == "good" and _money_l != null:
+		UIFx.coins(self, _money_l.get_global_rect().get_center())
 	_toast_l.text = text
 	_toast_l.add_theme_color_override("font_color", UI.kind_color(kind))
 	_toast.visible = true
@@ -530,18 +545,41 @@ func _open_menu() -> void:
 	_overlay = _modal("Menu")
 	var v: VBoxContainer = _overlay.get_meta("box")
 	v.add_child(UI.button("Continuar jogando", _close_overlay, "primary", 90))
-	var sb_on: bool = Game.company.sandbox
-	v.add_child(UI.button("Modo sandbox: " + ("LIGADO (tocar para desligar)" if sb_on else "desligado (dinheiro e pesquisa infinitos)"),
-		func(): Game.company.set_sandbox(not sb_on); Game.changed.emit(); _close_overlay(), "info" if sb_on else "normal", 90))
 	v.add_child(UI.button("Salvar", func(): Game.save(); Game.notice.emit("Jogo salvo.", "good"); _close_overlay(), "normal", 90))
 	v.add_child(UI.button("Salvar e voltar ao menu", _to_menu, "normal", 90))
+
+## Decisão pendente: o relógio pausa até o jogador escolher uma opção.
+func _show_decision() -> void:
+	var c: Company = Game.company
+	var d := Decisions.def(str(c.pending_decision.id))
+	if d.is_empty():
+		c.pending_decision = {}
+		return
+	Clock.pause()
+	_overlay = _modal(str(d.title))
+	var v: VBoxContainer = _overlay.get_meta("box")
+	v.add_child(UI.wrap(str(d.text), 26, Palette.TEXT))
+	var opts: Array = d.options
+	for i in opts.size():
+		var opt: Dictionary = opts[i]
+		var can := Decisions.affordable(c, opt)
+		var col := UI.vbox(2)
+		var b := UI.button(str(opt.label), func():
+			var res := Decisions.resolve(c, i)
+			_close_overlay()
+			Game.notice.emit(str(res.msg), "bad" if bool(res.get("risk_hit", false)) else "info")
+			Game.changed.emit(), "primary" if can else "normal", 76)
+		b.disabled = not can
+		col.add_child(b)
+		col.add_child(UI.wrap(Decisions.describe(c, opt) + ("" if can else "\nCaixa insuficiente."), 21, Palette.MUTED if can else Palette.BAD))
+		v.add_child(col)
 
 func _show_game_over() -> void:
 	Clock.pause()
 	_overlay = _modal("Falência")
 	var v: VBoxContainer = _overlay.get_meta("box")
 	v.add_child(UI.wrap("Sua empresa não aguentou as dívidas. Dia %d (%s)." % [Game.company.day, Fmt.date(Game.company.day)], 28, Palette.TEXT))
-	v.add_child(UI.button("Voltar ao menu", func(): Saves.delete_save(); _to_menu_nosave(), "primary", 90))
+	v.add_child(UI.button("Voltar ao menu", func(): Saves.delete_save(Game.company.sandbox); _to_menu_nosave(), "primary", 90))
 
 func _modal(title: String) -> Control:
 	var shade := ColorRect.new()

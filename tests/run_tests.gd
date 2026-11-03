@@ -37,6 +37,9 @@ func _initialize() -> void:
 	test_logo_symbols()
 	test_sandbox()
 	test_os_look_and_notifs()
+	test_founding()
+	test_decisions()
+	test_look()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -771,3 +774,69 @@ func test_tutorial() -> void:
 	check(not Tutorial.active(Company.from_dict(old)), "save antigo não reinicia o tutorial")
 	for st in GameData.tutorial().steps:
 		check(GameData.tutorial().tips.has(str(st.page)) or str(st.page) == "dash", "página do passo existe: " + str(st.page))
+
+func test_founding() -> void:
+	var base := Company.new(3)
+	var c := Company.new(3)
+	Founding.apply(c, {"origin": "us", "difficulty": "hard", "founder": "Ana", "focus": "phone"})
+	check(c.origin == "us" and c.difficulty == "hard" and c.focus == "phone" and c.founder == "Ana", "fundação grava a ficha")
+	check(absf(c.money - Rules.START_MONEY * 1.3 * 0.7) < 0.01, "capital = origem x dificuldade")
+	check(c.reputation > base.reputation, "origem EUA aumenta a reputação inicial")
+	check(c.sales_mult("phone") > c.sales_mult("laptop"), "especialização vende mais na categoria foco")
+	check(c.sales_mult("laptop") < 1.0, "dificuldade desafiadora reduz vendas")
+	var br := staffed(5)
+	var cn := staffed(5)
+	var pay_a := br.monthly_payroll()
+	Founding.apply(cn, {"origin": "br"})
+	check(cn.monthly_payroll() < pay_a, "Brasil tem folha menor")
+	var de := Company.new(4)
+	Founding.apply(de, {"origin": "de"})
+	check(Founding.origin_mult(de, "research") > 1.0, "Alemanha pesquisa mais rápido")
+	var c2 := Company.from_dict(c.to_dict())
+	check(c2.origin == "us" and c2.focus == "phone" and c2.founder == "Ana", "fundação sobrevive ao save")
+	var old := Company.from_dict({"version": 11, "name": "Velha", "day": 1, "money": 1.0})
+	check(old.origin == "" and old.sales_mult("phone") == 1.0 and Founding.origin_mult(old, "wage") == 1.0, "save antigo não ganha bônus")
+	check(Founding.stage(Company.new()).level == 0, "empresa nova é Garagem")
+	var big := staffed(9)
+	big.last_income = 80000.0
+	check(Founding.stage(big).level >= 1, "estágio sobe com porte")
+
+func test_decisions() -> void:
+	for d in Decisions.defs():
+		check(d.options.size() >= 2, "decisão %s tem opções" % d.id)
+	var c := staffed(11)
+	c.day = 200
+	c.last_income = 60000.0
+	Decisions.open(c, "supplier_hike")
+	check(not c.pending_decision.is_empty(), "decisão abre")
+	var before := c.money
+	var r := Decisions.resolve(c, 2)       # componentes próprios
+	check(r.ok and c.pending_decision.is_empty(), "decisão resolvida")
+	check(c.money < before, "opção cobra o custo")
+	check(c.mod_mult("cost") < 1.0, "componentes próprios reduzem o custo por um tempo")
+	var cl := Company.from_dict(c.to_dict())
+	check(cl.mod_mult("cost") < 1.0 and cl.decision_log.size() == 1, "modificador e histórico persistem")
+	c.day += 300
+	check(c.mod_mult("cost") == 1.0, "modificador expira")
+	var poor := staffed(12)
+	poor.money = 10.0
+	Decisions.open(poor, "supplier_hike")
+	check(not Decisions.resolve(poor, 2).ok and not poor.pending_decision.is_empty(), "sem caixa não paga opção cara")
+	var sell := staffed(13)
+	sell.mods.append({"key": "sales", "mult": 2.0, "until": 9999, "src": "t"})
+	check(sell.sales_mult("phone") == 2.0, "mod de vendas entra na demanda")
+	var staff_n := c.staff.size()
+	Decisions.open(c, "poaching")
+	Decisions._apply(c, {"lose_staff": 1})
+	check(c.staff.size() == staff_n - 1, "lose_staff remove um funcionário")
+
+func test_look() -> void:
+	var a := Look.of(5, "Maria", "designer")
+	var b := Look.of(5, "Maria", "designer")
+	check(a == b, "aparência é determinística")
+	var styles := {}
+	for i in 60:
+		styles[int(Look.of(i, "N%d" % i, "engineer").style)] = true
+	check(styles.size() >= 5, "estilos de cabelo variam entre funcionários")
+	check(bool(Look.of(1, "X", "programmer").glasses), "programador usa óculos")
+	check(Look.tier(300) == 3 and Look.tier(30) == 0, "faixas de senioridade")

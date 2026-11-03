@@ -1,0 +1,15 @@
+{
+ "origins": [
+  {"id": "br", "name": "Brasil", "tag": "Mão de obra acessível", "desc": "Mercado interno grande e salários mais baixos. Sem vantagem de capital.", "cash": 1.0, "wage": 0.9, "research": 1.0, "cost": 1.0, "rep": 0},
+  {"id": "us", "name": "Estados Unidos", "tag": "Capital farto", "desc": "Investidores generosos e marca respeitada, mas talentos caros.", "cash": 1.3, "wage": 1.2, "research": 1.0, "cost": 1.0, "rep": 5},
+  {"id": "de", "name": "Alemanha", "tag": "Engenharia de precisão", "desc": "Pesquisa mais rápida, salários um pouco acima da média.", "cash": 1.0, "wage": 1.1, "research": 1.15, "cost": 1.0, "rep": 2},
+  {"id": "cn", "name": "China", "tag": "Cadeia de suprimentos", "desc": "Produção mais barata, mas a marca começa pouco conhecida.", "cash": 1.0, "wage": 0.95, "research": 1.0, "cost": 0.94, "rep": -6},
+  {"id": "jp", "name": "Japão", "tag": "Qualidade e reputação", "desc": "Marca respeitada e pesquisa metódica, com custos de produção maiores.", "cash": 1.0, "wage": 1.0, "research": 1.08, "cost": 1.04, "rep": 10}
+ ],
+ "difficulties": [
+  {"id": "easy", "name": "Tranquilo", "desc": "Mais caixa inicial e vendas 8% melhores.", "cash": 1.5, "sales": 1.08},
+  {"id": "normal", "name": "Normal", "desc": "Experiência equilibrada.", "cash": 1.0, "sales": 1.0},
+  {"id": "hard", "name": "Desafiador", "desc": "Pouco caixa e vendas 7% piores.", "cash": 0.7, "sales": 0.93}
+ ],
+ "focus_sales": 1.10
+}

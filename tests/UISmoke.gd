@@ -368,6 +368,7 @@ func _ready() -> void:
 	Saves.delete_save()
 	if FileAccess.file_exists(Saves.BACKUP_PATH):
 		DirAccess.remove_absolute(Saves.BACKUP_PATH)
+	test_save_slots()
 	print("UI smoke: %s" % ("OK" if failures == 0 else "%d falha(s)" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -378,3 +379,26 @@ func _count(n: Node, meshes_only: bool) -> int:
 			k += 1
 		k += _count(ch, meshes_only)
 	return k
+
+func test_save_slots() -> void:
+	var camp := Company.new(21)
+	camp.company_name = "Campanha"
+	camp.day = 40
+	var sb := Company.new(22)
+	sb.company_name = "Sandbox"
+	sb.set_sandbox(true)
+	sb.day = 7
+	Saves.delete_save(false)
+	Saves.delete_save(true)
+	Saves.save_company(camp)
+	Saves.save_company(sb)
+	ok(Saves.peek(false).name == "Campanha" and Saves.peek(true).name == "Sandbox", "slots independentes")
+	ok(Saves.load_company(false).day == 40 and Saves.load_company(true).day == 7, "cada slot carrega o seu")
+	Saves.archive_campaign()
+	ok(FileAccess.file_exists(Saves.REPLACED_PATH), "campanha substituída fica arquivada")
+	Saves.delete_save(true)
+	ok(Saves.has_save(false) and not Saves.has_save(true), "apagar o sandbox não toca a campanha")
+	Saves.delete_save(false)
+	for p in [Saves.REPLACED_PATH, Saves.BACKUP_PATH, Saves.SANDBOX_BACKUP_PATH]:
+		if FileAccess.file_exists(p):
+			DirAccess.remove_absolute(p)

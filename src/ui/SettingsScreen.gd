@@ -36,6 +36,23 @@ func _ready() -> void:
 	row.add_child(UI.button("+", func(): _change(10), "normal", 80, 100))
 	cv.add_child(UI.wrap("0 desliga. O jogo também salva ao sair do app."))
 
+	var gcard := UI.card()
+	v.add_child(gcard)
+	var gv := UI.vbox(10)
+	gcard.add_child(gv)
+	gv.add_child(UI.label("Gráficos", 28))
+	var grow := UI.hbox(10)
+	gv.add_child(grow)
+	for opt in [["eco", "Econômico"], ["bal", "Equilibrado"], ["high", "Alto"]]:
+		var gid: String = opt[0]
+		var gb := UI.button(opt[1], func():
+			Saves.gfx = gid
+			Saves.save_settings()
+			get_tree().reload_current_scene(), "primary" if Saves.gfx == gid else "normal", 72)
+		gb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grow.add_child(gb)
+	gv.add_child(UI.wrap("Econômico poupa bateria (sem efeitos de partículas e sombras de painel). Alto usa mais suavização e brilho.", 21))
+
 	var audio := UI.card()
 	v.add_child(audio)
 	var av := UI.vbox(14)
@@ -69,9 +86,12 @@ func _ready() -> void:
 	abv.add_child(UI.wrap("Feito com Godot Engine (licença MIT) e fonte Poppins (SIL Open Font License).", 21))
 	abv.add_child(UI.button("Política de privacidade", func(): OS.shell_open(PRIVACY_URL), "normal", 72))
 
-	var danger := UI.button("Apagar save", func(): _delete(), "danger", 84)
-	danger.disabled = not Saves.has_save()
+	var danger := UI.button("Apagar campanha salva", func(): _delete(false), "danger", 84)
+	danger.disabled = not Saves.has_save(false)
 	v.add_child(danger)
+	var danger2 := UI.button("Apagar sandbox salvo", func(): _delete(true), "danger", 84)
+	danger2.disabled = not Saves.has_save(true)
+	v.add_child(danger2)
 	v.add_child(UI.button("Voltar", func(): get_tree().change_scene_to_file("res://src/scenes/MainMenu.tscn"), "primary", 90))
 	_update()
 
@@ -123,6 +143,6 @@ func _update() -> void:
 	_sfx_label.text = "%d / 10" % Saves.sfx_volume
 	_music_label.text = "%d / 10" % Saves.music_volume
 
-func _delete() -> void:
-	Saves.delete_save()
+func _delete(sandbox: bool) -> void:
+	Saves.delete_save(sandbox)
 	get_tree().change_scene_to_file("res://src/scenes/MainMenu.tscn")

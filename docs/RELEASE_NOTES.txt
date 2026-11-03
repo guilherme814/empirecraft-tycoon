@@ -1,1 +1,1 @@
-Interface renovada: menu lateral agrupado (Empresa, Produtos, Negócios) que pode recolher para só ícones, mais altura para o conteúdo, título da aba no topo, toque no logo volta ao Painel e faixa de tutorial que não cobre mais as telas.
+Grande atualização: criação da empresa com país de origem, dificuldade e especialização; campanha e sandbox em saves separados; eventos com decisões e consequências; retratos e visual único para cada funcionário; estágios da empresa, efeitos de moedas e confete e perfis gráficos.

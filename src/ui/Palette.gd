@@ -29,6 +29,11 @@ static func card_box(color: Color, radius: int = 18, pad: int = 20) -> StyleBoxF
 	var s := box(color, radius, pad)
 	s.set_border_width_all(1)
 	s.border_color = color.lightened(0.10)
+	if Saves.gfx != "eco":
+		s.shadow_color = Color(0, 0, 0, 0.28 if Saves.gfx == "high" else 0.18)
+		s.shadow_size = 8 if Saves.gfx == "high" else 5
+		s.shadow_offset = Vector2(0, 3)
+		s.border_blend = true
 	return s
 
 static func kind_color(kind: String) -> Color:

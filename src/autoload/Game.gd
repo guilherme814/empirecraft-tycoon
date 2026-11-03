@@ -10,17 +10,19 @@ signal ui_request(kind: String, pid: int)   # "launch" | "reviews": a tela princ
 var company: Company = null
 var _last_autosave_day: int = 0
 
-func new_game(company_name: String, sandbox: bool = false) -> void:
+## spec (opcional): {origin, difficulty, founder, focus} da tela de fundação. O sandbox usa slot próprio.
+func new_game(company_name: String, sandbox: bool = false, spec: Dictionary = {}) -> void:
 	company = Company.new()
+	company.company_name = company_name if company_name.strip_edges() != "" else "Minha Empresa"
+	Founding.apply(company, spec)
 	if sandbox:
 		company.set_sandbox(true)
-	company.company_name = company_name if company_name.strip_edges() != "" else "Minha Empresa"
 	Tutorial.start(company)
 	company.add_log("Bem-vindo à %s! Contrate uma equipe e desenvolva seu primeiro produto." % company.company_name, "info")
 	_attach()
 
-func load_game() -> bool:
-	var c: Company = Saves.load_company()
+func load_game(sandbox: bool = false) -> bool:
+	var c: Company = Saves.load_company(sandbox)
 	if c == null:
 		return false
 	company = c

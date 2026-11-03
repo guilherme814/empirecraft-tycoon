@@ -92,6 +92,26 @@ func _ready() -> void:
 	screen._show_page("stores")
 	await _shot("rail_small")
 	screen._toggle_rail()
+	c.tutorial["on"] = false
+	screen._show_page("team")
+	screen._refresh_all()
+	await _shot("team")
+	c.day += 100
+	Decisions.open(c, "supplier_hike")
+	screen._refresh_all()
+	await _shot("decision")
+	screen._close_overlay()
+	UIFx.confetti(screen, Vector2(1200, 300))
+	await get_tree().create_timer(0.25).timeout
+	await _shot("confetti")
+	screen.queue_free()
+	var f: Control = load("res://src/scenes/FoundingScreen.tscn").instantiate()
+	add_child(f)
+	await _shot("founding")
+	f.queue_free()
+	var st: Control = load("res://src/scenes/SettingsScreen.tscn").instantiate()
+	add_child(st)
+	await _shot("settings")
 	get_tree().quit()
 
 func _shot(n: String) -> void:

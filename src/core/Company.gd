@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 11
+const SAVE_VERSION := 12
 const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
 const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
@@ -37,6 +37,14 @@ var notif_seen: int = 0           # última notificação vista
 var tutorial: Dictionary = {"on": false, "step": 0, "visited": []}   # tutorial guiado (ver Tutorial)
 var tips_seen: Array = []         # abas cuja dica de primeira visita já apareceu
 var sandbox: bool = false         # dinheiro e pontos de pesquisa infinitos
+var origin: String = ""           # país de origem (ver Founding); vazio = save antigo, sem bônus
+var difficulty: String = ""
+var founder: String = ""
+var focus: String = ""            # especialização: categoria com vendas melhores
+var mods: Array = []              # modificadores temporários {key, mult, until, src}
+var pending_decision: Dictionary = {}   # decisão aguardando o jogador {id, day}
+var decision_log: Array = []      # histórico {id, title, day, choice, risk}
+var last_decision_day: int = 0
 var log_entries: Array = []       # {day, text, kind}
 var income_month: float = 0.0
 var expense_month: float = 0.0
@@ -177,7 +185,7 @@ func monthly_payroll() -> float:
 	var t := 0.0
 	for e in staff:
 		t += e.salary()
-	return t * fixed_cost_factor()
+	return t * fixed_cost_factor() * Founding.origin_mult(self, "wage") * mod_mult("wage")
 
 func monthly_rent() -> float:
 	var upkeep := 0.0
@@ -399,7 +407,7 @@ func _research_tick() -> void:
 	var rp := 0.0
 	for e in staff_of("researcher"):
 		rp += 0.3 + float(e.insight) / 100.0
-	research_points += rp
+	research_points += rp * Founding.origin_mult(self, "research")
 
 func research_per_day() -> float:
 	var rp := 0.0
@@ -785,7 +793,7 @@ func _sell() -> void:
 		var mine_units := 0
 		for p in list:
 			var share: float = float(attr[p.id]) / denom
-			var raw_f: float = size * share * rng.randf_range(0.85, 1.15) * (1.0 + deal_sales_bonus(cat_id))
+			var raw_f: float = size * share * rng.randf_range(0.85, 1.15) * (1.0 + deal_sales_bonus(cat_id)) * sales_mult(cat_id)
 			raw_f = maxf(raw_f, demand_floor(p, exp_q))
 			var units_f: float = raw_f + p.units_carry
 			var wanted := int(floor(units_f))
@@ -809,6 +817,20 @@ func _sell() -> void:
 			"attr": attr, "denom": denom, "share": (float(mine_units) / size) if size > 0.0 else 0.0}
 
 # ───────────────────────── tempo ─────────────────────────
+
+## Produto dos modificadores temporários ativos de uma chave (cost, sales, wage).
+func mod_mult(key: String) -> float:
+	var m := 1.0
+	for md in mods:
+		if str(md.key) == key and int(md.until) > day:
+			m *= float(md.mult)
+	return m
+
+func active_mods() -> Array:
+	return mods.filter(func(md): return int(md.until) > day)
+
+func sales_mult(cat_id: String) -> float:
+	return Founding.sales_mult(self, cat_id) * mod_mult("sales")
 
 func advance_day() -> void:
 	if game_over:
@@ -887,6 +909,9 @@ func _month_end() -> void:
 		history.pop_front()
 	if rng.randf() < 0.4:
 		_random_event()
+	Decisions.maybe_trigger(self)
+	if day % 30 == 0:
+		mods = active_mods()
 	if money < Rules.BANKRUPT_LIMIT:
 		game_over = true
 		add_log("Sua empresa faliu.", "bad", "bankrupt")
@@ -1428,7 +1453,7 @@ func effective_quality(p: Product) -> float:
 func current_unit_cost(p: Product) -> float:
 	var cat: Dictionary = GameData.category(p.category)
 	var royalty := float(os_info(p.os_id).get("royalty", 0.0)) * float(cat.unit_cost)
-	return p.unit_cost * float(mfr_stats(p.mfr).cost) * (1.0 - deal_cost_discount()) * market.cost_pressure() + royalty
+	return p.unit_cost * float(mfr_stats(p.mfr).cost) * (1.0 - deal_cost_discount()) * market.cost_pressure() * Founding.origin_mult(self, "cost") * mod_mult("cost") + royalty
 
 ## Defeitos de fábrica: chance mensal por produto, maior em terceirizadas baratas.
 func _recalls() -> void:
@@ -1491,7 +1516,9 @@ func to_dict() -> Dictionary:
 		"campaigns": campaigns, "lab_jobs": lab_jobs, "chips": chips, "chip_dev": chip_dev, "requests": requests,
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
 		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores, "logo": logo, "decor": decor,
-		"sandbox": sandbox, "tutorial": tutorial, "tips_seen": tips_seen, "log_serial": log_serial, "notif_seen": notif_seen,
+		"sandbox": sandbox, "origin": origin, "difficulty": difficulty, "founder": founder, "focus": focus,
+		"mods": mods, "pending_decision": pending_decision, "decision_log": decision_log, "last_decision_day": last_decision_day,
+		"tutorial": tutorial, "tips_seen": tips_seen, "log_serial": log_serial, "notif_seen": notif_seen,
 	}
 
 ## Devolve null se o save for de uma versão futura (evita corromper dados).
@@ -1531,6 +1558,14 @@ static func from_dict(d: Dictionary) -> Company:
 		c.stores.append(st)
 	c.game_over = bool(d.get("game_over", false))
 	c.sandbox = bool(d.get("sandbox", false))
+	c.origin = str(d.get("origin", ""))
+	c.difficulty = str(d.get("difficulty", ""))
+	c.founder = str(d.get("founder", ""))
+	c.focus = str(d.get("focus", ""))
+	c.mods = (d.get("mods", []) as Array).duplicate(true)
+	c.pending_decision = (d.get("pending_decision", {}) as Dictionary).duplicate(true)
+	c.decision_log = (d.get("decision_log", []) as Array).duplicate(true)
+	c.last_decision_day = int(d.get("last_decision_day", 0))
 	c.log_serial = int(d.get("log_serial", 0))
 	c.notif_seen = int(d.get("notif_seen", c.log_serial))
 	c.tutorial = (d.get("tutorial", {"on": false, "step": 0, "visited": []}) as Dictionary).duplicate(true)
