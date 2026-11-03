@@ -182,10 +182,7 @@ func _build_nav() -> Control:
 	_rail.add_theme_stylebox_override("panel", Palette.box(Palette.PANEL_DEEP, 0, 8))
 	var outer := UI.vbox(0)
 	_rail.add_child(outer)
-	var sc := ScrollContainer.new()
-	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	var sc := UI.scroll()
 	outer.add_child(sc)
 	var v := UI.vbox(2)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL

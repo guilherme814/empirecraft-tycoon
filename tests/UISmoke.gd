@@ -368,6 +368,7 @@ func _ready() -> void:
 	Saves.delete_save()
 	if FileAccess.file_exists(Saves.BACKUP_PATH):
 		DirAccess.remove_absolute(Saves.BACKUP_PATH)
+	await test_touch_scroll()
 	test_save_slots()
 	print("UI smoke: %s" % ("OK" if failures == 0 else "%d falha(s)" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
@@ -402,3 +403,30 @@ func test_save_slots() -> void:
 	for p in [Saves.REPLACED_PATH, Saves.BACKUP_PATH, Saves.SANDBOX_BACKUP_PATH]:
 		if FileAccess.file_exists(p):
 			DirAccess.remove_absolute(p)
+
+## Arrastar o dedo sobre cartões e botões deve rolar a lista (e não clicar no botão).
+func test_touch_scroll() -> void:
+	var host := Control.new()
+	host.size = Vector2(900, 600)
+	add_child(host)
+	var sc := UI.scroll()
+	sc.size = Vector2(900, 600)
+	host.add_child(sc)
+	var v := UI.vbox(10)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(v)
+	for i in 12:
+		var card := UI.card()
+		var b := UI.button("Botão %d" % i, func(): pass, "normal", 120)
+		card.add_child(b)
+		v.add_child(card)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	ok(sc.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_SHOW_NEVER, "lista rola sem barra visível")
+	ok(v.get_child(0).mouse_filter == Control.MOUSE_FILTER_PASS, "cartão deixa o toque passar para a rolagem")
+	ok(v.get_child(0).get_child(0).mouse_filter == Control.MOUSE_FILTER_PASS, "botão deixa o arrasto passar para a rolagem")
+	var le := LineEdit.new()
+	v.add_child(le)
+	await get_tree().process_frame
+	ok(le.mouse_filter == Control.MOUSE_FILTER_STOP, "campo de texto continua recebendo o toque")
+	host.queue_free()

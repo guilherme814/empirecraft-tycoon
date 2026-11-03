@@ -16,10 +16,16 @@ func _ready() -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
+	var root := UI.vbox(14)
+	root.custom_minimum_size = Vector2(900, 0)
+	center.add_child(root)
+	root.add_child(UI.heading("Configurações"))
+	var sc := UI.scroll()
+	sc.custom_minimum_size = Vector2(900, 800)    # lista rolável; o "Voltar" fica sempre visível embaixo
+	root.add_child(sc)
 	var v := UI.vbox(20)
-	v.custom_minimum_size = Vector2(900, 0)
-	center.add_child(v)
-	v.add_child(UI.heading("Configurações"))
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(v)
 
 	var card := UI.card()
 	v.add_child(card)
@@ -92,7 +98,7 @@ func _ready() -> void:
 	var danger2 := UI.button("Apagar sandbox salvo", func(): _delete(true), "danger", 84)
 	danger2.disabled = not Saves.has_save(true)
 	v.add_child(danger2)
-	v.add_child(UI.button("Voltar", func(): get_tree().change_scene_to_file("res://src/scenes/MainMenu.tscn"), "primary", 90))
+	root.add_child(UI.button("Voltar", func(): get_tree().change_scene_to_file("res://src/scenes/MainMenu.tscn"), "primary", 90))
 	_update()
 
 func _check_update() -> void:

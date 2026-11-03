@@ -103,12 +103,7 @@ static func spacer() -> Control:
 
 ## Rolagem vertical por toque. O deadzone evita que um arrasto vire clique de botão.
 static func scroll() -> ScrollContainer:
-	var s := ScrollContainer.new()
-	s.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	s.scroll_deadzone = 24
-	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	s.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	return s
+	return TouchScroll.new()
 
 static func clear(n: Node) -> void:
 	for c in n.get_children():

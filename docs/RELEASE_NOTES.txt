@@ -1,1 +1,1 @@
-Grande atualização: criação da empresa com país de origem, dificuldade e especialização; campanha e sandbox em saves separados; eventos com decisões e consequências; retratos e visual único para cada funcionário; estágios da empresa, efeitos de moedas e confete e perfis gráficos.
+Rolagem por arrasto do dedo em todas as telas (sem barra branca, funciona também sobre botões e cartões) e Configurações com o botão Voltar sempre visível. Inclui a grande atualização: criação da empresa, saves separados de campanha e sandbox, decisões, retratos dos funcionários e efeitos.
