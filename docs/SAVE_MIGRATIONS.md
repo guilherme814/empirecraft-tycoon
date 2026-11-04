@@ -39,3 +39,4 @@ Testes: `test_save_roundtrip` (ida e volta) e `test_old_save_compat` (save v2 m�
 - O Android pede confirmação para instalar; o APK precisa ter o mesmo pacote e a mesma assinatura do instalado.
 - Pendente: assinatura digital do manifesto e download/instalação dentro do app (exige plugin Android).
 - 0.12.0: SAVE_VERSION 12. Novos campos opcionais: origin, difficulty, founder, focus, mods, pending_decision, decision_log, last_decision_day (saves antigos: origem vazia = sem bônus). Sandbox passa a ter slot próprio (user://save_sandbox.json); um save antigo com a flag sandbox é movido para esse slot na primeira abertura. Novo jogo guarda a campanha anterior em save_0.replaced.json.
+- 0.13.0: sem mudança de formato. design.parts (peças por eixo) e os campos novos de chip (gpu, isp, rt, ecores, mem, valid, bin, arch) são opcionais; saves antigos usam peças básicas e valores neutros.

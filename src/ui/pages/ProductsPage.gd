@@ -320,6 +320,8 @@ func _step_hardware() -> void:
 			func(): _adjust(a, Rules.SPEC_STEP), v > 0, used + Rules.SPEC_STEP <= budget and v < Rules.SPEC_AXIS_MAX, 210)
 		row.add_child(UI.bar(float(v) / float(Rules.SPEC_AXIS_MAX), Palette.INFO, 14))
 		_form.add_child(row)
+		_axis_parts(str(a))
+	_analysis_card()
 	_form.add_child(UI.label("Recursos extras", 24, Palette.MUTED))
 	var g := _grid(2)
 	var feats: Array = _design.get("features", [])
@@ -339,6 +341,36 @@ func _step_hardware() -> void:
 		cg.add_child(_opt(txt, cur_chip == int(ch.id), "", func(): _design["chip"] = int(ch.id); _touch()))
 	if c.chips.is_empty():
 		_form.add_child(UI.wrap("Projete processadores próprios na aba Hardware.", 20, Color("9fc0e8")))
+
+## Peças do eixo: cada uma mostra eficácia, custo e consumo; bloqueadas dizem o que falta.
+func _axis_parts(axis: String) -> void:
+	var list := Components.parts(axis)
+	if list.size() <= 1:
+		return
+	var g := _grid(2)
+	var parts_sel: Dictionary = _design.get("parts", {})
+	var cur := str(Components.chosen(_design, axis).get("id", ""))
+	for p in list:
+		var why := Components.part_blocker(company, p, _design)
+		var txt := "%s  ×%.2f · custo ×%.2f" % [str(p.name), float(p.q), float(p.cost)]
+		g.add_child(_opt(("✓ " if cur == str(p.id) else "") + txt, cur == str(p.id), why, func():
+			parts_sel[axis] = str(p.id)
+			_design["parts"] = parts_sel
+			_touch()))
+	_hints_note()
+
+## Consumo x bateria e problemas de compatibilidade do conjunto escolhido.
+func _analysis_card() -> void:
+	var c := company
+	var an := Components.analysis(c, _cat_id, _specs, _design)
+	if bool(an.has_battery):
+		var au := float(an.autonomy)
+		var col := Palette.GOOD if au >= 1.0 else (Palette.WARN if au >= 0.8 else Palette.BAD)
+		_form.add_child(UI.kv("Autonomia (energia x consumo)", "%d%%" % int(au * 100.0), col, 24))
+		if au < 0.9:
+			_form.add_child(UI.wrap("Os componentes e o processador gastam mais do que a bateria entrega: a qualidade final cai %d%%." % int(round((1.0 - float(an.q_mult)) * 100.0)), 21, Palette.WARN))
+	for pr in Components.problems(c, _cat_id, _design):
+		_form.add_child(UI.wrap("⚠ " + str(pr), 21, Palette.BAD))
 
 func _step_system() -> void:
 	var c := company

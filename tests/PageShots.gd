@@ -96,6 +96,25 @@ func _ready() -> void:
 	screen._show_page("team")
 	screen._refresh_all()
 	await _shot("team")
+	c.research_levels["res_chips"] = 3
+	c.research_levels["res_specs"] = 4
+	screen._show_page("chips")
+	var cp = screen._pages["chips"]
+	cp._d = Chips.default_design(c)
+	cp._d.name = "Aurora C1"
+	cp._d.gpu = 4
+	cp._d.ecores = 4
+	cp._d.isp = true
+	cp._d.mem = 1
+	cp._d.cores = 8
+	cp._touch()
+	await _shot("chip_lab")
+	screen._show_page("products")
+	var pp = screen._pages["products"]
+	pp._start()
+	pp._step = 2
+	pp._touch()
+	await _shot("hw_step")
 	c.day += 100
 	Decisions.open(c, "supplier_hike")
 	screen._refresh_all()

@@ -450,12 +450,13 @@ func default_specs(cat_id: String) -> Dictionary:
 	return specs
 
 ## Pontuação de especificações (0-100), sem equipe nem sorte.
-func spec_score(cat_id: String, specs: Dictionary) -> float:
+func spec_score(cat_id: String, specs: Dictionary, design: Dictionary = {}) -> float:
 	var cat: Dictionary = GameData.category(cat_id)
 	var score := 0.0
 	for a in cat.axes:
 		var pts := float(specs.get(a, 0))
-		score += float(cat.axes[a]) * pow(clampf(pts / float(Rules.SPEC_AXIS_MAX), 0.0, 1.0), 0.7)
+		# a peça escolhida (Components) muda a eficácia dos pontos; o teto vai a 115% para as melhores peças
+		score += float(cat.axes[a]) * pow(clampf(pts * Components.axis_q(design, str(a)) / float(Rules.SPEC_AXIS_MAX), 0.0, 1.15), 0.7)
 	return score * 100.0
 
 func team_factor() -> float:
@@ -477,8 +478,8 @@ func design_bonus() -> float:
 
 ## Estimativa mostrada ao jogador antes de iniciar (sem o fator sorte).
 func estimate_quality(cat_id: String, specs: Dictionary, design: Dictionary = {}) -> float:
-	return spec_score(cat_id, specs) * (1.0 + effect("tech_level")) * team_factor() * (1.0 + design_bonus()) \
-		* (1.0 + float(design_mods(cat_id, design).q))
+	return spec_score(cat_id, specs, design) * (1.0 + effect("tech_level")) * team_factor() * (1.0 + design_bonus()) \
+		* (1.0 + float(design_mods(cat_id, design).q)) * float(Components.analysis(self, cat_id, specs, design).q_mult)
 
 ## Qualidade final esperada, já com sistema e fabricante escolhidos.
 func estimate_final_quality(cat_id: String, specs: Dictionary, design: Dictionary, os_id: String, mfr_id: String) -> float:
@@ -534,7 +535,7 @@ func estimate_unit_cost(cat_id: String, specs: Dictionary, design: Dictionary = 
 	var cat: Dictionary = GameData.category(cat_id)
 	var load_f := 0.0
 	for a in cat.axes:
-		load_f += float(cat.axes[a]) * float(specs.get(a, 0)) / float(Rules.SPEC_AXIS_MAX)
+		load_f += float(cat.axes[a]) * float(specs.get(a, 0)) * Components.axis_cost(design, str(a)) / float(Rules.SPEC_AXIS_MAX)
 	var disc: float = minf(0.5, effect("unit_cost_discount"))
 	return float(cat.unit_cost) * (0.6 + 0.8 * load_f) * (1.0 - disc) * float(design_mods(cat_id, design).cost)
 
@@ -570,6 +571,9 @@ func create_product(pname: String, cat_id: String, specs: Dictionary, price: flo
 		return _fail("Dinheiro insuficiente")
 	if design.is_empty():
 		design = default_design(cat_id)
+	var comp_problems := Components.problems(self, cat_id, design)
+	if not comp_problems.is_empty():
+		return _fail("Componentes: " + str(comp_problems[0]))
 	if not design_valid(cat_id, design):
 		return _fail("Design ainda não desbloqueado")
 	if os_id == "":
@@ -1065,7 +1069,7 @@ func default_design(cat_id: String) -> Dictionary:
 	return {"shape": str(shapes[0].id) if not shapes.is_empty() else "classic", "finish": "alu", "color": "graphite",
 		"w": 5, "h": 5, "d": 5, "corner": 5, "strap": 5, "features": [],
 		"trim": "silver", "wall": "aurora", "cam": "plate", "notch": "punch", "band": "silicone", "led": "blue", "brand": true,
-		"package": "basic", "acc": [], "chip": 0,
+		"package": "basic", "acc": [], "chip": 0, "parts": {},
 		"buttons": "classic", "bio": "under", "back": "plain", "crown": "classic", "face": "digital",
 		"kbd": "standard", "webcam": "dot", "lid": "logo", "vent": "slats", "glow": "bar", "pad": "classic"}
 
@@ -1102,6 +1106,8 @@ func design_valid(cat_id: String, design: Dictionary) -> bool:
 			return false
 	var cid := int(design.get("chip", 0))
 	if cid != 0 and Chips.get_chip(self, cid).is_empty():
+		return false
+	if not Components.problems(self, cat_id, design).is_empty():
 		return false
 	return true
 

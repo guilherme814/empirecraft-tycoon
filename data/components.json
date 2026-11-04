@@ -1,0 +1,426 @@
+{
+ "axes": {
+  "performance": [
+   {
+    "id": "ram4",
+    "name": "LPDDR4 + eMMC",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 0.6,
+    "lvl": 0
+   },
+   {
+    "id": "ram5",
+    "name": "LPDDR5 + UFS 3.1",
+    "tier": 1,
+    "q": 1.12,
+    "cost": 1.15,
+    "power": 0.7,
+    "lvl": 2,
+    "chip": {
+     "node": 2,
+     "mem": 2
+    }
+   },
+   {
+    "id": "ram5x",
+    "name": "LPDDR5X + UFS 4.0",
+    "tier": 2,
+    "q": 1.25,
+    "cost": 1.35,
+    "power": 0.8,
+    "lvl": 4,
+    "chip": {
+     "node": 3,
+     "mem": 4
+    },
+    "desc": "Exige nó de 14 nm ou menor e 4 canais de memória."
+   }
+  ],
+  "battery": [
+   {
+    "id": "li",
+    "name": "Li-íon padrão",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 0.0,
+    "lvl": 0,
+    "cap": 1.0
+   },
+   {
+    "id": "poly",
+    "name": "Li-polímero",
+    "tier": 1,
+    "q": 1.06,
+    "cost": 1.1,
+    "power": 0.0,
+    "lvl": 1,
+    "cap": 1.12
+   },
+   {
+    "id": "sic",
+    "name": "Silício-carbono",
+    "tier": 2,
+    "q": 1.14,
+    "cost": 1.28,
+    "power": 0.0,
+    "lvl": 3,
+    "cap": 1.35
+   },
+   {
+    "id": "solid",
+    "name": "Estado sólido",
+    "tier": 3,
+    "q": 1.25,
+    "cost": 1.6,
+    "power": 0.0,
+    "lvl": 6,
+    "cap": 1.6
+   }
+  ],
+  "display": [
+   {
+    "id": "lcd",
+    "name": "LCD IPS",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 1.4,
+    "lvl": 0
+   },
+   {
+    "id": "oled",
+    "name": "OLED",
+    "tier": 1,
+    "q": 1.1,
+    "cost": 1.2,
+    "power": 1.1,
+    "lvl": 1
+   },
+   {
+    "id": "ltpo",
+    "name": "OLED LTPO 120 Hz",
+    "tier": 2,
+    "q": 1.2,
+    "cost": 1.4,
+    "power": 1.0,
+    "lvl": 3,
+    "chip": {
+     "node": 2
+    }
+   },
+   {
+    "id": "flex",
+    "name": "OLED dobrável",
+    "tier": 2,
+    "q": 1.15,
+    "cost": 1.5,
+    "power": 1.2,
+    "lvl": 0,
+    "only_shapes": [
+     "fold"
+    ],
+    "desc": "Obrigatória em aparelhos dobráveis."
+   },
+   {
+    "id": "micro",
+    "name": "MicroLED",
+    "tier": 3,
+    "q": 1.32,
+    "cost": 1.8,
+    "power": 0.9,
+    "lvl": 6,
+    "chip": {
+     "node": 3
+    }
+   }
+  ],
+  "camera": [
+   {
+    "id": "cam12",
+    "name": "Sensor 12 MP",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 0.4,
+    "lvl": 0
+   },
+   {
+    "id": "cam48",
+    "name": "48 MP com estabilização",
+    "tier": 1,
+    "q": 1.12,
+    "cost": 1.18,
+    "power": 0.55,
+    "lvl": 1
+   },
+   {
+    "id": "cam108",
+    "name": "108 MP + OIS",
+    "tier": 2,
+    "q": 1.24,
+    "cost": 1.4,
+    "power": 0.7,
+    "lvl": 3,
+    "chip": {
+     "isp": true
+    },
+    "desc": "Exige processador com ISP."
+   },
+   {
+    "id": "peri",
+    "name": "Periscópio 5× + IA",
+    "tier": 3,
+    "q": 1.38,
+    "cost": 1.75,
+    "power": 0.9,
+    "lvl": 5,
+    "chip": {
+     "isp": true,
+     "npu": 1
+    },
+    "forbid_shapes": [
+     "slim",
+     "fold"
+    ],
+    "desc": "Exige ISP e NPU; não cabe em corpos finos."
+   }
+  ],
+  "thermal": [
+   {
+    "id": "passive",
+    "name": "Dissipador passivo",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 0.0,
+    "lvl": 0
+   },
+   {
+    "id": "fan",
+    "name": "Cooler ativo",
+    "tier": 1,
+    "q": 1.12,
+    "cost": 1.15,
+    "power": 0.8,
+    "lvl": 1
+   },
+   {
+    "id": "vapor",
+    "name": "Câmara de vapor",
+    "tier": 2,
+    "q": 1.25,
+    "cost": 1.45,
+    "power": 0.6,
+    "lvl": 3
+   },
+   {
+    "id": "liquid",
+    "name": "Refrigeração líquida",
+    "tier": 3,
+    "q": 1.4,
+    "cost": 1.8,
+    "power": 1.4,
+    "lvl": 5
+   }
+  ],
+  "storage": [
+   {
+    "id": "sata",
+    "name": "SSD SATA",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 0.3,
+    "lvl": 0
+   },
+   {
+    "id": "nvme",
+    "name": "NVMe",
+    "tier": 1,
+    "q": 1.15,
+    "cost": 1.2,
+    "power": 0.4,
+    "lvl": 2
+   },
+   {
+    "id": "nvme4",
+    "name": "NVMe Gen4",
+    "tier": 2,
+    "q": 1.3,
+    "cost": 1.45,
+    "power": 0.55,
+    "lvl": 4,
+    "chip": {
+     "node": 3
+    }
+   }
+  ],
+  "sensors": [
+   {
+    "id": "sens0",
+    "name": "Sensores básicos",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 0.3,
+    "lvl": 0
+   },
+   {
+    "id": "optic",
+    "name": "Saúde óptica",
+    "tier": 1,
+    "q": 1.15,
+    "cost": 1.2,
+    "power": 0.45,
+    "lvl": 2
+   },
+   {
+    "id": "ecg",
+    "name": "ECG + temperatura",
+    "tier": 2,
+    "q": 1.3,
+    "cost": 1.45,
+    "power": 0.6,
+    "lvl": 4,
+    "chip": {
+     "npu": 1
+    },
+    "desc": "Exige processador com NPU."
+   }
+  ],
+  "graphics": [
+   {
+    "id": "igpu",
+    "name": "GPU integrada",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 2.0,
+    "lvl": 0
+   },
+   {
+    "id": "gpu_m",
+    "name": "GPU dedicada média",
+    "tier": 1,
+    "q": 1.2,
+    "cost": 1.35,
+    "power": 3.0,
+    "lvl": 3,
+    "chip": {
+     "gpu": 4
+    }
+   },
+   {
+    "id": "gpu_h",
+    "name": "GPU alto desempenho",
+    "tier": 2,
+    "q": 1.4,
+    "cost": 1.8,
+    "power": 4.5,
+    "lvl": 5,
+    "chip": {
+     "gpu": 8,
+     "rt": true
+    },
+    "desc": "Exige 8+ unidades de GPU e ray tracing no chip."
+   }
+  ],
+  "audio": [
+   {
+    "id": "spk",
+    "name": "Alto-falantes estéreo",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 0.4,
+    "lvl": 0
+   },
+   {
+    "id": "spatial",
+    "name": "Áudio espacial",
+    "tier": 1,
+    "q": 1.15,
+    "cost": 1.2,
+    "power": 0.5,
+    "lvl": 2
+   },
+   {
+    "id": "hifi",
+    "name": "Hi-Fi + cancelamento de ruído",
+    "tier": 2,
+    "q": 1.3,
+    "cost": 1.45,
+    "power": 0.7,
+    "lvl": 4,
+    "chip": {
+     "npu": 1
+    }
+   }
+  ],
+  "design": [
+   {
+    "id": "case0",
+    "name": "Caixa padrão",
+    "tier": 0,
+    "q": 1.0,
+    "cost": 1.0,
+    "power": 0.0,
+    "lvl": 0
+   },
+   {
+    "id": "steel",
+    "name": "Aço inoxidável",
+    "tier": 1,
+    "q": 1.1,
+    "cost": 1.2,
+    "power": 0.0,
+    "lvl": 2
+   },
+   {
+    "id": "ti",
+    "name": "Titânio",
+    "tier": 2,
+    "q": 1.2,
+    "cost": 1.45,
+    "power": 0.0,
+    "lvl": 4
+   }
+  ]
+ },
+ "labels": {
+  "performance": "Memória e armazenamento",
+  "battery": "Bateria",
+  "display": "Tela",
+  "camera": "Câmera",
+  "thermal": "Refrigeração",
+  "storage": "Armazenamento",
+  "sensors": "Sensores",
+  "graphics": "GPU",
+  "audio": "Áudio",
+  "design": "Caixa"
+ },
+ "shape_rules": {
+  "fold": {
+   "display": [
+    "flex"
+   ]
+  }
+ },
+ "draw_scale": {
+  "phone": 1.0,
+  "laptop": 4.0,
+  "watch": 0.25,
+  "console": 8.0
+ },
+ "generic_chip": {
+  "node": 2,
+  "npu": 0,
+  "isp": false,
+  "gpu": 2,
+  "rt": false,
+  "mem": 2
+ }
+}

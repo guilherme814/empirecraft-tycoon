@@ -9,7 +9,8 @@
    "wafer": 6000,
    "perf": 0.7,
    "power": 2.6,
-   "work": 0.8
+   "work": 0.8,
+   "leak": 0.6
   },
   {
    "id": "n65",
@@ -20,7 +21,8 @@
    "wafer": 9000,
    "perf": 0.82,
    "power": 1.9,
-   "work": 1.0
+   "work": 1.0,
+   "leak": 0.8
   },
   {
    "id": "n45",
@@ -31,7 +33,8 @@
    "wafer": 14000,
    "perf": 0.95,
    "power": 1.4,
-   "work": 1.3
+   "work": 1.3,
+   "leak": 1.0
   },
   {
    "id": "n28",
@@ -42,7 +45,8 @@
    "wafer": 21000,
    "perf": 1.1,
    "power": 1.0,
-   "work": 1.7
+   "work": 1.7,
+   "leak": 1.1
   },
   {
    "id": "n14",
@@ -53,7 +57,8 @@
    "wafer": 32000,
    "perf": 1.28,
    "power": 0.7,
-   "work": 2.3
+   "work": 2.3,
+   "leak": 0.7
   },
   {
    "id": "n7",
@@ -64,7 +69,8 @@
    "wafer": 52000,
    "perf": 1.5,
    "power": 0.48,
-   "work": 3.2
+   "work": 3.2,
+   "leak": 0.75
   }
  ],
  "foundries": [
@@ -115,5 +121,13 @@
   "laptop": 0.3,
   "watch": 0.0,
   "console": 0.3
- }
+ },
+ "cat_gfx_weight": {
+  "phone": 0.1,
+  "laptop": 0.2,
+  "watch": 0.0,
+  "console": 0.5
+ },
+ "mem_bw": 4.2,
+ "generic_mem": 2
 }

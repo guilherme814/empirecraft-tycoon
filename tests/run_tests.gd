@@ -40,6 +40,9 @@ func _initialize() -> void:
 	test_founding()
 	test_decisions()
 	test_look()
+	test_components()
+	test_chip_expansion()
+	test_chip_realism()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
 		quit(0)
@@ -840,3 +843,164 @@ func test_look() -> void:
 	check(styles.size() >= 5, "estilos de cabelo variam entre funcionários")
 	check(bool(Look.of(1, "X", "programmer").glasses), "programador usa óculos")
 	check(Look.tier(300) == 3 and Look.tier(30) == 0, "faixas de senioridade")
+
+func _chip_with(c: Company, over: Dictionary) -> int:
+	var d := Chips.default_design(c)
+	d.merge(over, true)
+	d["id"] = c._new_id()
+	d["name"] = "T"
+	d["bug"] = 0.05
+	c.chips.append(d)
+	return int(d.id)
+
+func test_components() -> void:
+	var c := staffed(31)
+	var specs := c.default_specs("phone")
+	var base_d := c.default_design("phone")
+	var q0 := c.estimate_quality("phone", specs, base_d)
+	var u0 := c.estimate_unit_cost("phone", specs, base_d)
+	var legacy := base_d.duplicate(true)
+	legacy.erase("parts")
+	check(absf(c.estimate_quality("phone", specs, legacy) - q0) < 0.001, "design antigo (sem peças) = peças básicas")
+	check(Components.problems(c, "phone", base_d).is_empty(), "peças básicas sempre válidas")
+	# peça melhor: mais qualidade e mais custo, mas exige pesquisa
+	var d2 := base_d.duplicate(true)
+	d2.parts = {"display": "oled"}
+	check(Components.part_blocker(c, Components.part("display", "oled"), d2) != "", "OLED exige Engenharia de Materiais")
+	c.research_levels["res_specs"] = 3
+	check(Components.part_blocker(c, Components.part("display", "oled"), d2) == "", "OLED liberado após pesquisa")
+	check(c.estimate_quality("phone", specs, d2) > q0, "OLED aumenta a qualidade")
+	check(c.estimate_unit_cost("phone", specs, d2) > u0, "OLED aumenta o custo")
+	# câmera top exige ISP no chip
+	c.research_levels["res_specs"] = 6
+	var d3 := base_d.duplicate(true)
+	d3.parts = {"camera": "cam108"}
+	check(Components.part_blocker(c, Components.part("camera", "cam108"), d3) != "", "108 MP exige chip com ISP")
+	check(not c.create_product("X", "phone", specs, 0.0, d3).ok, "produto com peça bloqueada é recusado")
+	c.research_levels["res_chips"] = 1
+	var cid := _chip_with(c, {"isp": true, "npu": 1})
+	d3["chip"] = cid
+	check(Components.part_blocker(c, Components.part("camera", "cam108"), d3) == "", "chip com ISP libera 108 MP")
+	check(Components.part_blocker(c, Components.part("camera", "peri"), d3) == "", "ISP + NPU libera periscópio")
+	var d4 := d3.duplicate(true)
+	d4.parts = {"camera": "peri"}
+	d4.shape = "slim"
+	check(Components.part_blocker(c, Components.part("camera", "peri"), d4) != "", "periscópio não cabe em corpo ultrafino")
+	# dobrável exige tela flexível
+	var d5 := base_d.duplicate(true)
+	d5.shape = "fold"
+	check(str(Components.chosen(d5, "display").id) == "flex" and Components.problems(c, "phone", d5).is_empty(), "formato dobrável usa tela dobrável por padrão")
+	d5.parts = {"display": "lcd"}
+	check(not Components.problems(c, "phone", d5).is_empty(), "dobrável com tela comum é incompatível")
+	check(Components.part_blocker(c, Components.part("display", "flex"), base_d) != "", "tela dobrável só em formato dobrável")
+	# energia: peças gulosas + bateria pequena derrubam a qualidade
+	var low := specs.duplicate()
+	low["battery"] = 10
+	var greedy := base_d.duplicate(true)
+	greedy.parts = {"display": "lcd", "camera": "cam12"}
+	var a_low := Components.analysis(c, "phone", low, greedy)
+	var a_def := Components.analysis(c, "phone", specs, greedy)
+	check(float(a_low.autonomy) < float(a_def.autonomy) and float(a_low.q_mult) < float(a_def.q_mult), "bateria pequena reduz autonomia e qualidade")
+	check(absf(float(a_def.autonomy) - 1.0) < 0.05, "configuração básica tem autonomia ~100%")
+	var bigbat := greedy.duplicate(true)
+	bigbat.parts = {"battery": "sic"}
+	check(float(Components.analysis(c, "phone", specs, bigbat).autonomy) > float(a_def.autonomy), "bateria melhor aumenta a autonomia")
+	check(not Components.analysis(c, "console", c.default_specs("console"), c.default_design("console")).has_battery, "console não usa bateria")
+	# persistência: as peças ficam no design do produto
+	var ok_d := base_d.duplicate(true)
+	ok_d.parts = {"battery": "poly"}
+	c.research_levels["res_specs"] = 6
+	var r := c.create_product("Peça", "phone", specs, 0.0, ok_d)
+	check(r.ok, "produto com peças válidas é criado")
+	var c2 := Company.from_dict(c.to_dict())
+	check(str((c2.products[0].design.parts as Dictionary).get("battery", "")) == "poly", "peças sobrevivem ao save")
+
+func test_chip_expansion() -> void:
+	var base := {"node": "n28", "cores": 4, "clock": 2.0, "cache": 4, "npu": 0, "foundry": "fab_a", "name": "a"}
+	var old_st := Chips.stats(base)                      # projeto antigo, sem gpu/isp/arch
+	check(float(old_st.gfx) > 0.0 and int(old_st.gpu) == 0, "chip antigo ganha valores padrão")
+	var g := base.duplicate()
+	g["gpu"] = 8
+	check(float(Chips.stats(g).area) > float(old_st.area) and float(Chips.stats(g).gfx) > float(old_st.gfx), "GPU aumenta área e gráficos")
+	check(float(Chips.stats(g).tdp) > float(old_st.tdp), "GPU aumenta o consumo")
+	var i := base.duplicate()
+	i["isp"] = true
+	check(float(Chips.stats(i).area) > float(old_st.area), "ISP ocupa área")
+	var e := base.duplicate()
+	e["arch"] = "eff"
+	var p := base.duplicate()
+	p["arch"] = "perf"
+	check(float(Chips.stats(e).tdp) < float(old_st.tdp) and float(Chips.stats(p).tdp) > float(old_st.tdp), "arquitetura muda o consumo")
+	check(float(Chips.stats(p).perf) > float(Chips.stats(e).perf), "arquitetura de desempenho é mais rápida")
+	check(Chips.dev_cost(g) > Chips.dev_cost(base) and Chips.dev_work(i) > Chips.dev_work(base), "GPU e ISP encarecem o projeto")
+	var caps := Chips.caps({"node": "n14", "npu": 2, "isp": true, "gpu": 6})
+	check(int(caps.node) == 3 and bool(caps.isp) and int(caps.gpu) == 6, "capacidades do chip")
+	# console: chip com GPU forte rende mais qualidade que um sem GPU
+	var c := staffed(33)
+	var spec := c.default_specs("console")
+	var weak := base.duplicate()
+	weak["bug"] = 0.05
+	var strong := base.duplicate()
+	strong["gpu"] = 8
+	strong["bug"] = 0.05
+	check(Chips.quality_mult(c, strong, "console", spec) > Chips.quality_mult(c, weak, "console", spec), "GPU melhora o console")
+
+func test_chip_realism() -> void:
+	var base := {"node": "n14", "cores": 8, "clock": 3.0, "cache": 8, "npu": 0, "foundry": "fab_a", "name": "r", "mem": 1}
+	var wide := base.duplicate()
+	wide["mem"] = 4
+	check(float(Chips.stats(wide).perf) > float(Chips.stats(base).perf) * 1.2, "parede de memória: mais canais liberam desempenho")
+	check(float(Chips.stats(base).mem_factor) < 1.0 and float(Chips.stats(wide).mem_factor) > float(Chips.stats(base).mem_factor), "gargalo de memória é reportado")
+	var more := base.duplicate()
+	more["cores"] = 16
+	check(float(Chips.stats(more).perf) < float(Chips.stats(base).perf) * 1.25, "dobrar núcleos sem memória rende pouco")
+	# núcleos eficientes: desempenho extra com menos watts que núcleos grandes
+	var p4 := {"node": "n14", "cores": 4, "clock": 2.5, "cache": 8, "npu": 0, "foundry": "fab_a", "name": "a", "mem": 4}
+	var p8 := p4.duplicate()
+	p8["cores"] = 8
+	var pe := p4.duplicate()
+	pe["ecores"] = 4
+	check(float(Chips.stats(pe).perf) > float(Chips.stats(p4).perf), "núcleos eficientes somam desempenho")
+	check(float(Chips.stats(pe).tdp) < float(Chips.stats(p8).tdp), "núcleos eficientes gastam menos que núcleos grandes")
+	check(float(Chips.stats(pe).area) < float(Chips.stats(p8).area), "núcleos eficientes ocupam menos área")
+	# tensão x clock: potência cresce mais que linearmente
+	var lo := p4.duplicate()
+	lo["clock"] = 1.5
+	var hi := p4.duplicate()
+	hi["clock"] = 3.0
+	check(float(Chips.stats(hi).tdp) > 2.5 * float(Chips.stats(lo).tdp) * 0.8 and Chips.voltage(3.0) > Chips.voltage(1.5), "potência sobe com V²·f")
+	# vazamento cresce com a área
+	var big := p4.duplicate()
+	big["cache"] = 32
+	big["gpu"] = 12
+	check(float(Chips.stats(big).leak_w) > float(Chips.stats(p4).leak_w), "vazamento cresce com a área")
+	# binning: aproveita dies defeituosos, custo cai, perde um núcleo
+	var huge := {"node": "n28", "cores": 12, "clock": 2.5, "cache": 16, "npu": 1, "gpu": 8, "foundry": "fab_a", "name": "h", "mem": 4}
+	var sv := huge.duplicate()
+	sv["bin"] = "salv"
+	check(float(Chips.stats(sv).unit_cost) < float(Chips.stats(huge).unit_cost), "binning reduz o custo por chip vendável")
+	check(int(Chips.stats(sv).eff_cores) == 11 and float(Chips.stats(sv).sell_frac) > float(Chips.stats(huge).sell_frac), "binning desliga um núcleo e vende mais dies")
+	# validação reduz bugs e custa tempo/dinheiro
+	var v2 := huge.duplicate()
+	v2["valid"] = 2
+	check(float(Chips.stats(v2).bug) < float(Chips.stats(huge).bug) * 0.5, "validação reduz o risco de bug")
+	check(Chips.dev_cost(v2) > Chips.dev_cost(huge) and Chips.dev_work(v2) > Chips.dev_work(huge), "validação encarece e atrasa")
+	# ray tracing só conta com GPU
+	var rt_no := base.duplicate()
+	rt_no["rt"] = true
+	check(not bool(Chips.caps(rt_no).rt), "ray tracing exige unidades de GPU")
+	var rt_ok := huge.duplicate()
+	rt_ok["rt"] = true
+	check(bool(Chips.caps(rt_ok).rt) and float(Chips.stats(rt_ok).gfx) > float(Chips.stats(huge).gfx) * 0.99, "ray tracing aparece nas capacidades")
+	# RAM rápida exige canais de memória suficientes
+	var c := staffed(41)
+	c.research_levels["res_specs"] = 6
+	var d := c.default_design("phone")
+	d.parts = {"performance": "ram5x"}
+	c.research_levels["res_chips"] = 4
+	var few := {"node": "n14", "cores": 4, "clock": 2.0, "cache": 4, "npu": 0, "mem": 2, "foundry": "fab_a", "name": "f", "bug": 0.05, "id": c._new_id()}
+	c.chips.append(few)
+	d["chip"] = int(few.id)
+	check(Components.part_blocker(c, Components.part("performance", "ram5x"), d) != "", "LPDDR5X exige 4 canais de memória")
+	few["mem"] = 4
+	check(Components.part_blocker(c, Components.part("performance", "ram5x"), d) == "", "4 canais liberam LPDDR5X")

@@ -80,6 +80,27 @@ func rebuild() -> void:
 	_left.add_child(UI.stepper("Clock", "%.1f GHz" % float(_d.clock), func(): _d.clock = snappedf(maxf(Chips.CLOCK_MIN, float(_d.clock) - 0.1), 0.1); _touch(), func(): _d.clock = snappedf(minf(Chips.CLOCK_MAX, float(_d.clock) + 0.1), 0.1); _touch(), float(_d.clock) > Chips.CLOCK_MIN + 0.01, float(_d.clock) < Chips.CLOCK_MAX - 0.01, 200))
 	_left.add_child(UI.stepper("Cache", "%d MB" % int(_d.cache), func(): _d.cache = maxi(1, int(_d.cache) / 2); _touch(), func(): _d.cache = mini(Chips.MAX_CACHE, int(_d.cache) * 2); _touch(), int(_d.cache) > 1, int(_d.cache) < Chips.MAX_CACHE, 200))
 	_left.add_child(UI.stepper("NPU (IA)", str(int(_d.npu)), func(): _d.npu = maxi(0, int(_d.npu) - 1); _touch(), func(): _d.npu = mini(Chips.MAX_NPU, int(_d.npu) + 1); _touch(), int(_d.npu) > 0, int(_d.npu) < Chips.MAX_NPU, 200))
+	_left.add_child(UI.stepper("Núcleos eficientes", str(int(_d.get("ecores", 0))), func(): _d.ecores = maxi(0, int(_d.get("ecores", 0)) - 1); _touch(), func(): _d.ecores = mini(Chips.MAX_ECORES, int(_d.get("ecores", 0)) + 1); _touch(), int(_d.get("ecores", 0)) > 0, int(_d.get("ecores", 0)) < Chips.MAX_ECORES, 200))
+	_left.add_child(UI.stepper("Canais de memória", str(int(_d.get("mem", 2))), func(): _d.mem = maxi(1, int(_d.get("mem", 2)) / 2); _touch(), func(): _d.mem = mini(Chips.MAX_MEM, int(_d.get("mem", 2)) * 2); _touch(), int(_d.get("mem", 2)) > 1, int(_d.get("mem", 2)) < Chips.MAX_MEM, 200))
+	_left.add_child(UI.stepper("GPU (unidades)", str(int(_d.get("gpu", 0))), func(): _d.gpu = maxi(0, int(_d.get("gpu", 0)) - 1); _touch(), func(): _d.gpu = mini(Chips.MAX_GPU, int(_d.get("gpu", 0)) + 1); _touch(), int(_d.get("gpu", 0)) > 0, int(_d.get("gpu", 0)) < Chips.MAX_GPU, 200))
+	if int(_d.get("gpu", 0)) > 0:
+		var rt_on: bool = bool(_d.get("rt", false))
+		_left.add_child(UI.button("Ray tracing: " + ("incluído" if rt_on else "sem"), func(): _d.rt = not rt_on; _touch(), "primary" if rt_on else "normal", 62))
+	var isp_on: bool = bool(_d.get("isp", false))
+	var ib := UI.button("ISP de câmera: " + ("incluído" if isp_on else "sem"), func(): _d.isp = not isp_on; _touch(), "primary" if isp_on else "normal", 62)
+	_left.add_child(ib)
+	_left.add_child(UI.label("Arquitetura", 22, Palette.MUTED))
+	var ar := UI.hbox(8)
+	for k in Chips.ARCHS:
+		var kid: String = k
+		var ab := UI.button(str(Chips.ARCHS[k].name), func(): _d.arch = kid; _touch(), "primary" if str(_d.get("arch", "bal")) == kid else "normal", 58)
+		ab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ar.add_child(ab)
+	_left.add_child(ar)
+	var salv_on: bool = str(_d.get("bin", "full")) == "salv"
+	_left.add_child(UI.button("Aproveitar dies defeituosos (1 núcleo off): " + ("sim" if salv_on else "não"), func(): _d.bin = "full" if salv_on else "salv"; _touch(), "primary" if salv_on else "normal", 62))
+	_left.add_child(UI.stepper("Validação", ["básica", "reforçada", "completa"][clampi(int(_d.get("valid", 0)), 0, 2)], func(): _d.valid = maxi(0, int(_d.get("valid", 0)) - 1); _touch(), func(): _d.valid = mini(2, int(_d.get("valid", 0)) + 1); _touch(), int(_d.get("valid", 0)) > 0, int(_d.get("valid", 0)) < 2, 200))
+	_left.add_child(UI.wrap(_unlock_hint(_d), 20, Color("9fc0e8")))
 	var st := Chips.stats(_d)
 	var box := UI.card(Color("0b1830"), 14)
 	_left.add_child(box)
@@ -91,6 +112,12 @@ func rebuild() -> void:
 	gv.add_child(UI.kv("Rendimento (Murphy)", "%d%%" % int(float(st.yield) * 100.0), Palette.GOOD if float(st.yield) > 0.7 else (Palette.WARN if float(st.yield) > 0.45 else Palette.BAD), 24))
 	gv.add_child(UI.kv("Custo por chip bom", Fmt.money(float(st.unit_cost)), Palette.ACCENT, 26))
 	gv.add_child(UI.kv("Desempenho", "%.2f× referência" % float(st.index), Palette.INFO, 24))
+	var mf := float(st.mem_factor)
+	gv.add_child(UI.kv("Gargalo de memória", "sem gargalo" if mf >= 0.999 else "-%d%% do desempenho" % int((1.0 - mf) * 100.0), Palette.GOOD if mf >= 0.999 else (Palette.WARN if mf > 0.8 else Palette.BAD), 24))
+	gv.add_child(UI.kv("Vazamento (leakage)", "%.1f W" % float(st.leak_w), Palette.TEXT, 24))
+	if float(st.sell_frac) > float(st.yield) + 0.001:
+		gv.add_child(UI.kv("Dies vendáveis (com binning)", "%d%%" % int(float(st.sell_frac) * 100.0), Palette.GOOD, 24))
+	gv.add_child(UI.kv("Gráficos (GPU)", "%.2f× referência" % float(st.gfx), Palette.INFO, 24))
 	gv.add_child(UI.kv("Consumo (TDP)", "%.1f W" % float(st.tdp), Palette.TEXT, 24))
 	gv.add_child(UI.kv("Risco de bug no tape-out", "%d%%" % int(float(st.bug) * 100.0), Palette.WARN if float(st.bug) > 0.12 else Palette.TEXT, 24))
 	var caps := ""
@@ -108,6 +135,28 @@ func rebuild() -> void:
 	if why != "":
 		_left.add_child(UI.label(why, 22, Palette.BAD))
 	_right_side()
+
+## Resume quais componentes o projeto atual libera no estúdio de produtos.
+func _unlock_hint(d: Dictionary) -> String:
+	var caps := Chips.caps(d)
+	var out: Array = []
+	for axis in ["performance", "display", "camera", "storage", "sensors", "graphics", "audio"]:
+		for p in Components.parts(axis):
+			var need: Dictionary = p.get("chip", {})
+			if need.is_empty():
+				continue
+			var ok := true
+			if need.has("node") and int(caps.node) < int(need.node):
+				ok = false
+			if need.has("npu") and int(caps.npu) < int(need.npu):
+				ok = false
+			if need.has("isp") and bool(need.isp) and not bool(caps.isp):
+				ok = false
+			if need.has("gpu") and int(caps.gpu) < int(need.gpu):
+				ok = false
+			if ok:
+				out.append(str(p.name))
+	return "Libera peças: " + (", ".join(out) if not out.is_empty() else "nenhuma peça avançada") + "."
 
 func _right_side() -> void:
 	var c := company
@@ -142,7 +191,7 @@ func _right_side() -> void:
 		h.add_child(UI.spacer())
 		h.add_child(UI.button("Descartar", func(): act(Chips.delete_chip(c, int(ch.id))), "danger", 54, 160))
 		bv.add_child(h)
-		bv.add_child(UI.label("%s · %d núcleos · %.1f GHz · %d MB · NPU %d" % [str(Chips.node(str(ch.node)).name), int(ch.cores), float(ch.clock), int(ch.cache), int(ch.npu)], 22, Palette.MUTED))
+		bv.add_child(UI.label("%s · %d núcleos · %.1f GHz · %d MB · NPU %d · GPU %d%s · %d núcleos efic. · %d canais · %s" % [str(Chips.node(str(ch.node)).name), int(ch.cores), float(ch.clock), int(ch.cache), int(ch.npu), int(ch.get("gpu", 0)), " · ISP" if bool(ch.get("isp", false)) else "", int(ch.get("ecores", 0)), int(ch.get("mem", 4)), str(Chips.ARCHS.get(str(ch.get("arch", "bal")), Chips.ARCHS.bal).name)], 22, Palette.MUTED))
 		bv.add_child(UI.label("custo %s · rendimento %d%% · %.1f W · desempenho %.2f×" % [Fmt.money(float(st.unit_cost)), int(float(st.yield) * 100.0), float(st.tdp), float(st.index)], 22, Palette.TEXT))
 		bv.add_child(UI.label("Desempenho sustentado: " + thr, 20, Palette.MUTED))
 		bv.add_child(UI.label("Bug no tape-out: %d%%" % int(float(ch.bug) * 100.0), 20, Palette.WARN if float(ch.bug) > 0.12 else Palette.MUTED))
