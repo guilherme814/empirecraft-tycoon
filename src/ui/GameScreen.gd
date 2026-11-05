@@ -599,6 +599,9 @@ func _on_ui_request(kind: String, pid: int) -> void:
 	if kind == "goto_team":
 		_show_page("team")
 		return
+	if kind == "presentation":
+		_show_presentation()
+		return
 	var c: Company = Game.company
 	var p: Product = c.get_product(pid)
 	if p == null:
@@ -759,6 +762,19 @@ func _show_teardown(p: Product) -> void:
 	v.add_child(UI.kv("Custo de componentes", Fmt.money(p.unit_cost) + " /un.", Palette.TEXT, 24))
 	v.add_child(UI.wrap("Aparelhos difíceis de abrir (finos, dobráveis, vidro e cerâmica, peças avançadas) saem mais caros nos recalls: custo ×%.2f." % Teardown.recall_mult(score), 21, Palette.MUTED))
 	v.add_child(UI.button("Fechar", _close_overlay, "primary", 76))
+
+## Planejar uma apresentação ao vivo (assunto, país, formato) e assistir ao palco.
+func _show_presentation() -> void:
+	if _overlay != null:
+		_close_overlay()
+	Clock.pause()
+	_overlay = _modal("Apresentação ao vivo")
+	var v: VBoxContainer = _overlay.get_meta("box")
+	var w := PresentationWizard.new().setup(Game.company)
+	w.closed.connect(func():
+		_close_overlay()
+		Game.changed.emit())
+	v.add_child(w)
 
 func _close_overlay() -> void:
 	if _overlay != null:

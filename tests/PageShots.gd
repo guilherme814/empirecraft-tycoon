@@ -128,6 +128,23 @@ func _ready() -> void:
 		screen._show_update(rel[0])
 		await _shot("update")
 		screen._close_overlay()
+	c.reputation = 80.0
+	screen._show_presentation()
+	await _shot("present_plan")
+	var wz: PresentationWizard = null
+	for n in screen.find_children("*", "PresentationWizard", true, false):
+		wz = n
+	if wz != null:
+		wz._country = "de"
+		wz._plan()
+		var subs := Presentations.subjects(c)
+		if not subs.is_empty():
+			wz._kind = str(subs[0].kind)
+			wz._id = int(subs[0].id)
+		wz._go()
+		await get_tree().create_timer(3.2).timeout
+		await _shot("present_stage")
+	screen._close_overlay()
 	UIFx.confetti(screen, Vector2(1200, 300))
 	await get_tree().create_timer(0.25).timeout
 	await _shot("confetti")

@@ -1,0 +1,23 @@
+{
+ "formats": [
+  {"id": "online", "name": "Transmissão online", "cost": 4000, "reach": 0.5, "desc": "Barata e sem plateia: alcance pequeno, risco pequeno."},
+  {"id": "stage", "name": "Evento no palco", "cost": 20000, "reach": 1.0, "desc": "Plateia e imprensa locais."},
+  {"id": "mega", "name": "Megaevento global", "cost": 80000, "reach": 1.8, "desc": "Alcance enorme, mas um fracasso machuca o dobro."}
+ ],
+ "countries": {
+  "br": {"product": 1.05, "os": 0.95, "chip": 0.90, "press": 0.8, "cost": 0.8, "note": "Plateia calorosa, fã de aparelhos."},
+  "ar": {"product": 1.05, "os": 0.95, "chip": 0.90, "press": 0.7, "cost": 0.7, "note": "Entusiasmo alto, imprensa pequena."},
+  "mx": {"product": 1.05, "os": 0.95, "chip": 0.90, "press": 0.8, "cost": 0.8, "note": "Gosta de aparelhos com bom preço."},
+  "us": {"product": 1.00, "os": 1.15, "chip": 1.00, "press": 1.2, "cost": 1.6, "note": "Adora ecossistema e software."},
+  "ca": {"product": 1.00, "os": 1.00, "chip": 1.00, "press": 0.9, "cost": 1.3, "note": "Público equilibrado."},
+  "uk": {"product": 1.00, "os": 1.05, "chip": 0.95, "press": 1.0, "cost": 1.4, "note": "Imprensa crítica, valoriza software."},
+  "de": {"product": 0.95, "os": 0.95, "chip": 1.20, "press": 1.0, "cost": 1.3, "note": "Exigente com engenharia e chips."},
+  "fr": {"product": 1.05, "os": 0.95, "chip": 0.95, "press": 1.0, "cost": 1.4, "note": "Valoriza design e acabamento."},
+  "jp": {"product": 1.10, "os": 0.90, "chip": 1.15, "press": 1.0, "cost": 1.4, "note": "Ama precisão de hardware."},
+  "kr": {"product": 1.10, "os": 1.00, "chip": 1.10, "press": 1.0, "cost": 1.2, "note": "Mercado ávido por novidade."},
+  "cn": {"product": 1.00, "os": 0.90, "chip": 1.10, "press": 1.1, "cost": 1.1, "note": "Enorme audiência, aprecia chips próprios."},
+  "in": {"product": 1.10, "os": 1.00, "chip": 0.90, "press": 0.9, "cost": 0.8, "note": "Público gigante, sensível a preço."},
+  "au": {"product": 1.00, "os": 1.00, "chip": 1.00, "press": 0.8, "cost": 1.3, "note": "Plateia amistosa."},
+  "ae": {"product": 1.10, "os": 0.95, "chip": 1.00, "press": 1.0, "cost": 1.7, "note": "Gosta de luxo e grandes eventos."}
+ }
+}

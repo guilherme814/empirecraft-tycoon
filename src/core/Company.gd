@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 13
+const SAVE_VERSION := 14
 const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
 const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
@@ -45,6 +45,9 @@ var mods: Array = []              # modificadores temporários {key, mult, until
 var pending_decision: Dictionary = {}   # decisão aguardando o jogador {id, day}
 var decision_log: Array = []      # histórico {id, title, day, choice, risk}
 var last_decision_day: int = 0
+var buzz: Dictionary = {}          # país -> buzz (0..1) gerado por apresentações; aumenta vendas das lojas
+var presentations: Array = []      # histórico de apresentações
+var last_presentation: int = 0
 var log_entries: Array = []       # {day, text, kind}
 var income_month: float = 0.0
 var expense_month: float = 0.0
@@ -858,6 +861,10 @@ func advance_day() -> void:
 	stocks.daily(self)
 	for e in staff:
 		e.morale = lerpf(e.morale, 75.0, 0.02)
+	for k in buzz.keys():
+		buzz[k] = float(buzz[k]) * 0.992
+		if float(buzz[k]) < 0.01:
+			buzz.erase(k)
 	if day % Rules.DAYS_IN_MONTH == 0:
 		_month_end()
 	sandbox_refill()
@@ -1170,7 +1177,7 @@ func os_ecosystem() -> float:
 	for p in products:
 		if p.os_id == "own":
 			base += float(p.units_total)
-	return base
+	return base + float(own_os.get("buzz", 0.0)) * float(GameData.os_data().own.eco_base) * 0.25
 
 func os_info(id: String) -> Dictionary:
 	if id == "own":
@@ -1523,7 +1530,7 @@ func to_dict() -> Dictionary:
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
 		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores, "logo": logo, "decor": decor,
 		"sandbox": sandbox, "origin": origin, "difficulty": difficulty, "founder": founder, "focus": focus,
-		"mods": mods, "pending_decision": pending_decision, "decision_log": decision_log, "last_decision_day": last_decision_day,
+		"buzz": buzz, "presentations": presentations, "last_presentation": last_presentation, "mods": mods, "pending_decision": pending_decision, "decision_log": decision_log, "last_decision_day": last_decision_day,
 		"tutorial": tutorial, "tips_seen": tips_seen, "log_serial": log_serial, "notif_seen": notif_seen,
 	}
 
@@ -1569,6 +1576,9 @@ static func from_dict(d: Dictionary) -> Company:
 	c.founder = str(d.get("founder", ""))
 	c.focus = str(d.get("focus", ""))
 	c.mods = (d.get("mods", []) as Array).duplicate(true)
+	c.buzz = (d.get("buzz", {}) as Dictionary).duplicate()
+	c.presentations = (d.get("presentations", []) as Array).duplicate(true)
+	c.last_presentation = int(d.get("last_presentation", 0))
 	c.pending_decision = (d.get("pending_decision", {}) as Dictionary).duplicate(true)
 	c.decision_log = (d.get("decision_log", []) as Array).duplicate(true)
 	c.last_decision_day = int(d.get("last_decision_day", 0))

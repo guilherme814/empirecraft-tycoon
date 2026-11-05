@@ -42,7 +42,7 @@ func signature() -> String:
 	var st: Array = []
 	for p in c.products:
 		st.append(p.id * 10 + (1 if p.state == Product.STATE_RELEASED else (2 if p.state == Product.STATE_READY else 0)))
-	return "%s|%s|%d|%d|%s|%s|%d|%d|%d" % [str(ids), str(st), _pid, c.research_level("res_marketing"), _channel, str(_regions), _bi, _di, int(c.money / 5000.0) + int(c.reputation / 5.0) * 100000 + int(c.loyalty) * 7]
+	return "%d|%s|%s|%d|%d|%s|%s|%d|%d|%d" % [c.last_presentation, str(ids), str(st), _pid, c.research_level("res_marketing"), _channel, str(_regions), _bi, _di, int(c.money / 5000.0) + int(c.reputation / 5.0) * 100000 + int(c.loyalty) * 7]
 
 func _eligible() -> Array:
 	return company.products.filter(func(p): return p.state == Product.STATE_RELEASED or p.state == Product.STATE_READY)
@@ -53,6 +53,16 @@ func rebuild() -> void:
 	UI.clear(_right)
 	_bars.clear()
 	var elig := _eligible()
+	var pres := UI.card(Color("0b1830"), 14)
+	_form.add_child(pres)
+	var prv := UI.vbox(6)
+	pres.add_child(prv)
+	prv.add_child(UI.label("Apresentação ao vivo", 30, Color("bfe0ff")))
+	prv.add_child(UI.wrap("Apresente um produto, seu sistema ou um chip em outro país: reputação, vendas e buzz nas lojas do país.", 21, Color("9fc0e8")))
+	var cd := c.last_presentation > 0 and c.day - c.last_presentation < Presentations.COOLDOWN_DAYS
+	var pb := UI.button("Planejar apresentação" + ("  (aguarde %d dias)" % (Presentations.COOLDOWN_DAYS - (c.day - c.last_presentation)) if cd else ""),
+		func(): Game.ui_request.emit("presentation", 0), "good", 70)
+	prv.add_child(pb)
 	_form.add_child(UI.label("Nova campanha", 36, Color("bfe0ff")))
 	if elig.is_empty():
 		_form.add_child(UI.wrap("Você ainda não tem produto pronto ou lançado. Termine um projeto em Produtos.", 24, Color("9fc0e8")))

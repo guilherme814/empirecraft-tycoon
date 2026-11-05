@@ -116,7 +116,7 @@ static func forecast(c: Company, s: Dictionary) -> float:
 static func _local(c: Company, cat_id: String, s: Dictionary) -> float:
 	var size := GameData.store_opt("sizes", str(s.size))
 	var ct := GameData.country(str(s.country))
-	return c.market.market_size(cat_id, c.day) * float(ct.w) * float(size.reach) * (0.6 + 0.8 * experience(s))
+	return c.market.market_size(cat_id, c.day) * float(ct.w) * float(size.reach) * (0.6 + 0.8 * experience(s)) * (1.0 + 0.4 * float(c.buzz.get(str(s.country), 0.0)))
 
 static func daily(c: Company) -> void:
 	for s in c.stores:

@@ -43,6 +43,7 @@ func _initialize() -> void:
 	test_components()
 	test_chip_expansion()
 	test_updates_teardown()
+	test_presentations()
 	test_chip_realism()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
@@ -1062,3 +1063,63 @@ func test_updates_teardown() -> void:
 	check(Teardown.repair_score("phone", hard) < easy, "dobrável de vidro é mais difícil de reparar")
 	check(Teardown.recall_mult(10) > Teardown.recall_mult(90), "difícil de reparar custa mais no recall")
 	check(Teardown.layers(c, p).size() >= 5, "teardown lista as camadas")
+
+func test_presentations() -> void:
+	var c := staffed(51)
+	c.money = 5.0e6
+	c.day = 200
+	c.reputation = 60.0
+	check(Presentations.subjects(c).is_empty(), "sem produto, sem o que apresentar")
+	var p := _released(c)
+	var subs := Presentations.subjects(c)
+	check(subs.size() == 1 and subs[0].kind == "product", "produto aparece como assunto")
+	check(Presentations.blocker(c, "product", p.id, "", "stage") != "", "exige escolher o país")
+	check(Presentations.cost(c, "us", "stage") > Presentations.cost(c, "br", "stage"), "EUA custa mais que Brasil")
+	check(Presentations.cost(c, "br", "mega") > Presentations.cost(c, "br", "online"), "megaevento custa mais")
+	c.reputation = 5.0
+	check(Presentations.blocker(c, "product", p.id, "cn", "stage") != "", "país exige reputação")
+	c.reputation = 60.0
+	var m0 := c.money
+	var rep0 := c.reputation
+	var mods0 := c.mods.size()
+	var r := Presentations.run(c, "product", p.id, "br", "stage")
+	check(r.ok and c.money < m0, "apresentação cobra o custo")
+	check(c.mods.size() == mods0 + 1, "gera modificador de vendas")
+	check(["wow", "ok", "flop"].has(str(r.outcome)), "tem veredito")
+	check(c.presentations.size() == 1 and c.last_presentation == c.day, "registra no histórico")
+	check(Presentations.blocker(c, "product", p.id, "mx", "stage") != "", "intervalo entre apresentações")
+	c.day += Presentations.COOLDOWN_DAYS + 1
+	check(Presentations.blocker(c, "product", p.id, "br", "stage") != "", "não repete o mesmo assunto/país logo em seguida")
+	check(Presentations.blocker(c, "product", p.id, "mx", "stage") == "", "outro país é permitido")
+	# veredito segue a qualidade
+	check(Presentations.verdict(1.3) == "wow" and Presentations.verdict(1.0) == "ok" and Presentations.verdict(0.6) == "flop", "limiares do veredito")
+	# buzz aumenta vendas locais das lojas e decai
+	c.buzz["br"] = 0.8
+	var s := Stores.default_spec("br")
+	s["carry"] = {}
+	var with_buzz := Stores._local(c, "phone", s)
+	c.buzz["br"] = 0.0
+	check(with_buzz > Stores._local(c, "phone", s), "buzz aumenta a venda das lojas do país")
+	c.buzz["br"] = 0.5
+	c.advance_day()
+	check(float(c.buzz.get("br", 0.0)) < 0.5, "buzz decai com o tempo")
+	# software e hardware como assunto
+	c.own_os = {"version": 2, "features": []}
+	var cid := _chip_with(c, {"gpu": 4, "isp": true})
+	var kinds: Array = Presentations.subjects(c).map(func(x): return x.kind)
+	check(kinds.has("os") and kinds.has("chip"), "sistema próprio e chip podem ser apresentados")
+	check(Presentations.highlights(c, "chip", cid).size() >= 2, "destaques do chip")
+	var eco0 := c.os_ecosystem()
+	c.day += 200
+	c.money = 5.0e6
+	c.last_presentation = 0
+	var ro := Presentations.run(c, "os", 0, "us", "mega")
+	check(ro.ok, "apresentar o sistema próprio")
+	if ro.outcome != "flop":
+		check(c.os_ecosystem() > eco0, "boa apresentação do sistema aumenta o ecossistema")
+	c.last_presentation = 0
+	var rc := Presentations.run(c, "chip", cid, "de", "stage")
+	check(rc.ok, "apresentar um chip")
+	var c2 := Company.from_dict(c.to_dict())
+	check(c2.presentations.size() == c.presentations.size() and c2.last_presentation == c.last_presentation, "histórico sobrevive ao save")
+	check(c2.buzz.size() == c.buzz.size(), "buzz sobrevive ao save")
