@@ -45,6 +45,11 @@ var cover_days: int = 30        # quantos dias de venda manter em estoque
 var store_ema: float = 0.0      # média diária de vendas nas lojas próprias
 var lost_ema: float = 0.0       # média diária de vendas perdidas por falta de estoque
 var defects_total: int = 0      # unidades descartadas por defeito de fábrica
+var update_q: float = 0.0       # bônus permanente de qualidade das atualizações de software
+var refresh_days: int = 0       # dias "rejuvenescidos" na curva de demanda por atualizações
+var last_update: int = 0
+var updates: int = 0
+var update_log: Array = []      # atualizações únicas já feitas (ex.: "chip")
 var chip_id: int:
 	get: return int(design.get("chip", 0))
 
@@ -62,7 +67,8 @@ func to_dict() -> Dictionary:
 		"design": design, "os": os_id, "mfr": mfr,
 		"rating": rating, "rating_n": rating_n, "critic": critic, "reviews": reviews, "promise": promise, "gap": promise_gap,
 		"stock": stock, "avg_cost": avg_cost, "orders": orders, "auto": auto_stock, "cover": cover_days,
-		"store_ema": store_ema, "lost_ema": lost_ema, "defects": defects_total, "aw": awareness, "flaws": flaws, "tests": tests, "beta": beta, "beta_job": beta_job}
+		"store_ema": store_ema, "lost_ema": lost_ema, "defects": defects_total, "aw": awareness, "flaws": flaws, "tests": tests, "beta": beta, "beta_job": beta_job,
+		"uq": update_q, "rf": refresh_days, "lu": last_update, "un": updates, "ul": update_log}
 
 static func from_dict(d: Dictionary) -> Product:
 	var p := Product.new()
@@ -107,4 +113,9 @@ static func from_dict(d: Dictionary) -> Product:
 	p.tests = d.get("tests", {}).duplicate(true)
 	p.beta = d.get("beta", {}).duplicate(true)
 	p.beta_job = d.get("beta_job", {}).duplicate(true)
+	p.update_q = float(d.get("uq", 0.0))
+	p.refresh_days = int(d.get("rf", 0))
+	p.last_update = int(d.get("lu", 0))
+	p.updates = int(d.get("un", 0))
+	p.update_log = d.get("ul", []).duplicate()
 	return p

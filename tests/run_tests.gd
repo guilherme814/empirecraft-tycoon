@@ -42,6 +42,7 @@ func _initialize() -> void:
 	test_look()
 	test_components()
 	test_chip_expansion()
+	test_updates_teardown()
 	test_chip_realism()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
@@ -1004,3 +1005,60 @@ func test_chip_realism() -> void:
 	check(Components.part_blocker(c, Components.part("performance", "ram5x"), d) != "", "LPDDR5X exige 4 canais de memória")
 	few["mem"] = 4
 	check(Components.part_blocker(c, Components.part("performance", "ram5x"), d) == "", "4 canais liberam LPDDR5X")
+
+func _released(c: Company, os_id: String = "droidix") -> Product:
+	var r := c.create_product("Alvo", "phone", c.default_specs("phone"), 0.0, {}, os_id)
+	check(r.ok, "cria produto para atualização")
+	var p: Product = c.products[c.products.size() - 1]
+	c._finish_dev(p)
+	c.release(p.id)
+	return p
+
+func test_updates_teardown() -> void:
+	var c := staffed(41)
+	c.money = 5.0e6
+	c.day = 100
+	c.research_levels["res_software"] = 1
+	var p := _released(c)
+	var q0 := c.effective_quality(p)
+	check(Updates.blocker(c, p, "fix") != "", "correção exige defeito conhecido")
+	var r := Updates.apply(c, p.id, "perf")
+	check(r.ok and c.effective_quality(p) > q0, "melhoria de desempenho sobe a qualidade")
+	check(Updates.apply(c, p.id, "perf").ok == false, "cooldown entre atualizações")
+	c.day += Updates.COOLDOWN_DAYS + 1
+	check(Updates.apply(c, p.id, "major").ok, "grande versão com Software Avançado")
+	check(p.update_q > 0.08 and p.refresh_days >= 80, "bônus e rejuvenescimento acumulam")
+	for i in 6:
+		c.day += Updates.COOLDOWN_DAYS + 1
+		Updates.apply(c, p.id, "major")
+	check(p.update_q <= Updates.MAX_BONUS + 0.0001, "bônus tem teto")
+	# demanda: mesmo produto, mais velho, vende melhor se foi atualizado
+	var fresh := _released(c)
+	fresh.release_day = p.release_day
+	check(c.attractiveness(p) > c.attractiveness(fresh), "atualização rejuvenesce a demanda")
+	# defeitos conhecidos são corrigidos
+	var cq := staffed(42)
+	cq.money = 5.0e6
+	cq.day = 100
+	var pq := _released(cq)
+	pq.flaws = [{"id": "bug_crash", "found": true, "fixed": false}, {"id": "x", "found": false, "fixed": false}]
+	check(Updates.apply(cq, pq.id, "fix").ok and bool(pq.flaws[0].fixed) and not bool(pq.flaws[1].fixed), "correção resolve só os defeitos conhecidos")
+	# sistema próprio é mais barato
+	var own := _released(c)
+	own.os_id = "own"
+	check(Updates.cost(c, own, "perf") < Updates.cost(c, p, "perf"), "sistema próprio reduz o custo")
+	# persistência
+	var c2 := Company.from_dict(c.to_dict())
+	check(absf(c2.products[0].update_q - p.update_q) < 0.0001 and c2.products[0].refresh_days == p.refresh_days, "atualizações sobrevivem ao save")
+	# otimização para o chip: só com chip próprio estrangulando
+	check(Updates.blocker(c, p, "chip") != "", "sem chip próprio não há otimização")
+	# teardown
+	var d := c.default_design("phone")
+	var easy := Teardown.repair_score("phone", d)
+	var hard := d.duplicate(true)
+	hard.shape = "fold"
+	hard.finish = "glass"
+	hard.parts = {"display": "flex", "camera": "cam48"}
+	check(Teardown.repair_score("phone", hard) < easy, "dobrável de vidro é mais difícil de reparar")
+	check(Teardown.recall_mult(10) > Teardown.recall_mult(90), "difícil de reparar custa mais no recall")
+	check(Teardown.layers(c, p).size() >= 5, "teardown lista as camadas")

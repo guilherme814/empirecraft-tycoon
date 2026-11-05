@@ -609,6 +609,10 @@ func _on_ui_request(kind: String, pid: int) -> void:
 		_show_reviews(p, false)
 	elif kind == "launch":
 		_show_launch(p)
+	elif kind == "update":
+		_show_update(p)
+	elif kind == "teardown":
+		_show_teardown(p)
 
 func _stars(n: float) -> String:
 	var full := clampi(int(round(n)), 0, 5)
@@ -705,6 +709,56 @@ func _show_launch(p: Product) -> void:
 		b.disabled = c.money < fee
 		v.add_child(b)
 	v.add_child(UI.button("Cancelar", _close_overlay, "normal", 72))
+
+## Atualizações de software do produto: custo, efeito e motivo quando bloqueada.
+func _show_update(p: Product) -> void:
+	if _overlay != null:
+		_close_overlay()
+	var c: Company = Game.company
+	Clock.pause()
+	_overlay = _modal("Atualizar %s" % p.pname)
+	var v: VBoxContainer = _overlay.get_meta("box")
+	var own := p.os_id == "own"
+	v.add_child(UI.wrap("Qualidade por atualizações: +%d%% (limite %d%%) · %d atualização(ões)%s" % [
+		int(round(p.update_q * 100.0)), int(Updates.MAX_BONUS * 100.0), p.updates,
+		"  ·  sistema próprio: mais barato e mais eficaz" if own else ""], 24, Palette.TEXT))
+	for t in Updates.TIERS:
+		var id := str(t.id)
+		var why := Updates.blocker(c, p, id)
+		var g := Updates.gain(c, p, id)
+		var txt := "%s  ·  %s" % [str(t.name), Fmt.money(Updates.cost(c, p, id))]
+		var b := UI.button(txt, func():
+			var res := Updates.apply(c, p.id, id)
+			_close_overlay()
+			Game.notice.emit(str(res.msg), "good" if bool(res.ok) else "bad")
+			Game.changed.emit(), "primary" if why == "" else "normal", 72)
+		b.disabled = why != ""
+		v.add_child(b)
+		var info := str(t.desc)
+		if g > 0.0 and id == "chip":
+			info += " Ganho estimado: +%d%%." % int(round(g * 100.0))
+		v.add_child(UI.wrap(info if why == "" else "%s — %s" % [info, why], 21, Palette.MUTED if why == "" else Palette.WARN))
+	v.add_child(UI.button("Fechar", _close_overlay, "normal", 72))
+
+## Desmontagem: vista explodida das peças e nota de reparabilidade.
+func _show_teardown(p: Product) -> void:
+	if _overlay != null:
+		_close_overlay()
+	var c: Company = Game.company
+	Clock.pause()
+	_overlay = _modal("Desmontagem: %s" % p.pname)
+	var v: VBoxContainer = _overlay.get_meta("box")
+	var tv := TeardownView.new()
+	tv.set_layers(Teardown.layers(c, p))
+	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_child(tv)
+	var score := Teardown.repair_score(p.category, p.design)
+	var col := Palette.GOOD if score >= 60 else (Palette.WARN if score >= 35 else Palette.BAD)
+	v.add_child(UI.kv("Reparabilidade", "%d/100" % score, col, 26))
+	v.add_child(UI.bar(float(score) / 100.0, col, 12))
+	v.add_child(UI.kv("Custo de componentes", Fmt.money(p.unit_cost) + " /un.", Palette.TEXT, 24))
+	v.add_child(UI.wrap("Aparelhos difíceis de abrir (finos, dobráveis, vidro e cerâmica, peças avançadas) saem mais caros nos recalls: custo ×%.2f." % Teardown.recall_mult(score), 21, Palette.MUTED))
+	v.add_child(UI.button("Fechar", _close_overlay, "primary", 76))
 
 func _close_overlay() -> void:
 	if _overlay != null:

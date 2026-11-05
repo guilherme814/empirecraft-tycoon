@@ -615,6 +615,12 @@ func _product_card(p: Product) -> Control:
 			v.add_child(rr)
 			w["label"] = UI.label(_stats_text(p), 24, Palette.MUTED)
 			v.add_child(w.label)
+			var sw := UI.hbox(8)
+			sw.add_child(UI.button("Atualizar software", func(): Game.ui_request.emit("update", p.id), "good", 60))
+			sw.add_child(UI.button("Desmontar", func(): Game.ui_request.emit("teardown", p.id), "normal", 60))
+			for ch2 in sw.get_children():
+				ch2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			v.add_child(sw)
 			var last := UI.hbox(8)
 			last.add_child(UI.button("Nova versão", func(): _load_from(p), "info", 64))
 			last.add_child(UI.button("Tirar de linha", func(): act(c.retire(p.id)), "danger", 64))

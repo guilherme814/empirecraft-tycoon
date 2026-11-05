@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 12
+const SAVE_VERSION := 13
 const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
 const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
@@ -730,7 +730,7 @@ func attractiveness(p: Product) -> float:
 	var fair := fair_price(p.category, eq)
 	var price_factor := clampf(pow(fair / maxf(p.price, 1.0), 2.2), 0.0, 4.0)
 	var age := day - p.release_day
-	var dec := Market.decay(age, float(cat.lifetime))
+	var dec := Market.decay(maxi(0, age - p.refresh_days), float(cat.lifetime))
 	var hype := 1.0 + 0.6 * maxf(0.0, 1.0 - float(age) / 30.0) * (1.0 + effect("hype") + 1.5 * p.promise)
 	var rep_factor := 0.5 + reputation / 100.0
 	return q_factor * price_factor * dec * hype * rep_factor * rating_factor(p) * Loyalty.sales_mult(self) * Marketing.factor(Marketing.awareness_of(self, p)) * (1.04 if is_fashion_color(str(p.design.get("color", ""))) else 1.0)
@@ -750,7 +750,7 @@ func demand_floor(p: Product, exp_q: float) -> float:
 	if eq < 0.5 * exp_q or p.price > 1.3 * fair_price(p.category, eq):
 		return 0.0
 	var cat: Dictionary = GameData.category(p.category)
-	return Rules.MIN_DAILY_DEMAND * Market.decay(day - p.release_day, float(cat.lifetime)) * minf(1.0, eq / exp_q)
+	return Rules.MIN_DAILY_DEMAND * Market.decay(maxi(0, day - p.release_day - p.refresh_days), float(cat.lifetime)) * minf(1.0, eq / exp_q)
 
 ## Registra a venda. Só sai do estoque: devolve quantas unidades foram realmente vendidas.
 func _book_sale(p: Product, units: int, cat_id: String) -> int:
@@ -1454,7 +1454,7 @@ func set_manufacturer(prod_id: int, id: String) -> Dictionary:
 	return _ok("Contrato com %s fechado" % (contractor(id).get("name", "fábrica própria")))
 
 func effective_quality(p: Product) -> float:
-	return p.quality * os_mult(p.os_id, p.category) * float(mfr_stats(p.mfr).q) * chip_mult(p.category, p.specs, p.design)
+	return p.quality * os_mult(p.os_id, p.category) * float(mfr_stats(p.mfr).q) * chip_mult(p.category, p.specs, p.design) * (1.0 + p.update_q)
 
 func current_unit_cost(p: Product) -> float:
 	var cat: Dictionary = GameData.category(p.category)
@@ -1466,7 +1466,7 @@ func _recalls() -> void:
 	for p in released_products():
 		var risk: float = float(mfr_stats(p.mfr).risk) + 0.012 * float(Lab.severity_sum(p))
 		if risk > 0.0 and rng.randf() < risk:
-			var loss: float = maxf(2000.0, p.ema_units * 30.0 * current_unit_cost(p) * 0.4)
+			var loss: float = maxf(2000.0, p.ema_units * 30.0 * current_unit_cost(p) * 0.4) * Teardown.recall_mult(Teardown.repair_score(p.category, p.design))
 			_expense(loss, "recall")
 			reputation = maxf(0.0, reputation - 2.0)
 			Loyalty.on_recall(self, p)

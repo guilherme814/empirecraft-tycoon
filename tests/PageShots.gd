@@ -120,6 +120,14 @@ func _ready() -> void:
 	screen._refresh_all()
 	await _shot("decision")
 	screen._close_overlay()
+	var rel: Array = c.released_products()
+	if not rel.is_empty():
+		screen._show_teardown(rel[0])
+		await _shot("teardown")
+		screen._close_overlay()
+		screen._show_update(rel[0])
+		await _shot("update")
+		screen._close_overlay()
 	UIFx.confetti(screen, Vector2(1200, 300))
 	await get_tree().create_timer(0.25).timeout
 	await _shot("confetti")
