@@ -3,14 +3,14 @@ extends RefCounted
 ## Central econômica: demonstrativo (DRE), fluxo de caixa, desempenho por produto e equilíbrio
 ## do mercado. Só lê o estado da empresa; a UI apenas exibe estes números.
 
-const OPEX_OTHER := ["dev", "research", "hiring", "training", "commission", "fees", "tests", "recall", "events", "other"]
+const OPEX_OTHER := ["dev", "research", "hiring", "training", "commission", "fees", "tests", "recall", "events", "integration", "other"]
 
 static func _g(led: Dictionary, k: String) -> float:
 	return float(led.get(k, 0.0))
 
 ## DRE a partir de um ledger mensal (receitas +, despesas −) e dos movimentos fora do resultado.
 static func dre(led: Dictionary, cash_items: Dictionary) -> Dictionary:
-	var revenue := _g(led, "sales")
+	var revenue := _g(led, "sales") + _g(led, "subsidiaries")
 	var cogs := -_g(led, "cogs")
 	var marketing := -_g(led, "marketing")
 	var payroll := -_g(led, "payroll")
@@ -19,7 +19,7 @@ static func dre(led: Dictionary, cash_items: Dictionary) -> Dictionary:
 	for k in OPEX_OTHER:
 		other += -_g(led, k)
 	# qualquer categoria desconhecida cai em "outras", para o DRE sempre fechar com o ledger
-	var known := ["sales", "cogs", "marketing", "payroll", "rent", "interest", "taxes"] + OPEX_OTHER
+	var known := ["sales", "cogs", "marketing", "payroll", "rent", "interest", "taxes", "subsidiaries", "integration"] + OPEX_OTHER
 	for k in led:
 		if not known.has(k):
 			other += -float(led[k])

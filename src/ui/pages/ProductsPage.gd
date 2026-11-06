@@ -186,7 +186,9 @@ func _step_shape() -> void:
 	_form.add_child(UI.wrap("Maior = mais qualidade e custo. Mais fino = mais elegante e mais caro de produzir.", 21, Color("9fc0e8")))
 
 func _swatches(key: String) -> void:
-	var sw := UI.hbox(8)
+	var sw := HFlowContainer.new()
+	sw.add_theme_constant_override("h_separation", 8)
+	sw.add_theme_constant_override("v_separation", 8)
 	_form.add_child(sw)
 	var fashion := str(company.market.fashion.get("color", ""))
 	for col in GameData.designs().colors:

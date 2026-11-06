@@ -9,7 +9,7 @@ signal log_added(text: String, kind: String, sfx: String)
 signal day_advanced(day: int)
 signal review_ready(prod_id: int)
 
-const SAVE_VERSION := 14
+const SAVE_VERSION := 15
 const SANDBOX_MONEY := 1.0e11     # modo sandbox: piso de caixa
 const SANDBOX_RP := 1.0e7         # modo sandbox: piso de pontos de pesquisa
 const TAX_RATE := 0.15
@@ -47,6 +47,9 @@ var decision_log: Array = []      # histórico {id, title, day, choice, risk}
 var last_decision_day: int = 0
 var buzz: Dictionary = {}          # país -> buzz (0..1) gerado por apresentações; aumenta vendas das lojas
 var presentations: Array = []      # histórico de apresentações
+var acquired: Array = []           # empresas compradas {kind, name, day, price, unlock, rp_month}
+var acq_offers: Array = []         # startups à venda {id, type, name, price, expires}
+var last_acq: int = -1
 var last_presentation: int = 0
 var log_entries: Array = []       # {day, text, kind}
 var income_month: float = 0.0
@@ -892,6 +895,7 @@ func _month_end() -> void:
 	_expense(rent, "rent")
 	_deals_month()
 	Stores.monthly(self)
+	Acquisitions.monthly(self)
 	if loan > 0.0:
 		_expense(loan * LOAN_RATE, "interest")
 	var pre_tax := income_month - expense_month
@@ -1081,7 +1085,10 @@ func default_design(cat_id: String) -> Dictionary:
 		"kbd": "standard", "webcam": "dot", "lid": "logo", "vent": "slats", "glow": "bar", "pad": "classic"}
 
 func design_item_unlocked(item: Dictionary) -> bool:
-	return str(item.req) == "" or research_level(str(item.req)) >= int(item.lvl)
+	var rq := str(item.req)
+	if rq.begins_with("acq:"):
+		return Acquisitions.has_unlock(self, rq)
+	return rq == "" or research_level(rq) >= int(item.lvl)
 
 func shape_item(cat_id: String, id: String) -> Dictionary:
 	for it in GameData.designs().shapes.get(cat_id, []):
@@ -1530,7 +1537,7 @@ func to_dict() -> Dictionary:
 		"loyalty": loyalty, "loyalty_log": loyalty_log, "cash_start": cash_start, "cash_flow_last": cash_flow_last,
 		"cash_items": cash_items, "cash_items_last": cash_items_last, "stores": stores, "logo": logo, "decor": decor,
 		"sandbox": sandbox, "origin": origin, "difficulty": difficulty, "founder": founder, "focus": focus,
-		"buzz": buzz, "presentations": presentations, "last_presentation": last_presentation, "mods": mods, "pending_decision": pending_decision, "decision_log": decision_log, "last_decision_day": last_decision_day,
+		"buzz": buzz, "presentations": presentations, "acquired": acquired, "acq_offers": acq_offers, "last_acq": last_acq, "last_presentation": last_presentation, "mods": mods, "pending_decision": pending_decision, "decision_log": decision_log, "last_decision_day": last_decision_day,
 		"tutorial": tutorial, "tips_seen": tips_seen, "log_serial": log_serial, "notif_seen": notif_seen,
 	}
 
@@ -1578,6 +1585,9 @@ static func from_dict(d: Dictionary) -> Company:
 	c.mods = (d.get("mods", []) as Array).duplicate(true)
 	c.buzz = (d.get("buzz", {}) as Dictionary).duplicate()
 	c.presentations = (d.get("presentations", []) as Array).duplicate(true)
+	c.acquired = (d.get("acquired", []) as Array).duplicate(true)
+	c.acq_offers = (d.get("acq_offers", []) as Array).duplicate(true)
+	c.last_acq = int(d.get("last_acq", -1))
 	c.last_presentation = int(d.get("last_presentation", 0))
 	c.pending_decision = (d.get("pending_decision", {}) as Dictionary).duplicate(true)
 	c.decision_log = (d.get("decision_log", []) as Array).duplicate(true)

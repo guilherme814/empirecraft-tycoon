@@ -44,6 +44,7 @@ func _initialize() -> void:
 	test_chip_expansion()
 	test_updates_teardown()
 	test_presentations()
+	test_acquisitions()
 	test_chip_realism()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
@@ -1123,3 +1124,72 @@ func test_presentations() -> void:
 	var c2 := Company.from_dict(c.to_dict())
 	check(c2.presentations.size() == c.presentations.size() and c2.last_presentation == c.last_presentation, "histórico sobrevive ao save")
 	check(c2.buzz.size() == c.buzz.size(), "buzz sobrevive ao save")
+
+func test_acquisitions() -> void:
+	var c := staffed(61)
+	c.money = 2.0e8
+	c.day = 300
+	var ts := Acquisitions.targets(c)
+	var rivals_n := c.market.rivals.size()
+	check(ts.size() >= rivals_n, "rivais aparecem à venda")
+	# ofertas de startups surgem ao longo dos meses
+	for i in 12:
+		Acquisitions.monthly(c)
+	check(not c.acq_offers.is_empty(), "startups aparecem como ofertas")
+	check(c.acq_offers.size() <= Acquisitions.MAX_OFFERS, "limite de ofertas")
+	# compra de startup
+	var off: Dictionary = c.acq_offers[0]
+	var m0 := c.money
+	var n_offers := c.acq_offers.size()
+	var mods0 := c.mods.size()
+	var r := Acquisitions.buy(c, "startup", str(off.id))
+	check(r.ok, "compra de startup funciona: " + str(r.msg))
+	check(c.money <= m0 - float(off.price), "cobra o preço (mais integração)")
+	check(c.acq_offers.size() == n_offers - 1 and c.acquired.size() == 1, "startup sai da lista e entra no grupo")
+	check(c.mods.size() >= mods0, "perks viram modificadores")
+	check(Acquisitions.blocker(c, "rival", "Xiaomi") != "", "intervalo entre compras")
+	c.day += Acquisitions.COOLDOWN_DAYS + 1
+	# compra de rival: ações viram dinheiro, vira subsidiária
+	var name := "Xiaomi"
+	c.stocks.holdings[name] = {"n": 100, "cost": 100.0}
+	var price := Acquisitions.rival_price(c, c.market.rivals[c.market.rival_index(name)])
+	check(price > float(c.market.rivals[c.market.rival_index(name)].value), "rival custa mais que o valor (prêmio de controle)")
+	var cash0 := c.money
+	r = Acquisitions.buy(c, "rival", name)
+	check(r.ok, "compra de rival funciona")
+	check(c.money < cash0 and c.stocks.holding(name) == 0, "ações da empresa comprada foram liquidadas")
+	check(Acquisitions.owns(c, name) and bool(c.market.rivals[c.market.rival_index(name)].owned), "rival marcado como subsidiária")
+	check(not Stocks.new().buy(c, name, 1).ok, "não dá para comprar ações de subsidiária")
+	# lucro de subsidiária entra como receita
+	c.market.rivals[c.market.rival_index(name)]["rev_last"] = 1000000.0
+	c.income_month = 0.0
+	Acquisitions.monthly(c)
+	check(c.income_month >= 1000000.0 * Acquisitions.SHARE_OF_REV - 1.0, "repasse de subsidiária vira receita")
+	check(Economy.dre(c.ledger, c.cash_items).revenue >= 150000.0 - 1.0, "DRE inclui subsidiárias")
+	check(Acquisitions.group_value(c) > 0.0, "valor do grupo soma na empresa")
+	# limite do regulador
+	c.day += 100
+	for nm in ["Apple", "Samsung", "Google"]:
+		c.last_acq = -1
+		Acquisitions.buy(c, "rival", nm)
+	c.last_acq = -1
+	check(Acquisitions.owned_rivals(c).size() <= Acquisitions.MAX_RIVALS, "regulador limita compras de rivais")
+	check(Acquisitions.blocker(c, "rival", "Huawei") != "", "mais de 3 rivais é barrado")
+	# sem dinheiro
+	var poor := staffed(62)
+	poor.money = 1000.0
+	check(Acquisitions.blocker(poor, "rival", "Xiaomi") != "", "sem dinheiro não compra")
+	# desbloqueio de acabamento exclusivo
+	var item := {"req": "acq:materials", "lvl": 1}
+	check(not poor.design_item_unlocked(item), "acabamento exclusivo começa bloqueado")
+	poor.acquired.append({"kind": "startup", "name": "X", "unlock": "acq:materials", "price": 1.0, "day": 0})
+	check(poor.design_item_unlocked(item), "compra libera o acabamento exclusivo")
+	# save/load
+	var c2 := Company.from_dict(c.to_dict())
+	check(c2 != null and c2.acquired.size() == c.acquired.size() and c2.acq_offers.size() == c.acq_offers.size(), "aquisições sobrevivem ao save")
+	var old: Dictionary = c.to_dict()
+	old.erase("acquired")
+	old.erase("acq_offers")
+	old["version"] = 14
+	var c3 := Company.from_dict(old)
+	check(c3 != null and c3.acquired.is_empty() and c3.last_acq == -1, "save antigo (v14) abre sem aquisições")

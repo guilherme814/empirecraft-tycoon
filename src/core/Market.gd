@@ -201,6 +201,7 @@ func month_end() -> void:
 	supply_chain = clampf(supply_chain + (1.0 - supply_chain) * 0.15 + rng.randf_range(-0.05, 0.05), 0.7, 1.35)
 	for r in rivals:
 		var rev := float(r.rev_month)
+		r["rev_last"] = rev
 		r.rev_year = lerpf(float(r.rev_year), rev * 12.0, 0.25)
 		var profit := rev * 0.2 * float(r.tech) - 20000.0
 		r.cash = maxf(0.0, float(r.cash) + profit)
@@ -213,7 +214,7 @@ func month_end() -> void:
 		if rng.randf() < 0.08:
 			r.shock = rng.randf_range(-0.2, 0.18)
 	for i in rivals.size():
-		if rng.randf() < 0.05:
+		if rng.randf() < 0.05 and not bool(rivals[i].get("owned", false)):
 			_rival_event(i, _today)
 
 ## Reação dos rivais a um lançamento do jogador. Cada um age conforme a estratégia:
@@ -229,7 +230,7 @@ func react_to_launch(cat_id: String, quality: float, price: float, day: int) -> 
 	for i in rivals.size():
 		var r: Dictionary = rivals[i]
 		_ensure_rival(r)
-		if not focus_has(r, cat_id):
+		if not focus_has(r, cat_id) or bool(r.get("owned", false)):
 			continue
 		r.rivalry = minf(100.0, float(r.rivalry) + 12.0 * threat)
 		var chance := clampf(0.22 * float(r.aggr) * threat + float(r.rivalry) / 400.0, 0.0, 0.85)

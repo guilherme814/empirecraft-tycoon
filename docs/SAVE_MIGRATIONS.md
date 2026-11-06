@@ -42,3 +42,4 @@ Testes: `test_save_roundtrip` (ida e volta) e `test_old_save_compat` (save v2 m�
 - 0.13.0: sem mudança de formato. design.parts (peças por eixo) e os campos novos de chip (gpu, isp, rt, ecores, mem, valid, bin, arch) são opcionais; saves antigos usam peças básicas e valores neutros.
 - 0.14.0: SAVE_VERSION 13. Produto ganha campos opcionais uq (bônus de qualidade por atualizações), rf (dias rejuvenescidos), lu, un, ul. Saves antigos assumem zeros.
 - 0.15.0: SAVE_VERSION 14. Novos campos opcionais da empresa: buzz (país→0..1), presentations (histórico), last_presentation; own_os.buzz. Saves antigos assumem vazio.
+- 0.16.0: SAVE_VERSION 15. Novos campos opcionais da empresa: acquired (empresas compradas), acq_offers (startups à venda), last_acq; rivais ganham owned/owned_day/rev_last. Saves antigos assumem vazio.

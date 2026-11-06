@@ -15,6 +15,7 @@ const PAGE_DEFS := [
 	{"id": "ops", "group": "Negócios", "title": "Operações", "icon": "nav_ops", "script": "res://src/ui/pages/OperationsPage.gd"},
 	{"id": "finance", "group": "Negócios", "title": "Finanças", "icon": "nav_finance", "script": "res://src/ui/pages/FinancePage.gd"},
 	{"id": "stocks", "group": "Negócios", "title": "Bolsa", "icon": "nav_stocks", "script": "res://src/ui/pages/StocksPage.gd"},
+	{"id": "acq", "group": "Negócios", "title": "Aquisições", "icon": "nav_ops", "script": "res://src/ui/pages/AcquisitionsPage.gd"},
 	{"id": "market", "group": "Negócios", "title": "Mercado", "icon": "nav_market", "script": "res://src/ui/pages/MarketPage.gd"},
 	{"id": "feedback", "group": "Negócios", "title": "Feedback", "icon": "nav_feedback", "script": "res://src/ui/pages/FeedbackPage.gd"},
 ]

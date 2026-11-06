@@ -1,0 +1,24 @@
+{
+ "prefix": ["Quantum", "Pixel", "Nexo", "Lumi", "Brisa", "Faísca", "Orbe", "Vórtice", "Prisma", "Átomo", "Rastro", "Kinetic"],
+ "suffix": ["Labs", "Studio", "Systems", "Works"],
+ "types": [
+  {"id": "chip", "name": "Startup de silício", "icon": "nav_chip", "base": 900000.0,
+   "desc": "Time de engenheiros de chips: dá pontos de pesquisa agora e todo mês.",
+   "perk": {"rp_once": 120.0, "rp_month": 8.0}},
+  {"id": "software", "name": "Estúdio de software", "icon": "nav_system", "base": 700000.0,
+   "desc": "Apps e interface refinados: aumenta as vendas de tudo em 3%.",
+   "perk": {"sales": 1.03, "rp_once": 30.0}},
+  {"id": "materials", "name": "Laboratório de materiais", "icon": "nav_package", "base": 1100000.0,
+   "desc": "Libera o acabamento exclusivo Fibra de carbono e reduz o custo de produção em 2%.",
+   "perk": {"cost": 0.98, "unlock": "acq:materials"}},
+  {"id": "logistics", "name": "Empresa de logística", "icon": "nav_ops", "base": 800000.0,
+   "desc": "Rotas e armazéns próprios: custo de produção 3% menor.",
+   "perk": {"cost": 0.97}},
+  {"id": "optics", "name": "Fábrica de óptica", "icon": "nav_products", "base": 1000000.0,
+   "desc": "Lentes melhores: vendas +2%, pesquisa +60 e reputação +3.",
+   "perk": {"sales": 1.02, "rp_once": 60.0, "rep": 3.0}},
+  {"id": "media", "name": "Agência de influenciadores", "icon": "nav_marketing", "base": 600000.0,
+   "desc": "Alcance nas redes: reputação +5 e vendas +3%.",
+   "perk": {"sales": 1.03, "rep": 5.0}}
+ ]
+}

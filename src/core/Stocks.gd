@@ -40,7 +40,7 @@ func portfolio_cost() -> float:
 func update_value(c: Company) -> void:
 	var annual_profit := 12.0 * (c.last_income - c.last_expense)
 	value = maxf(0.0, c.money) + 10.0 * maxf(0.0, annual_profit) + 2.0 * 12.0 * c.last_income \
-		+ portfolio_value(c.market) + 1500.0 * c.reputation
+		+ portfolio_value(c.market) + Acquisitions.group_value(c) + 1500.0 * c.reputation
 	var target := value / Market.SHARES * c.market.macro
 	if price <= 0.0:
 		price = target
@@ -62,6 +62,8 @@ func buy(c: Company, name: String, qty: int) -> Dictionary:
 	var i := c.market.rival_index(name)
 	if i < 0 or qty <= 0:
 		return c._fail("Ação inválida")
+	if bool(c.market.rivals[i].get("owned", false)):
+		return c._fail("%s já é sua subsidiária" % name)
 	var unit := float(c.market.rivals[i].price) * (1.0 + FEE)
 	var total := unit * float(qty)
 	if c.money < total:

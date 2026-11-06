@@ -49,6 +49,26 @@
    "lvl": 3,
    "metal": 0.1,
    "rough": 0.15
+  },
+  {
+   "id": "bio",
+   "name": "Bioplástico",
+   "q": 0.01,
+   "cost": 0.97,
+   "req": "",
+   "lvl": 0,
+   "metal": 0.05,
+   "rough": 0.6
+  },
+  {
+   "id": "carbon",
+   "name": "Fibra de carbono",
+   "q": 0.08,
+   "cost": 1.22,
+   "req": "acq:materials",
+   "lvl": 1,
+   "metal": 0.35,
+   "rough": 0.4
   }
  ],
  "shapes": {
@@ -205,6 +225,36 @@
    "id": "purple",
    "name": "Roxo",
    "hex": "7b5cc4"
+  },
+  {
+   "id": "coral",
+   "name": "Coral",
+   "hex": "ff7a6b"
+  },
+  {
+   "id": "mint",
+   "name": "Menta",
+   "hex": "7fd8b8"
+  },
+  {
+   "id": "midnight",
+   "name": "Azul-meia-noite",
+   "hex": "1d2a52"
+  },
+  {
+   "id": "copper",
+   "name": "Cobre",
+   "hex": "b4683c"
+  },
+  {
+   "id": "lavender",
+   "name": "Lavanda",
+   "hex": "b9a6e8"
+  },
+  {
+   "id": "sand",
+   "name": "Areia",
+   "hex": "d8c7a3"
   }
  ],
  "wallpapers": [
@@ -243,6 +293,30 @@
    "name": "Oceano",
    "c1": "063a6b",
    "c2": "5ec8ff"
+  },
+  {
+   "id": "dunes",
+   "name": "Dunas",
+   "c1": "6b3a1b",
+   "c2": "f2c27a"
+  },
+  {
+   "id": "galaxy",
+   "name": "Galáxia",
+   "c1": "0b0820",
+   "c2": "7b4bff"
+  },
+  {
+   "id": "sakura",
+   "name": "Sakura",
+   "c1": "f7b6cf",
+   "c2": "7a3b6b"
+  },
+  {
+   "id": "carbon",
+   "name": "Carbono",
+   "c1": "0c0d10",
+   "c2": "3a3f4b"
   }
  ],
  "camera_layouts": [

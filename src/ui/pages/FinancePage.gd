@@ -6,7 +6,7 @@ const LABELS := {
 	"dev": "Desenvolvimento", "research": "Pesquisa", "hiring": "Contratações", "training": "Treinamento",
 	"capex": "Investimentos (obras)", "fees": "Taxas de contratos", "commission": "Comissões e acordos",
 	"recall": "Recalls e defeitos", "interest": "Juros", "taxes": "Impostos (15% do lucro)",
-	"events": "Eventos", "writeoff": "Estoque descartado", "inventory": "Estoque (lotes produzidos)", "loan": "Empréstimos", "other": "Outros"}
+	"events": "Eventos", "writeoff": "Estoque descartado", "subsidiaries": "Lucro de subsidiárias", "integration": "Integração de aquisições", "inventory": "Estoque (lotes produzidos)", "loan": "Empréstimos", "other": "Outros"}
 
 var _body: VBoxContainer
 var _cur_box: VBoxContainer
@@ -61,7 +61,7 @@ func _dre_card(title: String, d: Dictionary, cash_items: Dictionary) -> Control:
 	v.add_child(HSeparator.new())
 	v.add_child(UI.label("Fluxo de caixa", 24, Palette.INFO))
 	_row(v, "Lucro líquido", float(d.net))
-	var names := {"capex": "Obras e fábrica", "loan": "Empréstimos", "stocks": "Bolsa e capital"}
+	var names := {"capex": "Obras e fábrica", "loan": "Empréstimos", "stocks": "Bolsa e capital", "acquisitions": "Compra de empresas"}
 	for k in cash_items:
 		_row(v, str(names.get(k, k)), float(cash_items[k]), true, false, "fora do lucro")
 	_row(v, "Variação do caixa", float(d.cash_flow), true, true)

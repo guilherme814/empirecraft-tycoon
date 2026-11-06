@@ -62,7 +62,7 @@ func rebuild() -> void:
 	rv.add_child(UI.heading("Maiores empresas"))
 	var list: Array = [{"name": c.company_name + " (você)", "value": c.stocks.value, "me": true}]
 	for r in m.rivals:
-		list.append({"name": r.name, "value": float(r.value), "me": false})
+		list.append({"name": str(r.name) + (" (subsidiária)" if bool(r.get("owned", false)) else ""), "value": float(r.value), "me": false})
 	list.sort_custom(func(a, b): return float(a.value) > float(b.value))
 	for i in list.size():
 		var it: Dictionary = list[i]
@@ -83,7 +83,8 @@ func rebuild() -> void:
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_child(grid)
 	for r in m.rivals:
-		grid.add_child(_rival_card(r))
+		if not bool(r.get("owned", false)):
+			grid.add_child(_rival_card(r))
 	_body.add_child(UI.wrap("Preços seguem o valor da empresa (vendas e lucro), com ruído e o humor geral do mercado. Cada compra/venda paga 1% de corretagem.", 21))
 
 ## Distintivo: logotipo da sua empresa ou inicial colorida da marca rival.
