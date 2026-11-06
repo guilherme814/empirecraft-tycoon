@@ -267,7 +267,13 @@ func _apply_rail() -> void:
 func _style_nav(pid: String, selected: bool) -> void:
 	var b: Button = _nav[pid]
 	var flat := Palette.box(Color(0, 0, 0, 0), 14, 0)
-	b.add_theme_stylebox_override("normal", Palette.box(Palette.ACCENT, 14, 0) if selected else flat)
+	var act := Palette.box(Palette.ACCENT, 14, 0)
+	if Saves.gfx != "eco":
+		act.shadow_color = Color(Palette.ACCENT.r, Palette.ACCENT.g, Palette.ACCENT.b, 0.40)
+		act.shadow_size = 10
+		act.border_width_top = 2
+		act.border_color = Palette.ACCENT.lightened(0.3)
+	b.add_theme_stylebox_override("normal", act if selected else flat)
 	b.add_theme_stylebox_override("hover", Palette.box(Palette.ACCENT.lightened(0.1), 14, 0) if selected else Palette.box(Palette.PANEL_ALT, 14, 0))
 	b.add_theme_stylebox_override("pressed", Palette.box(Palette.ACCENT.darkened(0.2), 14, 0))
 	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())

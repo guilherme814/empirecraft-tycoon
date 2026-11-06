@@ -36,6 +36,21 @@ static func card_box(color: Color, radius: int = 18, pad: int = 20) -> StyleBoxF
 		s.border_blend = true
 	return s
 
+## Botão com relevo: filete de luz em cima e base mais escura (parece uma tecla).
+static func key_box(color: Color, colored: bool, pressed: bool = false) -> StyleBoxFlat:
+	var s := box(color, 14, 12)
+	if Saves.gfx == "eco":
+		return s
+	s.border_width_top = 0 if pressed else 2
+	s.border_width_bottom = 2 if pressed else 5
+	s.border_color = color.lightened(0.28) if colored else color.lightened(0.10)
+	# a borda é única; o escurecimento da base vem da sombra
+	s.shadow_color = Color(0, 0, 0, 0.30)
+	s.shadow_size = 0 if pressed else 3
+	s.shadow_offset = Vector2(0, 2)
+	s.content_margin_top = 12.0 + (3.0 if pressed else 0.0)
+	return s
+
 static func kind_color(kind: String) -> Color:
 	match kind:
 		"primary": return ACCENT
@@ -48,9 +63,9 @@ static func style_button(b: Button, kind: String) -> void:
 	var base := kind_color(kind)
 	var colored := kind != "normal"
 	var txt := ON_COLOR if colored else TEXT
-	b.add_theme_stylebox_override("normal", box(base, 14, 12))
-	b.add_theme_stylebox_override("hover", box(base.lightened(0.12), 14, 12))
-	b.add_theme_stylebox_override("pressed", box(base.darkened(0.2), 14, 12))
+	b.add_theme_stylebox_override("normal", key_box(base, colored))
+	b.add_theme_stylebox_override("hover", key_box(base.lightened(0.12), colored))
+	b.add_theme_stylebox_override("pressed", key_box(base.darkened(0.2), colored, true))
 	b.add_theme_stylebox_override("disabled", box(PANEL_DEEP, 14, 12))
 	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	b.add_theme_color_override("font_color", txt)

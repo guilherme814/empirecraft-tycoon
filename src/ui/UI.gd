@@ -75,7 +75,7 @@ static func background() -> ColorRect:
 	return r
 
 static func card(color: Color = Palette.PANEL, pad: int = 20) -> PanelContainer:
-	var p := PanelContainer.new()
+	var p := GlassPanel.new()
 	p.add_theme_stylebox_override("panel", Palette.card_box(color, 18, pad))
 	return p
 

@@ -18,6 +18,9 @@ func set_series(values: Array, color: Color = Palette.ACCENT) -> void:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Palette.PANEL_DEEP)
+	for gi in range(1, 4):
+		var gy := size.y * float(gi) / 4.0
+		draw_line(Vector2(0, gy), Vector2(size.x, gy), Color(1, 1, 1, 0.045), 1.0)
 	if series.is_empty():
 		return
 	var lo := INF
@@ -43,8 +46,18 @@ func _draw() -> void:
 			poly.append(Vector2(pts[pts.size() - 1].x, pad + h))
 			poly.append(Vector2(pts[0].x, pad + h))
 			var c: Color = s.color
-			draw_colored_polygon(poly, Color(c.r, c.g, c.b, 0.14))
-		draw_polyline(pts, s.color, 3.0, true)
+			var cols := PackedColorArray()
+			for q in poly:
+				var t := clampf((q.y - pad) / h, 0.0, 1.0)
+				cols.append(Color(c.r, c.g, c.b, 0.34 * (1.0 - t) + 0.02))
+			draw_polygon(poly, cols)
+		var cl: Color = s.color
+		if Saves.gfx != "eco":
+			draw_polyline(pts, Color(cl.r, cl.g, cl.b, 0.16), 9.0, true)
+		draw_polyline(pts, cl, 3.0, true)
+		var last: Vector2 = pts[pts.size() - 1]
+		draw_circle(last, 7.0, Color(cl.r, cl.g, cl.b, 0.25))
+		draw_circle(last, 4.0, cl)
 	if show_range:
 		var f := ThemeDB.fallback_font
 		draw_string(f, Vector2(pad + 4, 22), Fmt.money(hi), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Palette.MUTED)

@@ -5,6 +5,8 @@ extends SubViewportContainer
 
 var spin_speed: float = 0.45
 var _vp: SubViewport
+var _ring: MeshInstance3D
+var _t: float = 0.0
 var _cam: Camera3D
 var _pivot: Node3D
 var _model: DeviceModel
@@ -78,6 +80,30 @@ func _ready() -> void:
 	_shadow.material_override = sm
 	_shadow.rotation_degrees = Vector3(-90, 0, 0)
 	_vp.add_child(_shadow)
+	# palco: anel de luz da cor de destaque que pulsa devagar sob o aparelho
+	if Saves.gfx != "eco":
+		_ring = MeshInstance3D.new()
+		var rq := QuadMesh.new()
+		rq.size = Vector2(3.4, 3.4)
+		_ring.mesh = rq
+		var rm := StandardMaterial3D.new()
+		rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		rm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		rm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		var rg := Gradient.new()
+		rg.offsets = PackedFloat32Array([0.0, 0.55, 0.70, 0.80, 1.0])
+		rg.colors = PackedColorArray([Color(1, 0.6, 0.18, 0.16), Color(1, 0.6, 0.18, 0.05), Color(1, 0.62, 0.2, 0.55), Color(1, 0.6, 0.18, 0.05), Color(0, 0, 0, 0)])
+		var rt := GradientTexture2D.new()
+		rt.gradient = rg
+		rt.fill = GradientTexture2D.FILL_RADIAL
+		rt.fill_from = Vector2(0.5, 0.5)
+		rt.fill_to = Vector2(1.0, 0.5)
+		rt.width = 256
+		rt.height = 256
+		rm.albedo_texture = rt
+		_ring.material_override = rm
+		_ring.rotation_degrees = Vector3(-90, 0, 0)
+		_vp.add_child(_ring)
 	_pivot = Node3D.new()
 	_vp.add_child(_pivot)
 	_model = DeviceModel.new()
@@ -99,11 +125,17 @@ func set_device(cat: String, specs: Dictionary, quality_ratio: float, design: Di
 	_key = k
 	_model.build(cat, specs, quality_ratio, design)
 	_shadow.position = Vector3(0, _model.floor_y - 0.05, 0)
+	if _ring != null:
+		_ring.position = Vector3(0, _model.floor_y - 0.045, 0)
 	_place_camera(cat)
 
 func _process(delta: float) -> void:
 	if not is_visible_in_tree():
 		return
+	_t += delta
+	if _ring != null:
+		var k := 1.0 + 0.04 * sin(_t * 1.6)
+		_ring.scale = Vector3(k, k, k)
 	if _idle > 0.0:
 		_idle -= delta
 	elif spin_speed != 0.0:
