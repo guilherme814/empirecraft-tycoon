@@ -84,10 +84,32 @@ func rebuild() -> void:
 	entries.reverse()
 	for i in mini(10, entries.size()):
 		var e: Dictionary = entries[i]
-		nv.add_child(UI.wrap("[%s] %s" % [Fmt.date(int(e.day)), e.text], 24, UI.kind_color(str(e.kind))))
+		nv.add_child(_news_row(e))
+
+## Linha de notícia: marcador colorido pelo tipo, data discreta e texto legível.
+func _news_row(e: Dictionary) -> Control:
+	var col: Color = UI.kind_color(str(e.kind))
+	if str(e.kind) not in ["good", "bad"]:
+		col = Palette.INFO
+	var row := UI.hbox(12)
+	var bar := ColorRect.new()
+	bar.color = col
+	bar.custom_minimum_size = Vector2(6, 0)
+	row.add_child(bar)
+	var d := UI.label(Fmt.date(int(e.day)), 21, Palette.MUTED)
+	d.custom_minimum_size = Vector2(150, 0)
+	row.add_child(d)
+	var t := UI.wrap(str(e.text), 24, Palette.TEXT)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(t)
+	return row
 
 func _stat(row: HBoxContainer, icon_name: String, title: String, value: String, color: Color) -> void:
 	var card := UI.card(Palette.PANEL, 18)
+	var sb := card.get_theme_stylebox("panel").duplicate() as StyleBoxFlat
+	sb.border_width_left = 6
+	sb.border_color = color.darkened(0.15)
+	card.add_theme_stylebox_override("panel", sb)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(card)
 	var v := UI.vbox(4)
