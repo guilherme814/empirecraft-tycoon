@@ -11,6 +11,7 @@ var _cam: Camera3D
 var _pivot: Node3D
 var _model: DeviceModel
 var _shadow: MeshInstance3D
+var _sweep: OmniLight3D
 var _key: String = ""
 var _yaw: float = 0.55
 var _pitch: float = 0.16
@@ -58,6 +59,47 @@ func _ready() -> void:
 	rim.omni_range = 9.0
 	_vp.add_child(rim)
 
+	# luz de varredura: gira em volta e faz o brilho passear pelo metal e pelo vidro
+	if Saves.gfx != "eco":
+		_sweep = OmniLight3D.new()
+		_sweep.light_color = Color(1.0, 0.97, 0.9)
+		_sweep.light_energy = 1.4
+		_sweep.omni_range = 7.0
+		_vp.add_child(_sweep)
+		var sp := CPUParticles3D.new()
+		sp.amount = 26 if Saves.gfx == "bal" else 48
+		sp.lifetime = 4.0
+		sp.preprocess = 4.0
+		sp.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+		sp.emission_sphere_radius = 1.5
+		sp.direction = Vector3.UP
+		sp.spread = 30.0
+		sp.initial_velocity_min = 0.08
+		sp.initial_velocity_max = 0.22
+		sp.gravity = Vector3.ZERO
+		sp.scale_amount_min = 0.4
+		sp.scale_amount_max = 1.2
+		var sq := QuadMesh.new()
+		sq.size = Vector2(0.035, 0.035)
+		var smat := StandardMaterial3D.new()
+		smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		smat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		smat.albedo_color = Color(1.0, 0.86, 0.6, 0.9)
+		var sg := Gradient.new()
+		sg.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
+		sg.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0.5), Color(1, 1, 1, 0)])
+		var st := GradientTexture2D.new()
+		st.gradient = sg
+		st.fill = GradientTexture2D.FILL_RADIAL
+		st.fill_from = Vector2(0.5, 0.5)
+		st.fill_to = Vector2(1.0, 0.5)
+		st.width = 32
+		st.height = 32
+		smat.albedo_texture = st
+		sq.material = smat
+		sp.mesh = sq
+		_vp.add_child(sp)
 	# sombra de contato (fixa; não gira com o aparelho)
 	_shadow = MeshInstance3D.new()
 	var q := QuadMesh.new()
@@ -133,6 +175,9 @@ func _process(delta: float) -> void:
 	if not is_visible_in_tree():
 		return
 	_t += delta
+	if _sweep != null:
+		var a := _t * 0.7
+		_sweep.position = Vector3(cos(a) * 2.6, 1.2 + 0.5 * sin(_t * 0.4), sin(a) * 2.6 + 1.0)
 	if _ring != null:
 		var k := 1.0 + 0.04 * sin(_t * 1.6)
 		_ring.scale = Vector3(k, k, k)

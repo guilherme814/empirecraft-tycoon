@@ -115,8 +115,10 @@ func show_store(spec: Dictionary, released: int, country_color: Color) -> void:
 		var mi := MeshInstance3D.new()
 		mi.mesh = b.build()
 		mi.material_override = MeshBuilder.material(pair[1])
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if (pair[1] == "lit" and Saves.gfx != "eco") else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_static_root.add_child(mi)
+	_add_ground()
+	_add_dust()
 	var lamp := OmniLight3D.new()
 	lamp.position = Vector3(W * 0.5, 1.8, D * 0.5)
 	lamp.light_color = Color("ffe2b8")
