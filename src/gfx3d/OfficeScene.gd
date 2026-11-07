@@ -102,6 +102,14 @@ func _ready() -> void:
 	sun.light_color = Color(1.0, 0.95, 0.86)
 	sun.light_energy = 1.05
 	_sun = sun
+	if Saves.gfx != "eco":
+		sun.shadow_enabled = true
+		sun.shadow_bias = 0.05
+		sun.shadow_normal_bias = 1.2
+		sun.shadow_blur = 2.0 if Saves.gfx == "high" else 1.2
+		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+		sun.directional_shadow_max_distance = 70.0
+		sun.shadow_opacity = 0.55
 	_vp.add_child(sun)
 
 	_static_root = Node3D.new()
@@ -538,10 +546,68 @@ func _build_static() -> void:
 		var mi := MeshInstance3D.new()
 		mi.mesh = b.build()
 		mi.material_override = MeshBuilder.material(pair[1])
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if (pair[1] == "lit" and Saves.gfx != "eco") else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_static_root.add_child(mi)
+	_add_ground()
+	_add_dust()
 	_add_labels()
 	_add_lights()
+
+## Chão de fundo: um halo azulado sob o prédio, para o escritório "flutuar" com sombra e não no vazio.
+func _add_ground() -> void:
+	var q := QuadMesh.new()
+	var span := maxf(room_w, room_d) * 2.6
+	q.size = Vector2(span, span)
+	var mi := MeshInstance3D.new()
+	mi.mesh = q
+	var gr := Gradient.new()
+	gr.offsets = PackedFloat32Array([0.0, 0.55, 1.0])
+	gr.colors = PackedColorArray([Color(0.16, 0.22, 0.42, 0.85), Color(0.09, 0.12, 0.25, 0.5), Color(0.04, 0.06, 0.11, 0.0)])
+	var gt := GradientTexture2D.new()
+	gt.gradient = gr
+	gt.fill = GradientTexture2D.FILL_RADIAL
+	gt.fill_from = Vector2(0.5, 0.5)
+	gt.fill_to = Vector2(1.0, 0.5)
+	gt.width = 256
+	gt.height = 256
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_texture = gt
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.rotation_degrees = Vector3(-90, 0, 0)
+	mi.position = Vector3(room_w * 0.5, -0.4, room_d * 0.5)
+	_static_root.add_child(mi)
+
+## Partículas de poeira que flutuam na luz: dão profundidade e vida ao ambiente.
+func _add_dust() -> void:
+	if Saves.gfx == "eco":
+		return
+	var p := CPUParticles3D.new()
+	p.amount = 40 if Saves.gfx == "bal" else 70
+	p.lifetime = 9.0
+	p.preprocess = 9.0
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	p.emission_box_extents = Vector3(room_w * 0.5, 1.1, room_d * 0.5)
+	p.position = Vector3(room_w * 0.5, 1.3, room_d * 0.5)
+	p.direction = Vector3(0.3, 0.4, 0.1)
+	p.spread = 60.0
+	p.initial_velocity_min = 0.03
+	p.initial_velocity_max = 0.12
+	p.gravity = Vector3.ZERO
+	p.scale_amount_min = 0.5
+	p.scale_amount_max = 1.2
+	var qm := QuadMesh.new()
+	qm.size = Vector2(0.05, 0.05)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	m.albedo_color = Color(1.0, 0.93, 0.78, 0.35)
+	qm.material = m
+	p.mesh = qm
+	_static_root.add_child(p)
 
 func _add_lights() -> void:
 	var fl := layout.front_lane
