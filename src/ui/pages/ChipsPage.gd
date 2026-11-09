@@ -160,6 +160,32 @@ func _unlock_hint(d: Dictionary) -> String:
 
 func _right_side() -> void:
 	var c := company
+	# planta do chip ao vivo + barras de atributos
+	var vc := UI.card(Palette.PANEL_DEEP, 8)
+	_right.add_child(vc)
+	var vv := UI.vbox(6)
+	vc.add_child(vv)
+	var cv := ChipView.new(380)
+	cv.set_design(_d)
+	vv.add_child(cv)
+	var stt := Chips.stats(_d)
+	var bars := [["Desempenho", clampf(float(stt.index) / 6.0, 0.0, 1.0), Palette.ACCENT],
+		["Eficiência", clampf((float(stt.index) / maxf(float(stt.tdp), 0.1)) / 2.0, 0.0, 1.0), Palette.GOOD],
+		["Resfriamento (menos calor)", clampf(1.0 - float(stt.tdp) / 25.0, 0.0, 1.0), Palette.INFO],
+		["Gráficos", clampf(float(stt.gfx) / 6.0, 0.0, 1.0), Color("ff9a2e")],
+		["IA (NPU)", clampf(float(int(_d.get("npu", 0))) / float(Chips.MAX_NPU), 0.0, 1.0), Color("b46bff")]]
+	for b in bars:
+		var row := UI.hbox(10)
+		var lb := UI.label(str(b[0]), 22, Palette.MUTED)
+		lb.custom_minimum_size = Vector2(360, 0)
+		lb.clip_text = true
+		row.add_child(lb)
+		var pb := UI.bar(float(b[1]), b[2], 16)
+		pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pb.custom_minimum_size = Vector2(220, 16)
+		pb.show_percentage = false
+		row.add_child(pb)
+		vv.add_child(row)
 	if c.chip_dev != null:
 		var card := UI.card(Palette.PANEL, 18)
 		_right.add_child(card)
