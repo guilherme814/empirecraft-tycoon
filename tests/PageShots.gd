@@ -97,6 +97,9 @@ func _ready() -> void:
 	screen._refresh_all()
 	await _shot("team")
 	c.research_levels["res_chips"] = 3
+	var _cd: Dictionary = Chips.default_design(c)
+	_cd.merge({"id": 1, "name": "Aurora C1", "bug": 0.05, "cores": 6, "ecores": 4, "gpu": 4, "npu": 1, "arch": "perf"}, true)
+	c.chips.append(_cd)
 	c.research_levels["res_specs"] = 4
 	screen._show_page("chips")
 	var cp = screen._pages["chips"]

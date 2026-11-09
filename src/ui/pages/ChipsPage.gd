@@ -210,8 +210,14 @@ func _right_side() -> void:
 			thr += "%s %d%%  " % [str(cat.name), int(Chips.throttle(c, ch, str(cat.id), {"thermal": 25}) * 100.0)]
 		var box := UI.card(Palette.PANEL_ALT, 14)
 		lv.add_child(box)
+		var outer := UI.hbox(14)
+		box.add_child(outer)
+		var cbx := ChipBox.new()
+		cbx.set_chip(ch)
+		outer.add_child(cbx)
 		var bv := UI.vbox(4)
-		box.add_child(bv)
+		bv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		outer.add_child(bv)
 		var h := UI.hbox(8)
 		h.add_child(UI.label(str(ch.name), 28, Palette.ACCENT))
 		h.add_child(UI.spacer())
