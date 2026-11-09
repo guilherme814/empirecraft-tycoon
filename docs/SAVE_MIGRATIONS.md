@@ -45,3 +45,4 @@ Testes: `test_save_roundtrip` (ida e volta) e `test_old_save_compat` (save v2 m�
 - 0.16.0: SAVE_VERSION 15. Novos campos opcionais da empresa: acquired (empresas compradas), acq_offers (startups à venda), last_acq; rivais ganham owned/owned_day/rev_last. Saves antigos assumem vazio.
 - 0.17.0: sem mudança no save (polimento visual).
 - 0.18.0: sem mudança no save (somente gráficos).
+- 0.19.0: sem mudança de SAVE_VERSION. Designs ganham chaves opcionais: cor 'custom:rrggbb', cam_x/cam_y e logo_x/logo_y (ausentes = posição padrão).

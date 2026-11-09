@@ -370,6 +370,7 @@ func _ready() -> void:
 		DirAccess.remove_absolute(Saves.BACKUP_PATH)
 	await test_touch_scroll()
 	test_save_slots()
+	test_position_pad()
 	print("UI smoke: %s" % ("OK" if failures == 0 else "%d falha(s)" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -380,6 +381,16 @@ func _count(n: Node, meshes_only: bool) -> int:
 			k += 1
 		k += _count(ch, meshes_only)
 	return k
+
+func test_position_pad() -> void:
+	var pad := PositionPad.new()
+	pad.set_design({"cam_x": 0.5, "cam_y": 0.3, "logo_x": -0.4, "logo_y": 0.8})
+	pad.size = Vector2(240, 400)
+	var pc := pad._handle_pos("cam")
+	var pl := pad._handle_pos("logo")
+	ok(pc.distance_to(pl) > 10.0, "alças da câmera e do logo em posições diferentes")
+	ok(pad._rect().has_point(pc) and pad._rect().has_point(pl), "alças ficam dentro do aparelho")
+	pad.free()
 
 func test_save_slots() -> void:
 	var camp := Company.new(21)

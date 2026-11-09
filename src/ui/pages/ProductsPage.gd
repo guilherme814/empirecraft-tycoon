@@ -145,6 +145,12 @@ func rebuild() -> void:
 func _go(i: int) -> void:
 	_step = clampi(i, 0, STEPS.size() - 1)
 	_touch()
+	if Saves.gfx != "eco" and _form != null:
+		_form.modulate.a = 0.0
+		_form.position.x = 40.0
+		var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_form, "modulate:a", 1.0, 0.28)
+		tw.tween_property(_form, "position:x", 0.0, 0.28)
 
 func _opt(text: String, selected: bool, locked: String, cb: Callable) -> Button:
 	var b := UI.button(text, cb, "primary" if selected else "normal", 70, 0, "lock" if locked != "" else "", "nav")
@@ -303,6 +309,15 @@ func _step_style() -> void:
 	match _cat_id:
 		"phone":
 			_choice_row("Câmera traseira", "cam", GameData.designs().camera_layouts)
+			_form.add_child(UI.label("Posição da câmera e do logo: arraste as alças", 24, Palette.MUTED))
+			var pad := PositionPad.new()
+			pad.set_design(_design)
+			pad.moved.connect(func(_k: String, _x: float, _y: float, final: bool):
+				if final:
+					_touch()
+				else:
+					_update_viewer())
+			_form.add_child(pad)
 			_choice_row("Recorte da tela", "notch", GameData.designs().notches)
 			_choice_row("Botões laterais", "buttons", GameData.designs().buttons)
 			_choice_row("Leitor de digital", "bio", GameData.designs().bios)

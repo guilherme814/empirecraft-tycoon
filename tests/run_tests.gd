@@ -1211,3 +1211,4 @@ func test_custom_color() -> void:
 	check(str(back.color) == "custom:12ab34", "design guarda cor livre")
 	dm.free()
 	cp.free()
+

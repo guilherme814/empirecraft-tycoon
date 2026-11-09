@@ -374,6 +374,11 @@ func _phone(s: Dictionary) -> void:
 	var anchor: String = lay.anchor
 	var cx0 := (-w * 0.5 + psz.x * 0.5 + 0.1) if anchor == "left" else 0.0
 	var cy0 := h * 0.5 - psz.y * 0.5 - 0.1
+	if _design.has("cam_x"):   # posição livre escolhida no estúdio
+		var xmin := -w * 0.5 + psz.x * 0.5 + 0.06
+		var xmax := w * 0.5 - psz.x * 0.5 - 0.06
+		cx0 = lerpf(xmin, xmax, (float(_design.cam_x) + 1.0) * 0.5)
+		cy0 = lerpf(h * 0.5 - psz.y * 0.5 - 0.1, -h * 0.5 + psz.y * 0.5 + 0.1, float(_design.get("cam_y", 0.0)))
 	var zb := -t * 0.5 - 0.012
 	if not bool(lay.get("ring", false)):
 		var prad: float = float(lay.get("rad", psz.x * 0.5 if bool(lay.circle) else 0.07))
@@ -392,7 +397,12 @@ func _phone(s: Dictionary) -> void:
 		Vector3(0, -0.4, -t * 0.5 - 0.003))
 	if bool(_design.get("brand", true)) and _brand_text() != "":
 		_text(self, _brand_text(), 0.075, _trim_color(), Vector3(0, -0.12, -t * 0.5 - 0.004), Vector3(0, 180, 0))
-	_logo_mark(self, 0.055, _logo_color(), Vector3(0, -0.02, -t * 0.5 - 0.004), Vector3(0, 180, 0))
+	var lgx := 0.0
+	var lgy := -0.02
+	if _design.has("logo_x"):
+		lgx = float(_design.logo_x) * (w * 0.5 - 0.1)
+		lgy = lerpf(h * 0.5 - 0.1, -h * 0.5 + 0.1, float(_design.get("logo_y", 0.45)))
+	_logo_mark(self, 0.055, _logo_color(), Vector3(lgx, lgy, -t * 0.5 - 0.004), Vector3(0, 180, 0))
 	_feature_dots(self, Vector3(-0.15, -0.58, -t * 0.5 - 0.006), Vector3(90, 0, 0))
 
 ## Botões laterais conforme o estilo escolhido.
