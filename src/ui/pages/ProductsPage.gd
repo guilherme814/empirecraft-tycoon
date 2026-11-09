@@ -3,6 +3,9 @@ extends Page
 ## À direita: pré-visualização 3D e a lista de produtos (lançar, preço, trocar SO/fábrica, nova versão).
 
 const STEPS := ["Forma", "Estilo", "Hardware", "Sistema", "Produção"]
+const STEP_TITLES := ["ESCOLHA A FORMA", "ESTILO E ACABAMENTO", "HARDWARE", "SISTEMA", "PRODUÇÃO"]
+const STEP_ICONS := ["nav_products", "designer", "nav_chip", "nav_system", "nav_package"]
+var _backdrop: StudioBackdrop
 
 var _step: int = 0
 var _cat_id: String = "phone"
@@ -21,6 +24,8 @@ var _live: Dictionary = {}   # product id -> {"bar": ProgressBar, "label": Label
 
 func build() -> void:
 	# duas colunas com rolagem independente: o formulário à esquerda e a prévia 3D à direita
+	_backdrop = StudioBackdrop.new()
+	add_child(_backdrop)
 	var cols := UI.hbox(16)
 	cols.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(cols)
@@ -30,6 +35,7 @@ func build() -> void:
 	var panel := UI.blueprint(16)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	panel.self_modulate = Color(1, 1, 1, 0.86)   # deixa o fundo vivo aparecer por trás
 	lsc.add_child(panel)
 	_form = UI.vbox(12)
 	panel.add_child(_form)
@@ -39,12 +45,13 @@ func build() -> void:
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rsc.add_child(right)
 	var vcard := UI.card(Palette.PANEL_DEEP, 10)
+	vcard.self_modulate = Color(1, 1, 1, 0.12)   # o aparelho flutua sobre o fundo colorido da etapa
 	right.add_child(vcard)
 	var vbox := UI.vbox(4)
 	vcard.add_child(vbox)
 	vbox.add_child(UI.label("Pré-visualização 3D (arraste para girar)", 22, Palette.MUTED))
 	_viewer = DeviceViewer.new()
-	_viewer.custom_minimum_size.y = 430.0
+	_viewer.custom_minimum_size.y = 500.0
 	vbox.add_child(_viewer)
 	_stat_holder = UI.vbox(10)
 	right.add_child(_stat_holder)
@@ -84,12 +91,18 @@ func rebuild() -> void:
 	var c := company
 	var head := UI.hbox(8)
 	_form.add_child(head)
-	head.add_child(UI.label("Estúdio de design", 34, Color("bfe0ff")))
+	_backdrop.set_look(_step)
+	var title := UI.label(STEP_TITLES[_step], 54, Color.WHITE)
+	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.55))
+	title.add_theme_constant_override("outline_size", 10)
+	title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+	title.add_theme_constant_override("shadow_offset_y", 4)
+	head.add_child(title)
 	head.add_child(UI.spacer())
 	var st_row := UI.hbox(8)
 	_form.add_child(st_row)
 	for i in STEPS.size():
-		var b := UI.button("%d  %s" % [i + 1, STEPS[i]], func(): _go(i), "info" if i == _step else "normal", 60)
+		var b := UI.button(STEPS[i], func(): _go(i), "info" if i == _step else "normal", 72, 0, STEP_ICONS[i], "nav")
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.add_theme_font_size_override("font_size", 23)
 		st_row.add_child(b)
