@@ -6,6 +6,7 @@ const STEPS := ["Forma", "Estilo", "Hardware", "Sistema", "Produção"]
 const STEP_TITLES := ["ESCOLHA A FORMA", "ESTILO E ACABAMENTO", "HARDWARE", "SISTEMA", "PRODUÇÃO"]
 const STEP_ICONS := ["nav_products", "designer", "nav_chip", "nav_system", "nav_package"]
 var _backdrop: StudioBackdrop
+var _pick_open: Dictionary = {}   # chave da cor -> seletor livre aberto
 
 var _step: int = 0
 var _cat_id: String = "phone"
@@ -216,6 +217,31 @@ func _swatches(key: String) -> void:
 			b.add_theme_stylebox_override(st, sb)
 		b.pressed.connect(func(): Sfx.play("click"); _design[key] = str(col.id); _touch())
 		sw.add_child(b)
+	# cor livre: botão arco-íris abre o seletor de paleta + matiz
+	var cur := str(_design.get(key, ""))
+	var custom_sel := cur.begins_with("custom:")
+	var free := Button.new()
+	free.focus_mode = Control.FOCUS_NONE
+	free.custom_minimum_size = Vector2(64, 64)
+	free.text = "+"
+	free.add_theme_font_size_override("font_size", 34)
+	var fsb := Palette.box(Color(str(cur.substr(7))) if custom_sel else Color("3a4258"), 32, 0)
+	fsb.border_color = Palette.ACCENT if (custom_sel or _pick_open.get(key, false)) else Color("e8eaf2")
+	fsb.set_border_width_all(6 if custom_sel else 3)
+	for st in ["normal", "hover", "pressed"]:
+		free.add_theme_stylebox_override(st, fsb)
+	free.pressed.connect(func(): Sfx.play("click"); _pick_open[key] = not bool(_pick_open.get(key, false)); _touch())
+	sw.add_child(free)
+	if bool(_pick_open.get(key, false)):
+		var cp := ColorPicker2D.new()
+		cp.set_color(Color.html(cur.substr(7)) if custom_sel else Color("5aa9ff"))
+		cp.changed.connect(func(c: Color, final: bool):
+			_design[key] = "custom:" + c.to_html(false)
+			if final:
+				_touch()
+			else:
+				_update_viewer())
+		_form.add_child(cp)
 
 ## Sorteia só detalhes estéticos gratuitos (cores e variações), para variar os aparelhos.
 func _randomize_look() -> void:

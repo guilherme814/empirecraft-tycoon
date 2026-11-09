@@ -45,6 +45,7 @@ func _initialize() -> void:
 	test_updates_teardown()
 	test_presentations()
 	test_acquisitions()
+	test_custom_color()
 	test_chip_realism()
 	if failures.is_empty():
 		print("ALL TESTS PASSED")
@@ -1193,3 +1194,20 @@ func test_acquisitions() -> void:
 	old["version"] = 14
 	var c3 := Company.from_dict(old)
 	check(c3 != null and c3.acquired.is_empty() and c3.last_acq == -1, "save antigo (v14) abre sem aquisições")
+
+func test_custom_color() -> void:
+	var dm := DeviceModel.new()
+	var col := dm._color_of("custom:ff8800", Color.BLACK)
+	check(col.is_equal_approx(Color.html("ff8800")), "cor livre vira a cor exata no aparelho")
+	check(dm._color_of("graphite", Color.RED) != Color.RED, "cores da paleta continuam funcionando")
+	var cp := ColorPicker2D.new()
+	cp.set_color(Color.html("3366cc"))
+	check(cp.color().is_equal_approx(Color.html("3366cc")), "seletor devolve a cor definida")
+	var c := staffed(63)
+	c.money = 1.0e7
+	var d: Dictionary = c.default_design("phone")
+	d["color"] = "custom:12ab34"
+	var back: Dictionary = (d.duplicate(true))
+	check(str(back.color) == "custom:12ab34", "design guarda cor livre")
+	dm.free()
+	cp.free()

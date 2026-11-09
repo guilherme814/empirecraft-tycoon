@@ -66,6 +66,8 @@ func _opt(key: String, fallback: String) -> String:
 	return str(_design.get(key, fallback))
 
 func _color_of(id: String, fallback: Color) -> Color:
+	if id.begins_with("custom:"):
+		return Color.html(id.substr(7))
 	for c in GameData.designs().colors:
 		if c.id == id:
 			return Color(str(c.hex))
